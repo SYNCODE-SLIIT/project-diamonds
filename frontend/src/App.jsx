@@ -1,9 +1,13 @@
 import React from 'react'
 import {Routes,Route} from 'react-router-dom'
+// import RegisterOrganizer from './pages/authentication/RegisterOrganizer'
+import MemberApplication from './pages/authentication/MemberApplication'
+// import CreateMemberAccount from './pages/authentication/CreateMemberAccount'
+// import Login from './pages/authentication/Login'
 
 import Navbar from './components/Navbar'
 import Home from './pages/home'
-import AboutUs from './pages/aboutUs'
+
 import Contactus from './pages/Contactus'
 import Profile from './pages/Profile'
 
@@ -14,7 +18,10 @@ const App = () => {
       <Navbar />
       <Routes>
         <Route path='/' element={<Home />}  />
-        <Route path='/aboutUs' element={<AboutUs />} />
+        {/* <Route path="/register/organizer" element={<RegisterOrganizer />} /> */}
+        <Route path="/register/member/application" element={<MemberApplication />} />
+        {/* <Route path="/register/member/create-account" element={<CreateMemberAccount />} /> */}
+        {/* <Route path ='/Login' element={<Login />} /> */}
         <Route path='/contactUs' element={<Contactus />} />
         <Route path='/profile' element={<Profile />} />
       </Routes>

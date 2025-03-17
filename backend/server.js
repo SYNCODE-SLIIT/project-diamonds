@@ -10,15 +10,20 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 4000;
 
-// Connect to MongoDB
-connectDB();
-
 // Middlewares
 app.use(express.json());
 app.use(cors());
+// Connect to MongoDB
+connectDB();
+// import authRoutes from '../backend/routes/authRoutes.js'
+// app.use('/api/auth', authRoutes)
+
+import memberApplicationRoutes from '../backend/routes/memberApplicationRoutes.js';
+app.use('/api/member-applications', memberApplicationRoutes);
+
 
 // API Endpoints
-app.get('/', (req, res) => {
+app.get('/register/member/application', (req, res) => {
     res.send('API Working');
 });
 
