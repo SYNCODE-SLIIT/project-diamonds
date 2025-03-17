@@ -16,6 +16,11 @@ export const createApplication = async (req, res) => {
       achievements
     } = req.body;
 
+    const existingApplication = await MemberApplication.findOne({ email });
+    if(existingApplication) {
+      return res.status(400).json({ message: "An application with that email already exists" });
+    }
+
     const newApplication = new MemberApplication({
       fullName,
       email,
@@ -69,5 +74,33 @@ export const updateApplicationStatus = async (req, res) => {
   } catch (error) {
     console.error('Error updating application status:', error);
     res.status(500).json({ message: 'Error updating application status' });
+  }
+};
+
+// In memberApplicationController.js
+
+// Get all pending applications
+export const getPendingApplications = async (req, res) => {
+  try {
+    const pendingApplications = await MemberApplication.find({ applicationStatus: 'Pending' });
+    res.status(200).json({ applications: pendingApplications });
+  } catch (error) {
+    console.error("Error fetching pending applications:", error);
+    res.status(500).json({ message: "Error fetching pending applications" });
+  }
+};
+
+// Get details of a single application by ID
+export const getApplicationById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const application = await MemberApplication.findById(id);
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+    res.status(200).json({ application });
+  } catch (error) {
+    console.error("Error fetching application:", error);
+    res.status(500).json({ message: "Error fetching application" });
   }
 };

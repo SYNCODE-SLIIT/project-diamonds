@@ -15,12 +15,12 @@ app.use(express.json());
 app.use(cors());
 // Connect to MongoDB
 connectDB();
-// import authRoutes from '../backend/routes/authRoutes.js'
-// app.use('/api/auth', authRoutes)
 
+// Memebr Application Routes
 import memberApplicationRoutes from '../backend/routes/memberApplicationRoutes.js';
 app.use('/api/member-applications', memberApplicationRoutes);
-
+import adminApplicationRoutes from './routes/adminApplicationRoutes.js';
+app.use('/api/admin/applications', adminApplicationRoutes);
 
 // API Endpoints
 app.get('/register/member/application', (req, res) => {
