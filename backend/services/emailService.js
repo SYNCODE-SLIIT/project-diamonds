@@ -24,6 +24,7 @@ const sendApprovalEmail = async (application, accountCreationLink) => {
 
   try {
     let info = await transporter.sendMail(mailOptions);
+    console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
     console.log('Approval email sent:', info.messageId);
   } catch (error) {
     console.error('Error sending approval email:', error);

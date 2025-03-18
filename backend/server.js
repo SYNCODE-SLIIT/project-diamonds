@@ -21,7 +21,9 @@ import memberApplicationRoutes from '../backend/routes/memberApplicationRoutes.j
 app.use('/api/member-applications', memberApplicationRoutes);
 import adminApplicationRoutes from './routes/adminApplicationRoutes.js';
 app.use('/api/admin/applications', adminApplicationRoutes);
-
+// User Routes
+import userRoutes from './routes/userRoutes.js';
+app.use('/api/users', userRoutes);
 // API Endpoints
 app.get('/register/member/application', (req, res) => {
     res.send('API Working');

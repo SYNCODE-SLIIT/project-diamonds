@@ -64,7 +64,7 @@ export const updateApplicationStatus = async (req, res) => {
     // Send an email notification based on the new status
     if (status === 'Approved') {
       // Construct the account creation link (adjust port/path as needed)
-      const accountCreationLink = `http://localhost:3000/register/member/createAccount?applicationId=${updatedApplication._id}`;
+      const accountCreationLink = `http://localhost:5173/register/member/createAccount?applicationId=${updatedApplication._id}`;
       await emailService.sendApprovalEmail(updatedApplication, accountCreationLink);
     } else if (status === 'Rejected') {
       await emailService.sendRejectionEmail(updatedApplication);

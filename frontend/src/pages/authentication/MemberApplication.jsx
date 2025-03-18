@@ -12,6 +12,9 @@ const MemberApplication = () => {
     achievements: ''
   });
   
+  // State for inline validation errors
+  const [errors, setErrors] = useState({});
+  
   // Single availability entry being edited
   const [availabilityEntry, setAvailabilityEntry] = useState({
     day: '',
@@ -25,25 +28,61 @@ const MemberApplication = () => {
   const [responseMsg, setResponseMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   
+  // Basic field validation function
+  const validateField = (name, value) => {
+    let errorMsg = "";
+    switch(name) {
+      case "age":
+        if (value && Number(value) < 18) {
+          errorMsg = "Applicants must be at least 18 years old.";
+        }
+        break;
+      case "email":
+        // Basic email format check
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (value && !emailRegex.test(value)) {
+          errorMsg = "Invalid email format.";
+        }
+        break;
+      default:
+        break;
+    }
+    setErrors(prev => ({ ...prev, [name]: errorMsg }));
+  };
+
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    validateField(name, value);
   };
   
   const handleAvailabilityChange = (e) => {
-    setAvailabilityEntry({
-      ...availabilityEntry,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setAvailabilityEntry(prev => ({ ...prev, [name]: value }));
   };
   
   const addAvailability = () => {
     // Only add if all fields are filled
-    if(availabilityEntry.day && availabilityEntry.start && availabilityEntry.end) {
-      setAvailabilities([...availabilities, availabilityEntry]);
+    if (availabilityEntry.day && availabilityEntry.start && availabilityEntry.end) {
+      setAvailabilities(prev => [...prev, availabilityEntry]);
       setAvailabilityEntry({ day: '', start: '', end: '' });
+    }
+  };
+
+  // Check email uniqueness on blur
+  const checkEmailUniqueness = async () => {
+    if(formData.email) {
+      try {
+        const res = await fetch(`http://localhost:4000/api/member-applications/check-email?email=${encodeURIComponent(formData.email)}`);
+        const data = await res.json();
+        if(data.exists) {
+          setErrors(prev => ({ ...prev, email: "An application with that email already exists." }));
+        } else {
+          setErrors(prev => ({ ...prev, email: "" }));
+        }
+      } catch (err) {
+        console.error("Error checking email uniqueness", err);
+      }
     }
   };
   
@@ -51,6 +90,14 @@ const MemberApplication = () => {
     e.preventDefault();
     setResponseMsg('');
     setErrorMsg('');
+    
+    // If there are any errors, do not submit
+    for (let key in errors) {
+      if (errors[key]) {
+        setErrorMsg("Please fix the errors before submitting.");
+        return;
+      }
+    }
     
     const payload = {
       fullName: formData.fullName,
@@ -108,6 +155,7 @@ const MemberApplication = () => {
             required 
             style={{ width: '100%', padding: '8px', border: '1px solid #007BFF', borderRadius: '4px' }}
           />
+          {errors.fullName && <div style={{ color: 'red' }}>{errors.fullName}</div>}
         </div>
         <div style={{ marginBottom: '15px' }}>
           <label style={{ display: 'block', marginBottom: '5px' }}>Email:</label>
@@ -116,9 +164,11 @@ const MemberApplication = () => {
             name="email" 
             value={formData.email} 
             onChange={handleChange} 
+            onBlur={checkEmailUniqueness}
             required 
             style={{ width: '100%', padding: '8px', border: '1px solid #007BFF', borderRadius: '4px' }}
           />
+          {errors.email && <div style={{ color: 'red' }}>{errors.email}</div>}
         </div>
         <div style={{ marginBottom: '15px' }}>
           <label style={{ display: 'block', marginBottom: '5px' }}>Contact Number:</label>
@@ -129,6 +179,7 @@ const MemberApplication = () => {
             onChange={handleChange} 
             style={{ width: '100%', padding: '8px', border: '1px solid #007BFF', borderRadius: '4px' }}
           />
+          {errors.contactNumber && <div style={{ color: 'red' }}>{errors.contactNumber}</div>}
         </div>
         <div style={{ marginBottom: '15px' }}>
           <label style={{ display: 'block', marginBottom: '5px' }}>Age:</label>
@@ -140,6 +191,7 @@ const MemberApplication = () => {
             required 
             style={{ width: '100%', padding: '8px', border: '1px solid #007BFF', borderRadius: '4px' }}
           />
+          {errors.age && <div style={{ color: 'red' }}>{errors.age}</div>}
         </div>
         <div style={{ marginBottom: '15px' }}>
           <label style={{ display: 'block', marginBottom: '5px' }}>Dance Style:</label>
@@ -151,6 +203,7 @@ const MemberApplication = () => {
             required 
             style={{ width: '100%', padding: '8px', border: '1px solid #007BFF', borderRadius: '4px' }}
           />
+          {errors.danceStyle && <div style={{ color: 'red' }}>{errors.danceStyle}</div>}
         </div>
         <div style={{ marginBottom: '15px' }}>
           <label style={{ display: 'block', marginBottom: '5px' }}>Years of Experience:</label>
@@ -161,6 +214,7 @@ const MemberApplication = () => {
             onChange={handleChange} 
             style={{ width: '100%', padding: '8px', border: '1px solid #007BFF', borderRadius: '4px' }}
           />
+          {errors.yearsOfExperience && <div style={{ color: 'red' }}>{errors.yearsOfExperience}</div>}
         </div>
         {/* Availabilities Section */}
         <div style={{ marginBottom: '15px', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }}>
@@ -238,6 +292,7 @@ const MemberApplication = () => {
             onChange={handleChange} 
             style={{ width: '100%', padding: '8px', height: '80px', border: '1px solid #007BFF', borderRadius: '4px' }}
           />
+          {errors.biography && <div style={{ color: 'red' }}>{errors.biography}</div>}
         </div>
         <div style={{ marginBottom: '15px' }}>
           <label style={{ display: 'block', marginBottom: '5px' }}>Achievements:</label>
@@ -249,6 +304,7 @@ const MemberApplication = () => {
             placeholder="Separate achievements with commas" 
             style={{ width: '100%', padding: '8px', border: '1px solid #007BFF', borderRadius: '4px' }}
           />
+          {errors.achievements && <div style={{ color: 'red' }}>{errors.achievements}</div>}
         </div>
         <button 
           type="submit" 
