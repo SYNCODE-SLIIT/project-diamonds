@@ -1,25 +1,22 @@
-import React from 'react'
-import {Routes,Route} from 'react-router-dom'
-
-import Navbar from './components/Navbar'
-import Home from './pages/home'
-import AboutUs from './pages/aboutUs'
-import Contactus from './pages/Contactus'
-import Profile from './pages/Profile'
+import { Routes, Route } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Home from './pages/Home';
+import AboutUs from './pages/AboutUs';
+import Contactus from './pages/Contactus';
+import Profile from './pages/Profile';
 
 const App = () => {
   return (
-    <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
-
+    <div className="px-4 sm:px-0 md:px-0 lg:px-0 mx-auto">
       <Navbar />
       <Routes>
-        <Route path='/' element={<Home />}  />
-        <Route path='/aboutUs' element={<AboutUs />} />
-        <Route path='/contactUs' element={<Contactus />} />
-        <Route path='/profile' element={<Profile />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/aboutUs" element={<AboutUs />} />
+        <Route path="/contactUs" element={<Contactus />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
     </div>
-  )
-}
+  );
+};
 
-export default App
+export default App;
