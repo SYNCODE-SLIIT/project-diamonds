@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './MemberApplication.css'; // Don't forget to create this CSS file
 
 const MemberApplication = () => {
   const [formData, setFormData] = useState({
@@ -12,23 +13,18 @@ const MemberApplication = () => {
     achievements: ''
   });
   
-  // State for inline validation errors
   const [errors, setErrors] = useState({});
-  
-  // Single availability entry being edited
   const [availabilityEntry, setAvailabilityEntry] = useState({
     day: '',
     start: '',
     end: ''
   });
   
-  // Array of availability entries
   const [availabilities, setAvailabilities] = useState([]);
   
   const [responseMsg, setResponseMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   
-  // Basic field validation function
   const validateField = (name, value) => {
     let errorMsg = "";
     switch(name) {
@@ -38,7 +34,6 @@ const MemberApplication = () => {
         }
         break;
       case "email":
-        // Basic email format check
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (value && !emailRegex.test(value)) {
           errorMsg = "Invalid email format.";
@@ -62,14 +57,12 @@ const MemberApplication = () => {
   };
   
   const addAvailability = () => {
-    // Only add if all fields are filled
     if (availabilityEntry.day && availabilityEntry.start && availabilityEntry.end) {
       setAvailabilities(prev => [...prev, availabilityEntry]);
       setAvailabilityEntry({ day: '', start: '', end: '' });
     }
   };
 
-  // Check email uniqueness on blur
   const checkEmailUniqueness = async () => {
     if(formData.email) {
       try {
@@ -91,7 +84,6 @@ const MemberApplication = () => {
     setResponseMsg('');
     setErrorMsg('');
     
-    // If there are any errors, do not submit
     for (let key in errors) {
       if (errors[key]) {
         setErrorMsg("Please fix the errors before submitting.");
@@ -133,32 +125,24 @@ const MemberApplication = () => {
   };
 
   return (
-    <div style={{
-      margin: '20px',
-      padding: '20px',
-      maxWidth: '600px',
-      border: '1px solid #ccc',
-      borderRadius: '8px',
-      boxShadow: '0px 0px 10px rgba(0,0,0,0.1)'
-    }}>
-      <h2 style={{ marginBottom: '20px', textAlign: 'center' }}>Member Application</h2>
-      {responseMsg && <div style={{ color: 'green', marginBottom: '10px', textAlign: 'center' }}>{responseMsg}</div>}
-      {errorMsg && <div style={{ color: 'red', marginBottom: '10px', textAlign: 'center' }}>{errorMsg}</div>}
-      <form onSubmit={handleApplicationSubmit}>
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Full Name:</label>
+    <div className="application-container">
+      <h2 className="application-title">Member Application</h2>
+      {responseMsg && <div className="success-message">{responseMsg}</div>}
+      {errorMsg && <div className="error-message">{errorMsg}</div>}
+      <form onSubmit={handleApplicationSubmit} className="application-form">
+        <div className="form-group">
+          <label>Full Name:</label>
           <input 
             type="text" 
             name="fullName" 
             value={formData.fullName} 
             onChange={handleChange} 
             required 
-            style={{ width: '100%', padding: '8px', border: '1px solid #007BFF', borderRadius: '4px' }}
           />
-          {errors.fullName && <div style={{ color: 'red' }}>{errors.fullName}</div>}
+          {errors.fullName && <div className="error-text">{errors.fullName}</div>}
         </div>
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Email:</label>
+        <div className="form-group">
+          <label>Email:</label>
           <input 
             type="email" 
             name="email" 
@@ -166,117 +150,99 @@ const MemberApplication = () => {
             onChange={handleChange} 
             onBlur={checkEmailUniqueness}
             required 
-            style={{ width: '100%', padding: '8px', border: '1px solid #007BFF', borderRadius: '4px' }}
           />
-          {errors.email && <div style={{ color: 'red' }}>{errors.email}</div>}
+          {errors.email && <div className="error-text">{errors.email}</div>}
         </div>
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Contact Number:</label>
+        <div className="form-group">
+          <label>Contact Number:</label>
           <input 
             type="text" 
             name="contactNumber" 
             value={formData.contactNumber} 
             onChange={handleChange} 
-            style={{ width: '100%', padding: '8px', border: '1px solid #007BFF', borderRadius: '4px' }}
           />
-          {errors.contactNumber && <div style={{ color: 'red' }}>{errors.contactNumber}</div>}
+          {errors.contactNumber && <div className="error-text">{errors.contactNumber}</div>}
         </div>
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Age:</label>
+        <div className="form-group">
+          <label>Age:</label>
           <input 
             type="number" 
             name="age" 
             value={formData.age} 
             onChange={handleChange} 
             required 
-            style={{ width: '100%', padding: '8px', border: '1px solid #007BFF', borderRadius: '4px' }}
           />
-          {errors.age && <div style={{ color: 'red' }}>{errors.age}</div>}
+          {errors.age && <div className="error-text">{errors.age}</div>}
         </div>
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Dance Style:</label>
+        <div className="form-group">
+          <label>Dance Style:</label>
           <input 
             type="text" 
             name="danceStyle" 
             value={formData.danceStyle} 
             onChange={handleChange} 
             required 
-            style={{ width: '100%', padding: '8px', border: '1px solid #007BFF', borderRadius: '4px' }}
           />
-          {errors.danceStyle && <div style={{ color: 'red' }}>{errors.danceStyle}</div>}
+          {errors.danceStyle && <div className="error-text">{errors.danceStyle}</div>}
         </div>
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Years of Experience:</label>
+        <div className="form-group">
+          <label>Years of Experience:</label>
           <input 
             type="number" 
             name="yearsOfExperience" 
             value={formData.yearsOfExperience} 
             onChange={handleChange} 
-            style={{ width: '100%', padding: '8px', border: '1px solid #007BFF', borderRadius: '4px' }}
           />
-          {errors.yearsOfExperience && <div style={{ color: 'red' }}>{errors.yearsOfExperience}</div>}
+          {errors.yearsOfExperience && <div className="error-text">{errors.yearsOfExperience}</div>}
         </div>
-        {/* Availabilities Section */}
-        <div style={{ marginBottom: '15px', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }}>
-          <h3 style={{ marginBottom: '10px' }}>Availabilities</h3>
-          <div style={{ marginBottom: '10px' }}>
-            <label style={{ display: 'block', marginBottom: '5px' }}>Select Day:</label>
-            <select 
-              name="day" 
-              value={availabilityEntry.day} 
-              onChange={handleAvailabilityChange} 
-              style={{ width: '100%', padding: '8px', border: '1px solid #007BFF', borderRadius: '4px' }}
-            >
-              <option value="">Select a day</option>
-              <option value="Monday">Monday</option>
-              <option value="Tuesday">Tuesday</option>
-              <option value="Wednesday">Wednesday</option>
-              <option value="Thursday">Thursday</option>
-              <option value="Friday">Friday</option>
-              <option value="Saturday">Saturday</option>
-              <option value="Sunday">Sunday</option>
-            </select>
+        <div className="availability-section">
+          <h3>Availabilities</h3>
+          <div className="availability-inputs">
+            <div className="form-group">
+              <label>Select Day:</label>
+              <select 
+                name="day" 
+                value={availabilityEntry.day} 
+                onChange={handleAvailabilityChange} 
+              >
+                <option value="">Select a day</option>
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday">Friday</option>
+                <option value="Saturday">Saturday</option>
+                <option value="Sunday">Sunday</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Start Time:</label>
+              <input 
+                type="time" 
+                name="start" 
+                value={availabilityEntry.start} 
+                onChange={handleAvailabilityChange} 
+              />
+            </div>
+            <div className="form-group">
+              <label>End Time:</label>
+              <input 
+                type="time" 
+                name="end" 
+                value={availabilityEntry.end} 
+                onChange={handleAvailabilityChange} 
+              />
+            </div>
+            <button type="button" onClick={addAvailability} className="add-button">
+              Add Availability
+            </button>
           </div>
-          <div style={{ marginBottom: '10px' }}>
-            <label style={{ display: 'block', marginBottom: '5px' }}>Start Time:</label>
-            <input 
-              type="time" 
-              name="start" 
-              value={availabilityEntry.start} 
-              onChange={handleAvailabilityChange} 
-              style={{ width: '100%', padding: '8px', border: '1px solid #007BFF', borderRadius: '4px' }}
-            />
-          </div>
-          <div style={{ marginBottom: '10px' }}>
-            <label style={{ display: 'block', marginBottom: '5px' }}>End Time:</label>
-            <input 
-              type="time" 
-              name="end" 
-              value={availabilityEntry.end} 
-              onChange={handleAvailabilityChange} 
-              style={{ width: '100%', padding: '8px', border: '1px solid #007BFF', borderRadius: '4px' }}
-            />
-          </div>
-          <button 
-            type="button" 
-            onClick={addAvailability} 
-            style={{
-              padding: '8px 12px',
-              backgroundColor: '#007BFF',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            Add Availability
-          </button>
           {availabilities.length > 0 && (
-            <div style={{ marginTop: '10px' }}>
+            <div className="availability-list">
               <h4>Added Availabilities:</h4>
-              <ul style={{ listStyleType: 'none', padding: '0' }}>
+              <ul>
                 {availabilities.map((avail, index) => (
-                  <li key={index} style={{ marginBottom: '5px', background: '#f8f8f8', padding: '5px', borderRadius: '4px' }}>
+                  <li key={index}>
                     {avail.day} — {avail.start} to {avail.end}
                   </li>
                 ))}
@@ -284,41 +250,28 @@ const MemberApplication = () => {
             </div>
           )}
         </div>
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Biography:</label>
+        <div className="form-group">
+          <label>Biography:</label>
           <textarea 
             name="biography" 
             value={formData.biography} 
             onChange={handleChange} 
-            style={{ width: '100%', padding: '8px', height: '80px', border: '1px solid #007BFF', borderRadius: '4px' }}
+            rows="5"
           />
-          {errors.biography && <div style={{ color: 'red' }}>{errors.biography}</div>}
+          {errors.biography && <div className="error-text">{errors.biography}</div>}
         </div>
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Achievements:</label>
+        <div className="form-group">
+          <label>Achievements:</label>
           <input 
             type="text" 
             name="achievements" 
             value={formData.achievements} 
             onChange={handleChange} 
             placeholder="Separate achievements with commas" 
-            style={{ width: '100%', padding: '8px', border: '1px solid #007BFF', borderRadius: '4px' }}
           />
-          {errors.achievements && <div style={{ color: 'red' }}>{errors.achievements}</div>}
+          {errors.achievements && <div className="error-text">{errors.achievements}</div>}
         </div>
-        <button 
-          type="submit" 
-          style={{
-            width: '100%',
-            padding: '10px',
-            backgroundColor: '#28a745',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '16px',
-            cursor: 'pointer'
-          }}
-        >
+        <button type="submit" className="submit-button">
           Submit Application
         </button>
       </form>

@@ -24,6 +24,14 @@ app.use('/api/admin/applications', adminApplicationRoutes);
 // User Routes
 import userRoutes from './routes/userRoutes.js';
 app.use('/api/users', userRoutes);
+
+// Other imports and middleware setup...
+import organizerRoutes from './routes/organizerRoutes.js';
+
+// Mount the organizer routes
+app.use('/api/organizers', organizerRoutes);
+
+
 // API Endpoints
 app.get('/register/member/application', (req, res) => {
     res.send('API Working');

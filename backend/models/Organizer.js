@@ -7,10 +7,14 @@ const OrganizerSchema = new Schema({
   email: { type: String, required: true, unique: true },
   contactNumber: { type: String },
   profilePicture: { type: String },
-  paymentDetails: {
-    paymentMethod: { type: String },
-    paymentToken: { type: String },
-    billingAddress: { type: String }
+  // Removed paymentDetails and added new fields:
+  organizationDescription: { type: String },
+  businessAddress: { type: String },
+  website: { type: String },
+  socialMediaLinks: {
+    facebook: { type: String },
+    twitter: { type: String },
+    instagram: { type: String }
   },
   role: { type: String, default: 'organizer' },
   createdAt: { type: Date, default: Date.now },

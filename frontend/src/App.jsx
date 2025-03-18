@@ -6,7 +6,8 @@ import MemberApplication from './pages/authentication/MemberApplication'
 import AdminApplicationsList from './pages/authentication/AdminApplicationsList';
 import AdminApplicationDetails from './pages/authentication/AdminApplicationDetails';
 import CreateMemberAccount from './pages/authentication/CreateMemberAccount'
-
+import RegisterOrganizer from './pages/authentication/RegisterOrganizer'  
+import Login from './pages/authentication/Login';
 
 import Navbar from './components/Navbar'
 import Home from './pages/home'
@@ -26,7 +27,8 @@ const App = () => {
         <Route path="/admin/applications" element={<AdminApplicationsList />} />
         <Route path="/admin/applications/:id" element={<AdminApplicationDetails />} />
         <Route path="/register/member/createAccount" element={<CreateMemberAccount />} /> 
-
+        <Route path="/register/organizer" element={<RegisterOrganizer />} /> 
+        <Route path="/login" element={<Login />} />
 
         <Route path='/contactUs' element={<Contactus />} />
         <Route path='/profile' element={<Profile />} />
