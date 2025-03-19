@@ -6,6 +6,7 @@ import Home from './pages/home'
 import AboutUs from './pages/aboutUs'
 import Contactus from './pages/Contactus'
 import Profile from './pages/Profile'
+import FinancialDashboard from './components/FinancialDashboard'
 
 const App = () => {
   return (
@@ -17,6 +18,7 @@ const App = () => {
         <Route path='/aboutUs' element={<AboutUs />} />
         <Route path='/contactUs' element={<Contactus />} />
         <Route path='/profile' element={<Profile />} />
+        <Route path="/financial" element={<FinancialDashboard />} />
       </Routes>
     </div>
   )
