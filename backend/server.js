@@ -7,6 +7,7 @@ import incomeRoutes from "./routes/incomeRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import financialRoutes from './routes/financialRoutes.js';
+import transactionRoutes from "./routes/transactionRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -47,6 +48,7 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/income", incomeRoutes);
 app.use("/api/v1/expense", expenseRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes);
+app.use("/api/v1/transaction", transactionRoutes);
 
 // API Endpoints
 app.get('/register/member/application', (req, res) => {
