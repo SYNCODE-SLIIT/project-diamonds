@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/mongodb.js';
-import mongoose from 'mongoose';
+import packageRoutes from './routes/packageRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -14,17 +14,12 @@ const port = process.env.PORT || 4000;
 // Connect to MongoDB
 connectDB();
 
-// Log the current database and collection
-mongoose.connection.on('connected', () => {
-    console.log("Connected to MongoDB!");
-    console.log("Current Database:", mongoose.connection.name); // Log database name
-  });
-
 // Middlewares
 app.use(express.json());
 app.use(cors());
+app.use('/api/packages', packageRoutes);
 
-
+// API Endpoints
 app.get('/', (req, res) => {
     res.send('API Working');
 });
