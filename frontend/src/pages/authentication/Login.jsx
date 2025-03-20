@@ -24,10 +24,16 @@ const Login = () => {
       const data = await res.json();
       
       if (res.ok) {
-        // Store the token (for subsequent authenticated requests)
+        // Store the token
         localStorage.setItem('token', data.token);
-        // Redirect to home page (or dashboard) upon successful login
-        navigate('/dashboard');
+        // Check the user role and redirect accordingly
+        if (data.user.role === 'member') {
+          navigate('/member-dashboard');
+        } else if (data.user.role === 'organizer') {
+          navigate('/organizer-dashboard');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         setErrorMsg(data.message || 'Login failed. Please check your credentials.');
       }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import DashboardLayout from '../../components/layout/DashboardLayout'
+
 import IncomeOverview from '../../components/Income/IncomeOverview';
 import { API_PATHS } from '../../utils/apiPaths';
 import axiosInstance from '../../utils/axiosInstance';
@@ -130,7 +130,7 @@ const Income = () => {
   }, []);
 
   return (
-    <DashboardLayout activeMenu="Income">
+  
       <div className="my-5 mx-auto">
         <div className="grid grid-cols-1 gap-6">
           <div className="">
@@ -168,7 +168,7 @@ const Income = () => {
           />
         </Modal>
       </div>
-    </DashboardLayout>
+   
   );
 }
 

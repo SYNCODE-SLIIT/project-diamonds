@@ -1,7 +1,7 @@
 // pages/RecentTransactionPage.jsx
 import React, { useEffect, useState } from 'react';
 import { useUserAuth } from '../../hooks/useUserAuth';
-import DashboardLayout from '../../components/layout/DashboardLayout';
+
 import { API_PATHS } from '../../utils/apiPaths';
 import axiosInstance from '../../utils/axiosInstance';
 import IncomeList from '../../components/Income/IncomeList';
@@ -146,7 +146,7 @@ const RecentTransactionPage = () => {
   };
 
   return (
-    <DashboardLayout activeMenu="Transactions">
+
       <div className="my-5 mx-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-semibold">Recent Transactions</h2>
@@ -204,7 +204,7 @@ const RecentTransactionPage = () => {
           />
         </Modal>
       </div>
-    </DashboardLayout>
+
   );
 };
 

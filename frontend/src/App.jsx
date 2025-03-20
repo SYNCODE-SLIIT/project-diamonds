@@ -8,6 +8,16 @@ import AdminApplicationDetails from './pages/authentication/AdminApplicationDeta
 import CreateMemberAccount from './pages/authentication/CreateMemberAccount';
 import RegisterOrganizer from './pages/authentication/RegisterOrganizer';
 import Login from './pages/authentication/Login';
+import MemberDashboardLayout from './components/layout/MemberDashboardLayout';
+
+// Basic dashboard pages for members
+import MemberDashboardHome from './pages/membership/MemberDashboardHome';
+import MemberDashboardProfile from './pages/membership/MemberDashboardProfile';
+import MemberDashboardCalender from './pages/membership/MemberDashboardCalender';
+import MemberDashboardInbox from './pages/membership/MemberDashboardInbox';
+import MemberDashboardNewRequest from './pages/membership/MemberDashboardNewRequest';
+import MemberDashboardUpcomingEvents from './pages/membership/MemberDashboardUpcomingEvents';
+
 
 import Navbar from './components/Navbar';
 import Home from './pages/home';
@@ -42,10 +52,23 @@ const App = () => {
             <Route path='/profile' element={<Profile />} />
 
             <Route path='/financial' element={<FinancialDashboard />} />
-            <Route path='/dashboard' exact element={<Dashboard />} />
-            <Route path='/income' exact element={<Income />} />
-            <Route path='/expense' exact element={<Expense />} />
-            <Route path="/transactions" element={<RecentTransactionPage />} />
+
+       
+            <Route path="/member-dashboard" element={<MemberDashboardLayout />}>
+              <Route index element={<MemberDashboardHome />} />
+              <Route path='dashboard' exact element={<Dashboard />} />
+              <Route path='expense' exact element={<Expense />} />
+              <Route path='income' exact element={<Income />} />
+              <Route path="transactions" element={<RecentTransactionPage />} />
+              <Route path="profile" element={<MemberDashboardProfile />} />
+              <Route path="calender" element={<MemberDashboardCalender />} />
+              <Route path="inbox" element={<MemberDashboardInbox />} />
+              <Route path="new-request" element={<MemberDashboardNewRequest />} />
+              <Route path="upcoming-events" element={<MemberDashboardUpcomingEvents />} />
+         
+          </Route>
+
+          
           </Routes>
 
           {/* Use for notifications */}

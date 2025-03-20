@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import DashboardLayout from '../../components/layout/DashboardLayout';
+// import MemberDashboardLayout from '../../components/layout/MemberDashboardLayout.jsx';
 import { useUserAuth } from '../../hooks/useUserAuth';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../utils/axiosInstance.js';
@@ -43,7 +43,7 @@ const Dashboard = () => {
   }, []);
 
   return (
-    <DashboardLayout activeMenu="Dashboard">
+    
       <div className="my-5 mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <InfoCard
@@ -69,7 +69,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
           <RecentTransaction
             transaction={dashboardData?.recentTransactions}
-            onSeeMore={() => navigate("/transactions")}
+            onSeeMore={() => navigate("/member-dashboard/transactions")}
           />
 
           <FinanceOverview
@@ -80,7 +80,7 @@ const Dashboard = () => {
 
           <ExpenseTransaction
             transactions={dashboardData?.last30DaysExpenses?.transactions || []}
-            onSeeMore={() => navigate("/expense")}
+            onSeeMore={() => navigate("/member-dashboard/expense")}
           />
 
           <Last30DaysExpenses
@@ -94,12 +94,12 @@ const Dashboard = () => {
 
           <RecentIncome
             transactions={dashboardData?.last60DaysIncome?.transactions || []}
-            onSeeMore={() => navigate("/income")}
+            onSeeMore={() => navigate("/member-dashboard/income")}
           />
 
         </div>
       </div>
-    </DashboardLayout>
+  
   );
 };
 
