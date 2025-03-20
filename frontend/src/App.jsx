@@ -30,6 +30,8 @@ import { Toaster } from 'react-hot-toast';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Expense from './pages/Dashboard/Expense';
 import RecentTransactionPage from './pages/Dashboard/RecentTransaction';
+import FPaymentForm from './components/Financial/FPaymentForm';
+import FinancialReport from './components/Financial/FinancialReport';
 
 const App = () => {
   return (
@@ -53,6 +55,7 @@ const App = () => {
 
             <Route path='/financial' element={<FinancialDashboard />} />
 
+
        
             <Route path="/member-dashboard" element={<MemberDashboardLayout />}>
               <Route index element={<MemberDashboardHome />} />
@@ -69,6 +72,10 @@ const App = () => {
           </Route>
 
           
+    
+         
+            <Route path='/form' exact element={<FPaymentForm />} />
+            <Route path='/report' exact element={<FinancialReport />} />
           </Routes>
 
           {/* Use for notifications */}
