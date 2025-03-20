@@ -27,7 +27,7 @@ const Login = () => {
         // Store the token (for subsequent authenticated requests)
         localStorage.setItem('token', data.token);
         // Redirect to home page (or dashboard) upon successful login
-        navigate('/');
+        navigate('/dashboard');
       } else {
         setErrorMsg(data.message || 'Login failed. Please check your credentials.');
       }
