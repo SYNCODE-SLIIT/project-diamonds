@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useUserAuth } from '../../hooks/useUserAuth';
-import DashboardLayout from '../../components/layout/DashboardLayout';
+
 import { API_PATHS } from '../../utils/apiPaths';
 import axiosInstance from '../../utils/axiosInstance';
 import toast from 'react-hot-toast';
@@ -131,7 +131,7 @@ const Expense = () => {
 
 
   return (
-    <DashboardLayout activeMenu="Expense">
+
       <div className="my-5 mx-auto">
         <div className="grid grid-cols-1 gap-6">
           <div className="">
@@ -170,7 +170,7 @@ const Expense = () => {
           />
         </Modal>
       </div>
-    </DashboardLayout>
+
   )
 }
 
