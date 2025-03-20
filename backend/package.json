@@ -24,6 +24,7 @@
     "razorpay": "^2.9.6",
     "react-icons": "^5.5.0",
     "stripe": "^17.7.0",
-    "validator": "^13.12.0"
+    "validator": "^13.12.0",
+    "xlsx": "^0.18.5"
   }
 }

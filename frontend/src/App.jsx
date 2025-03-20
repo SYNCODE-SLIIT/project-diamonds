@@ -1,40 +1,66 @@
-import React from 'react'
-import {Routes,Route} from 'react-router-dom'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 // UserManagement
-import MemberApplication from './pages/authentication/MemberApplication'
+import MemberApplication from './pages/authentication/MemberApplication';
 import AdminApplicationsList from './pages/authentication/AdminApplicationsList';
 import AdminApplicationDetails from './pages/authentication/AdminApplicationDetails';
-import CreateMemberAccount from './pages/authentication/CreateMemberAccount'
-import RegisterOrganizer from './pages/authentication/RegisterOrganizer'  
+import CreateMemberAccount from './pages/authentication/CreateMemberAccount';
+import RegisterOrganizer from './pages/authentication/RegisterOrganizer';
 import Login from './pages/authentication/Login';
 
-import Navbar from './components/Navbar'
-import Home from './pages/home'
-import Contactus from './pages/Contactus'
-import Profile from './pages/Profile'
+import Navbar from './components/Navbar';
+import Home from './pages/home';
+import Contactus from './pages/Contactus';
+import Profile from './pages/Profile';
+import FinancialDashboard from './components/FinancialDashboard';
+import Income from './pages/Dashboard/Income';
+import UserProvider from './context/userContext';
+import { Toaster } from 'react-hot-toast';
+import Dashboard from './pages/Dashboard/Dashboard';
+import Expense from './pages/Dashboard/Expense';
+import RecentTransactionPage from './pages/Dashboard/RecentTransaction';
 
 const App = () => {
   return (
     <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
+      <UserProvider>
+        <Router>
+          <Navbar />
+          <Routes>
+            <Route path='/' element={<Home />} />
 
-      <Navbar />
-      <Routes>
-        <Route path='/' element={<Home />}  />
+            {/* UserManagement */}
+            <Route path='/register/member/application' element={<MemberApplication />} />
+            <Route path='/admin/applications' element={<AdminApplicationsList />} />
+            <Route path='/admin/applications/:id' element={<AdminApplicationDetails />} />
+            <Route path='/register/member/createAccount' element={<CreateMemberAccount />} />
+            <Route path='/register/organizer' element={<RegisterOrganizer />} />
+            <Route path='/login' element={<Login />} />
 
-        // UserManagement
-        <Route path="/register/member/application" element={<MemberApplication />} />
-        <Route path="/admin/applications" element={<AdminApplicationsList />} />
-        <Route path="/admin/applications/:id" element={<AdminApplicationDetails />} />
-        <Route path="/register/member/createAccount" element={<CreateMemberAccount />} /> 
-        <Route path="/register/organizer" element={<RegisterOrganizer />} /> 
-        <Route path="/login" element={<Login />} />
+            <Route path='/contactUs' element={<Contactus />} />
+            <Route path='/profile' element={<Profile />} />
 
-        <Route path='/contactUs' element={<Contactus />} />
-        <Route path='/profile' element={<Profile />} />
-      </Routes>
+            <Route path='/financial' element={<FinancialDashboard />} />
+            <Route path='/dashboard' exact element={<Dashboard />} />
+            <Route path='/income' exact element={<Income />} />
+            <Route path='/expense' exact element={<Expense />} />
+            <Route path="/transactions" element={<RecentTransactionPage />} />
+          </Routes>
+
+          {/* Use for notifications */}
+          <Toaster
+            toastOptions={{
+              className: '',
+              style: {
+                fontSize: '13px',
+              },
+            }}
+          />
+        </Router>
+      </UserProvider>
     </div>
-  )
-}
+  );
+};
 
-export default App
+export default App;
