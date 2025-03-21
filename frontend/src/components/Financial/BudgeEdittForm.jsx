@@ -1,4 +1,3 @@
-// src/components/BudgetForm.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
 
@@ -6,10 +5,11 @@ const BudgetForm = ({ budget, onClose, onUpdated }) => {
   const [formData, setFormData] = useState({
     allocatedBudget: budget.allocatedBudget,
     currentSpend: budget.currentSpend,
+    status: budget.status // Added status field
   });
 
   const handleChange = (e) => {
-    setFormData({...formData, [e.target.name]: e.target.value});
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -30,11 +30,32 @@ const BudgetForm = ({ budget, onClose, onUpdated }) => {
         <form onSubmit={handleSubmit}>
           <div>
             <label>Allocated Budget:</label>
-            <input type="number" name="allocatedBudget" value={formData.allocatedBudget} onChange={handleChange} />
+            <input
+              type="number"
+              name="allocatedBudget"
+              value={formData.allocatedBudget}
+              onChange={handleChange}
+            />
           </div>
           <div>
             <label>Current Spend:</label>
-            <input type="number" name="currentSpend" value={formData.currentSpend} onChange={handleChange} />
+            <input
+              type="number"
+              name="currentSpend"
+              value={formData.currentSpend}
+              onChange={handleChange}
+            />
+          </div>
+          <div>
+            <label>Status:</label>
+            <select
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+            >
+              <option value="approved">Approved</option>
+              <option value="declined">Declined</option>
+            </select>
           </div>
           <div className="mt-2 flex gap-2">
             <button type="submit" className="bg-green-500 text-white px-2 py-1">Update</button>

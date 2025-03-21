@@ -13,7 +13,7 @@ const RecentTransaction = ({ transaction, onSeeMore }) => {
         </button>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 space-y-4">
         {transaction?.slice(0, 5).map((item) => (
           <TransactionInfoCard
             key={item._id}

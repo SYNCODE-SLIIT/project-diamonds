@@ -149,7 +149,7 @@ const RecentTransactionPage = () => {
 
       <div className="my-5 mx-auto">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-semibold">Recent Transactions</h2>
+          <h2 className="text-2xl font-semibold">All Transactions</h2>
           {/* Combined Download Button */}
           <button className="card-btn" onClick={handleDownloadAllTransactions}>
             <LuDownload className="text-base" />  Download All Transactions
