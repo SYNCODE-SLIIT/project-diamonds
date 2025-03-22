@@ -1,12 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-// Merged Imports
-// Common components
-import Navbar from './components/Navbar';
-import Home from './pages/home';
-import Contactus from './pages/Contactus';
-import Profile from './pages/Profile';
 
 // Content Management Imports
 import AboutUs from './pages/aboutUs';
