@@ -23,7 +23,7 @@ import gallery1 from './home/gallery1.jpg';
 import gallery2 from './home/gallery2.jpg';
 import gallery3 from './home/gallery3.jpg';
 import gallery4 from './home/gallery4.jpg';
-
+import youtube from './home/youtube.png';
 
 export const assets = {
   logo1,
@@ -50,6 +50,7 @@ export const assets = {
   gallery2,
   gallery3,
   gallery4,
+  youtube,
 };
 
 export default assets;
