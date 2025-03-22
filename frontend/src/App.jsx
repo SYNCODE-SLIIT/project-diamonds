@@ -33,12 +33,12 @@ import { Toaster } from 'react-hot-toast';
 
 import AdminLayout from './components/layout/AdminLayout';
 import UserProvider from './context/userContext';
-import FinancialDashboard from './components/FinancialDashboard';
+// import FinancialDashboard from './components/FinancialDashboard';
 
 
 const App = () => {
   return (
-    <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
+    <div >
       <UserProvider>
         
           
@@ -72,7 +72,7 @@ const App = () => {
           <Route element={<AdminLayout />}>
             <Route path='/admin/applications' element={<AdminApplicationsList />} />
             <Route path='/admin/applications/:id' element={<AdminApplicationDetails />} />
-            <Route path='/financial' element={<FinancialDashboard />} />
+            {/* <Route path='/financial' element={<FinancialDashboard />} /> */}
           </Route>
 
           </Routes>
