@@ -1,6 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
+import { Routes, Route } from 'react-router-dom'
 
 // Content Management Imports
 import AboutUs from './pages/aboutUs';
@@ -41,7 +40,7 @@ const App = () => {
   return (
     <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
       <UserProvider>
-        <Router>
+        
           
           <Routes>
           <Route element={<PublicLayout />}>
@@ -86,7 +85,7 @@ const App = () => {
               },
             }}
           />
-        </Router>
+        
       </UserProvider>
     </div>
   );

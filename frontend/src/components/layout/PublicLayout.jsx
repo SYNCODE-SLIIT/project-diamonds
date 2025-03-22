@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import Navbar from '../Navbar.jsx'; // Adjust the path if needed
+import Navbar from '../Navbar.jsx'; 
+import Footer from '../footer.jsx';
 
 const PublicLayout = () => {
   return (
@@ -8,9 +9,12 @@ const PublicLayout = () => {
       <header>
         <Navbar />
       </header>
-      <main>
+      <main className='w-full'>
         <Outlet />
       </main>
+      <footer>
+        <Footer />
+      </footer>
     </div>
   );
 };
