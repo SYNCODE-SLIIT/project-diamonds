@@ -26,8 +26,8 @@ const InvoiceForm = ({ invoice, onClose, onUpdated }) => {
 
   return (
     // Using fixed positioning without an opaque background overlay.
-    <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 md:p-8 max-w-5xl w-full">
+    <div className="fixed inset-0 flex items-center justify-center bg-transparent z-500">
+      <div className="bg-white rounded-lg shadow-lg p-6 md:p-8 max-w-2xl w-full">
         <h2 className="text-2xl font-bold mb-4">Edit Invoice</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">

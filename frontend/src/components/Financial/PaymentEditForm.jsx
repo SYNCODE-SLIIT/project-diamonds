@@ -10,13 +10,16 @@ const PaymentForm = ({ payment, onClose, onUpdated }) => {
   });
 
   const handleChange = (e) => {
-    setFormData({...formData, [e.target.name]: e.target.value});
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.patch(`http://localhost:4000/api/finance/p/${payment._id}`, formData);
+      const res = await axios.patch(
+        `http://localhost:4000/api/finance/p/${payment._id}`,
+        formData
+      );
       onUpdated(res.data);
     } catch (error) {
       console.error("Error updating payment:", error);
@@ -26,11 +29,11 @@ const PaymentForm = ({ payment, onClose, onUpdated }) => {
   return (
     // Position the form overlay near the top-center
     <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50">
-      {/* Set a moderate large size with max-w-xl */}
-      <div className="bg-white rounded-lg shadow-lg p-8 max-w-xl w-full">
-        <h2 className="text-3xl font-bold mb-6">Edit Payment</h2>
+      {/* Modal container with moderate size (max-w-xl) */}
+      <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full">
+        <h2 className="text-3xl font-bold mb-8">Edit Payment</h2>
         <form onSubmit={handleSubmit}>
-          {/* Each input in its own row */}
+          {/* Each input is on its own row */}
           <div className="mb-6">
             <label className="block text-lg font-medium mb-2">Amount:</label>
             <input

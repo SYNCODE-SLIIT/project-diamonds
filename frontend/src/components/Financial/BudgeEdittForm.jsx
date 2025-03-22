@@ -24,42 +24,65 @@ const BudgetForm = ({ budget, onClose, onUpdated }) => {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white p-4 rounded">
-        <h2 className="font-bold mb-2">Edit Budget</h2>
+    <div className="fixed inset-0 flex items-center justify-center bg-transparent z-500 ">
+      <div className="bg-white rounded-lg shadow-lg p-6 md:p-8 max-w-2xl w-full">
+        <h2 className="text-2xl font-bold mb-4">Edit Budget</h2>
         <form onSubmit={handleSubmit}>
-          <div>
-            <label>Allocated Budget:</label>
+          <div className="mb-4">
+            <label htmlFor="allocatedBudget" className="block text-sm font-medium mb-1">
+              Allocated Budget:
+            </label>
             <input
+              id="allocatedBudget"
               type="number"
               name="allocatedBudget"
               value={formData.allocatedBudget}
               onChange={handleChange}
+              className="w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/80"
             />
           </div>
-          <div>
-            <label>Current Spend:</label>
+          <div className="mb-4">
+            <label htmlFor="currentSpend" className="block text-sm font-medium mb-1">
+              Current Spend:
+            </label>
             <input
+              id="currentSpend"
               type="number"
               name="currentSpend"
               value={formData.currentSpend}
               onChange={handleChange}
+              className="w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/80"
             />
           </div>
-          <div>
-            <label>Status:</label>
+          <div className="mb-4">
+            <label htmlFor="status" className="block text-sm font-medium mb-1">
+              Status:
+            </label>
             <select
+              id="status"
               name="status"
               value={formData.status}
               onChange={handleChange}
+              className="w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/80"
             >
               <option value="approved">Approved</option>
               <option value="declined">Declined</option>
             </select>
           </div>
-          <div className="mt-2 flex gap-2">
-            <button type="submit" className="bg-green-500 text-white px-2 py-1">Update</button>
-            <button type="button" className="bg-gray-500 text-white px-2 py-1" onClick={onClose}>Cancel</button>
+          <div className="flex justify-end gap-4">
+            <button
+              type="submit"
+              className="bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-600 transition-colors duration-200"
+            >
+              Update
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="bg-gray-500 text-white px-4 py-2 rounded-full hover:bg-gray-600 transition-colors duration-200"
+            >
+              Cancel
+            </button>
           </div>
         </form>
       </div>

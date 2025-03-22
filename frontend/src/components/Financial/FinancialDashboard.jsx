@@ -4,15 +4,21 @@ import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
 
 // Custom components for cards and charts
-import InfoCard from './Cards/InfoCard';
-import CustomBarChart from './Charts/CustomBarChart';
-import CustomPieChart from './Charts/CustomPieChart';
+import InfoCard from '../Cards/InfoCard';
+import CustomBarChart from '../Charts/CustomBarChart';
+import CustomPieChart from '../Charts/CustomPieChart';
 
-// Updated form imports with new paths
-import BudgetForm from './Financial/BudgeEdittForm';
-import InvoiceForm from './Financial/InvoiceEditForm';
-import PaymentForm from './Financial/PaymentEditForm';
-import RefundForm from './Financial/RefundEditForm';
+// Edit Form components
+import BudgetForm from './BudgeEdittForm';
+import InvoiceForm from './InvoiceEditForm';
+import PaymentForm from './PaymentEditForm';
+import RefundForm from './RefundEditForm';
+
+// View modal components (read-only)
+import PaymentViewModal from './ViewForms/PaymentView';
+import RefundViewModal from './ViewForms/RefundView';
+import InvoiceViewModal from './ViewForms/InvoiceView';
+import BudgetViewModal from './ViewForms/BudgetView';
 
 // Recharts components for charts
 import {
@@ -31,7 +37,7 @@ import {
   Scatter,
 } from 'recharts';
 
-// React Icons (using Font Awesome icons from react-icons)
+// React Icons
 import { FaMoneyBillWave, FaWallet, FaPiggyBank } from 'react-icons/fa';
 
 // Colors for charts
@@ -43,7 +49,7 @@ const invoiceStatusClass = (status) => {
     case 'paid':
       return 'bg-green-200';
     case 'pending':
-      return 'bg-amber-200'; // amber approximates a red-yellow mix
+      return 'bg-amber-200';
     default:
       return 'bg-gray-200';
   }
@@ -78,17 +84,25 @@ const refundStatusClass = (status) => {
 };
 
 const budgetStatusClass = (status) => {
-  if (status === "approved") return "bg-green-200";
-  if (status === "declined") return "bg-red-200";
-  return "bg-gray-200";
+  if (status === 'approved') return 'bg-green-200';
+  if (status === 'declined') return 'bg-red-200';
+  return 'bg-gray-200';
 };
 
 const FinancialDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
+
+  // States for edit forms
   const [selectedBudget, setSelectedBudget] = useState(null);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [selectedRefund, setSelectedRefund] = useState(null);
+
+  // States for view modals
+  const [viewBudget, setViewBudget] = useState(null);
+  const [viewInvoice, setViewInvoice] = useState(null);
+  const [viewPayment, setViewPayment] = useState(null);
+  const [viewRefund, setViewRefund] = useState(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -103,9 +117,7 @@ const FinancialDashboard = () => {
     fetchDashboardData();
   }, []);
 
-  // ----------------------------
   // Data Aggregation Functions
-  // ----------------------------
   const aggregateByMonth = useMemo(() => {
     if (!dashboardData?.transactions) return [];
     const monthData = {};
@@ -170,7 +182,7 @@ const FinancialDashboard = () => {
     ];
   }, [dashboardData?.budget]);
 
-  // Create bubble chart data based on monthly revenue
+  // Bubble Chart Data
   const bubbleData = useMemo(() => {
     if (!aggregateByMonth.length) return [];
     return aggregateByMonth.map((data, index) => ({
@@ -181,9 +193,7 @@ const FinancialDashboard = () => {
     }));
   }, [aggregateByMonth]);
 
-  // ----------------------------
-  // Inline Status Update Handlers (with guard checks)
-  // ----------------------------
+  // Inline Status Update Handlers
   const handleInvoiceStatusChange = (e, invoice) => {
     const newStatus = e.target.value;
     if (newStatus === invoice.paymentStatus) return;
@@ -238,42 +248,31 @@ const FinancialDashboard = () => {
       });
   };
 
-// New: Inline Budget Status Update Handler
-const handleBudgetStatusChange = async (e, budget) => {
-  const newStatus = e.target.value;
-  if (newStatus === budget.status) return; // Avoid redundant updates
-  try {
-    // PATCH request to update the budget status.
-    // Include the current allocatedBudget and currentSpend values to enable proper remainingBudget calculation.
-    const response = await axios.patch(
-      `http://localhost:4000/api/finance/b/${budget._id}`,
-      { 
+  const handleBudgetStatusChange = async (e, budget) => {
+    const newStatus = e.target.value;
+    if (newStatus === budget.status) return;
+    try {
+      await axios.patch(`http://localhost:4000/api/finance/b/${budget._id}`, {
         allocatedBudget: budget.allocatedBudget,
         currentSpend: budget.currentSpend,
-        status: newStatus 
-      }
-    );
-
-    // Display success toast notification
-    toast.success(`Budget status updated to "${newStatus}"`);
-
-    // Update local state with the new status
-    const updatedBudget = { ...dashboardData.budget, status: newStatus };
-    setDashboardData({ ...dashboardData, budget: updatedBudget });
-  } catch (error) {
-    // Log the error and display failure toast notification
-    console.error("Error updating budget status:", error);
-    toast.error("Failed to update budget status");
-  }
-};
-
+        status: newStatus,
+      });
+      toast.success(`Budget status updated to "${newStatus}"`);
+      const updatedBudget = { ...dashboardData.budget, status: newStatus };
+      setDashboardData({ ...dashboardData, budget: updatedBudget });
+    } catch (error) {
+      console.error('Error updating budget status:', error);
+      toast.error('Failed to update budget status');
+    }
+  };
 
   // ----------------------------
-  // Example View Handlers
+  // View Handler Functions
   // ----------------------------
-  const handleInvoiceView = (inv) => toast(`Viewing details for invoice ${inv.invoiceNumber}`);
-  const handlePaymentView = (pay) => toast(`Viewing details for payment of RS.${pay.amount}`);
-  const handleRefundView = (ref) => toast(`Viewing details for refund of RS.${ref.refundAmount}`);
+  const handleBudgetView = (budget) => setViewBudget(budget);
+  const handleInvoiceView = (invoice) => setViewInvoice(invoice);
+  const handlePaymentView = (payment) => setViewPayment(payment);
+  const handleRefundView = (refund) => setViewRefund(refund);
 
   // ----------------------------
   // Render Component
@@ -316,12 +315,10 @@ const handleBudgetStatusChange = async (e, budget) => {
 
           {/* Analytics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {/* Monthly Revenue Analysis (Bar Chart) */}
             <div className="bg-white shadow rounded p-4 hover:shadow-xl transition-shadow duration-200">
               <h2 className="text-xl font-semibold mb-2">Monthly Revenue Analysis</h2>
               <CustomBarChart data={aggregateByMonth} />
             </div>
-            {/* Revenue Bubble Analysis (Bubble Chart) */}
             <div className="bg-white shadow rounded p-4 hover:shadow-xl transition-shadow duration-200">
               <h2 className="text-xl font-semibold mb-2">Revenue Bubble Analysis</h2>
               <ResponsiveContainer width="100%" height={300}>
@@ -333,8 +330,18 @@ const handleBudgetStatusChange = async (e, budget) => {
                     name="Month"
                     tickFormatter={(v) => {
                       const months = [
-                        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+                        'Jan',
+                        'Feb',
+                        'Mar',
+                        'Apr',
+                        'May',
+                        'Jun',
+                        'Jul',
+                        'Aug',
+                        'Sep',
+                        'Oct',
+                        'Nov',
+                        'Dec',
                       ];
                       return months[v - 1] || v;
                     }}
@@ -349,7 +356,6 @@ const handleBudgetStatusChange = async (e, budget) => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {/* Revenue by Category */}
             <div className="bg-white shadow rounded p-4 hover:shadow-xl transition-shadow duration-200">
               <h2 className="text-xl font-semibold mb-2">Revenue by Category</h2>
               <CustomPieChart
@@ -360,7 +366,6 @@ const handleBudgetStatusChange = async (e, budget) => {
                 showTextAnchor
               />
             </div>
-            {/* Budget Overview (Bar Chart) */}
             <div className="bg-white shadow rounded p-4 hover:shadow-xl transition-shadow duration-200">
               <h2 className="text-xl font-semibold mb-2">Budget Overview</h2>
               <ResponsiveContainer width="100%" height={300}>
@@ -376,7 +381,6 @@ const handleBudgetStatusChange = async (e, budget) => {
             </div>
           </div>
 
-          {/* Status Charts */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-white shadow rounded p-4 hover:shadow-xl transition-shadow duration-200">
               <h2 className="text-xl font-semibold mb-2">Invoice Status</h2>
@@ -446,7 +450,6 @@ const handleBudgetStatusChange = async (e, budget) => {
             </div>
           </div>
 
-          {/* Detailed Tables */}
           {/* Invoices Table */}
           <div className="mb-6">
             <h2 className="text-2xl font-semibold mb-2">Invoices</h2>
@@ -456,8 +459,12 @@ const handleBudgetStatusChange = async (e, budget) => {
                   <tr className="divide-x divide-gray-100">
                     <th className="px-4 py-2 text-left">Invoice #</th>
                     <th className="px-4 py-2 text-left">Amount (RS)</th>
-                    <th className="px-4 py-2 text-center" style={{ width: "2.5rem" }}>Status</th>
-                    <th className="px-4 py-2 text-center" style={{ width: "2.5rem" }}>Actions</th>
+                    <th className="px-4 py-2 text-center" style={{ width: '2.5rem' }}>
+                      Status
+                    </th>
+                    <th className="px-4 py-2 text-center" style={{ width: '2.5rem' }}>
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white">
@@ -505,8 +512,12 @@ const handleBudgetStatusChange = async (e, budget) => {
                   <tr className="divide-x divide-gray-100">
                     <th className="px-4 py-2 text-left">Amount (RS)</th>
                     <th className="px-4 py-2 text-left">Method</th>
-                    <th className="px-4 py-2 text-center" style={{ width: "2.5rem" }}>Status</th>
-                    <th className="px-4 py-2 text-center" style={{ width: "2.5rem" }}>Actions</th>
+                    <th className="px-4 py-2 text-center" style={{ width: '2.5rem' }}>
+                      Status
+                    </th>
+                    <th className="px-4 py-2 text-center" style={{ width: '2.5rem' }}>
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white">
@@ -547,7 +558,7 @@ const handleBudgetStatusChange = async (e, budget) => {
             </div>
           </div>
 
-          {/*Budget Table*/}
+          {/* Budget Table */}
           <div className="mb-6">
             <h2 className="text-2xl font-semibold mb-2">Budget Details</h2>
             <div className="overflow-auto">
@@ -557,12 +568,12 @@ const handleBudgetStatusChange = async (e, budget) => {
                     <th className="px-4 py-2 text-left">Allocated Budget</th>
                     <th className="px-4 py-2 text-left">Spent</th>
                     <th className="px-4 py-2 text-left">Remaining Budget</th>
-                    <th className="px-4 py-2 text-center" style={{ width: "2.5rem" }}>Status</th>
-                    <th className="px-4 py-2 text-center" style={{ width: "2.5rem" }}>Actions</th>
+                    <th className="px-4 py-2 text-center" style={{ width: '2.5rem' }}>Status</th>
+                    <th className="px-4 py-2 text-center" style={{ width: '2.5rem' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white">
-                  {dashboardData.budget && (
+                  {dashboardData.budget ? (
                     <tr className="hover:shadow-md transition-shadow duration-200">
                       <td className="px-4 py-2">{dashboardData.budget.allocatedBudget}</td>
                       <td className="px-4 py-2">
@@ -581,7 +592,7 @@ const handleBudgetStatusChange = async (e, budget) => {
                       </td>
                       <td className="px-4 py-2 flex gap-2 justify-center">
                         <button
-                          onClick={() => toast(`Viewing budget details`)}
+                          onClick={() => handleBudgetView(dashboardData.budget)}
                           className="bg-green-500 text-white px-2 py-1 rounded-full hover:bg-green-600 transition-colors duration-200 text-sm"
                         >
                           View
@@ -594,8 +605,7 @@ const handleBudgetStatusChange = async (e, budget) => {
                         </button>
                       </td>
                     </tr>
-                  )}
-                  {!dashboardData.budget && (
+                  ) : (
                     <tr>
                       <td className="px-4 py-2 text-center" colSpan={5}>
                         No budget data available.
@@ -607,7 +617,6 @@ const handleBudgetStatusChange = async (e, budget) => {
             </div>
           </div>
 
-
           {/* Refunds Table */}
           <div className="mb-6">
             <h2 className="text-2xl font-semibold mb-2">Refunds</h2>
@@ -617,8 +626,8 @@ const handleBudgetStatusChange = async (e, budget) => {
                   <tr className="divide-x divide-gray-100">
                     <th className="px-4 py-2 text-left">Refund Amount (RS)</th>
                     <th className="px-4 py-2 text-left">Reason</th>
-                    <th className="px-4 py-2 text-center" style={{ width: "2.5rem" }}>Status</th>
-                    <th className="px-4 py-2 text-center" style={{ width: "2.5rem" }}>Actions</th>
+                    <th className="px-4 py-2 text-center" style={{ width: '2.5rem' }}>Status</th>
+                    <th className="px-4 py-2 text-center" style={{ width: '2.5rem' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white">
@@ -658,7 +667,9 @@ const handleBudgetStatusChange = async (e, budget) => {
             </div>
           </div>
 
-          {/* Modals / Forms */}
+          {/* ----------------------------
+              Edit Modals / Forms
+          ---------------------------- */}
           {selectedBudget && (
             <BudgetForm
               budget={selectedBudget}
@@ -706,6 +717,34 @@ const handleBudgetStatusChange = async (e, budget) => {
                 setDashboardData({ ...dashboardData, refunds: updatedRefunds });
                 setSelectedRefund(null);
               }}
+            />
+          )}
+
+          {/* ----------------------------
+              View Modals (Read-Only)
+          ---------------------------- */}
+          {viewBudget && (
+            <BudgetViewModal
+              budget={viewBudget}
+              onClose={() => setViewBudget(null)}
+            />
+          )}
+          {viewInvoice && (
+            <InvoiceViewModal
+              invoice={viewInvoice}
+              onClose={() => setViewInvoice(null)}
+            />
+          )}
+          {viewPayment && (
+            <PaymentViewModal
+              payment={viewPayment}
+              onClose={() => setViewPayment(null)}
+            />
+          )}
+          {viewRefund && (
+            <RefundViewModal
+              refund={viewRefund}
+              onClose={() => setViewRefund(null)}
             />
           )}
         </>

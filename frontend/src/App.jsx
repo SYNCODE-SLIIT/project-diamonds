@@ -23,7 +23,7 @@ import Navbar from './components/Navbar';
 import Home from './pages/home';
 import Contactus from './pages/Contactus';
 import Profile from './pages/Profile';
-import FinancialDashboard from './components/FinancialDashboard';
+import FinancialDashboard from './components/Financial/FinancialDashboard';
 import Income from './pages/Dashboard/Income';
 import UserProvider from './context/userContext';
 import { Toaster } from 'react-hot-toast';
@@ -52,9 +52,9 @@ const App = () => {
 
             <Route path='/contactUs' element={<Contactus />} />
             <Route path='/profile' element={<Profile />} />
-
             <Route path='/financial' element={<FinancialDashboard />} />
-
+            <Route path='/form' exact element={<FPaymentForm />} />
+            <Route path='/report' exact element={<FinancialReport />} />
 
        
             <Route path="/member-dashboard" element={<MemberDashboardLayout />}>
@@ -68,14 +68,7 @@ const App = () => {
               <Route path="inbox" element={<MemberDashboardInbox />} />
               <Route path="new-request" element={<MemberDashboardNewRequest />} />
               <Route path="upcoming-events" element={<MemberDashboardUpcomingEvents />} />
-         
           </Route>
-
-          
-    
-         
-            <Route path='/form' exact element={<FPaymentForm />} />
-            <Route path='/report' exact element={<FinancialReport />} />
           </Routes>
 
           {/* Use for notifications */}
