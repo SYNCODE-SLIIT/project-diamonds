@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+
 /* expense tracker additional css */
 .input-box {
     @apply w-full flex justify-between gap-3 text-sm text-black bg-slate-100 rounded px-4 py-3 mb-4 mt-3 border border-slate-200 outline-none;
@@ -20,3 +21,6 @@
   .add-btn-fill{
     @apply text-white bg-purple-500
   }
+
+@import '@fortawesome/fontawesome-free/css/all.min.css';
+
