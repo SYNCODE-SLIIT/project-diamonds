@@ -1,7 +1,18 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-// UserManagement
+// Merged Imports
+// Common components
+import Navbar from './components/Navbar';
+import Home from './pages/home';
+import Contactus from './pages/Contactus';
+import Profile from './pages/Profile';
+
+// Content Management Imports
+import AboutUs from './pages/aboutUs';
+import ContentMediaDashboard from "./pages/ContentMediaDashboard";
+
+// User Management Imports
 import MemberApplication from './pages/authentication/MemberApplication';
 import AdminApplicationsList from './pages/authentication/AdminApplicationsList';
 import AdminApplicationDetails from './pages/authentication/AdminApplicationDetails';
@@ -13,8 +24,6 @@ import Income from './pages/Dashboard/Income';
 import Expense from './pages/Dashboard/Expense';
 import Dashboard from './pages/Dashboard/Dashboard';
 import RecentTransactionPage from './pages/Dashboard/RecentTransaction';
-
-// Basic dashboard pages for members
 import MemberDashboardHome from './pages/membership/MemberDashboardHome';
 import MemberDashboardProfile from './pages/membership/MemberDashboardProfile';
 import MemberDashboardCalender from './pages/membership/MemberDashboardCalender';
@@ -56,9 +65,9 @@ const App = () => {
        
             <Route path="/member-dashboard" element={<MemberDashboardLayout />}>
               <Route index element={<MemberDashboardHome />} />
-              <Route path='dashboard' exact element={<Dashboard />} />
-              <Route path='expense' exact element={<Expense />} />
-              <Route path='income' exact element={<Income />} />
+              <Route path='dashboard' element={<Dashboard />} />
+              <Route path='expense' element={<Expense />} />
+              <Route path='income' element={<Income />} />
               <Route path="transactions" element={<RecentTransactionPage />} />
               <Route path="profile" element={<MemberDashboardProfile />} />
               <Route path="calender" element={<MemberDashboardCalender />} />

@@ -1,21 +1,23 @@
-// routes/financialRoutes.js
-import express from 'express';
-import { 
-  generateFinancialReport, 
-  generateInvoice,
-  processPayment, 
-  processRefund, 
-  recordTransaction, 
-  updateBudget 
-} from '../controllers/financialController.js';
+import express from "express";
+import multer from "multer";
+import { generateExcelReport, getBudget, getDashboardData, getInvoices, processFullPayment, updateBudget, updateInvoice } from "../controllers/financialController.js";
+
 
 const router = express.Router();
+const upload = multer({ dest: "uploads/" });
 
-router.post('/invoice', generateInvoice);
-router.post('/payment', processPayment);
-router.post('/transaction', recordTransaction);
-router.put('/budget', updateBudget);
-router.post('/refund', processRefund);
-router.get('/report', generateFinancialReport);
+router.post("/full-payment", upload.single("bankSlip"), processFullPayment);
+
+// New route for Excel report download
+router.get("/report", generateExcelReport);
+
+router.get('/', getDashboardData);
+
+router.get('/b', getBudget);
+router.patch('b/:id', updateBudget);
+
+router.get('/i', getInvoices);
+router.patch('i/:id', updateInvoice);
+
 
 export default router;
