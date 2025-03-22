@@ -29,8 +29,7 @@ app.use(cors());
 // Connect to MongoDB
 connectDB();
 
-// Member Application Routes
-import memberApplicationRoutes from '../backend/routes/memberApplicationRoutes.js';
+import memberApplicationRoutes from './routes/memberApplicationRoutes.js';
 app.use('/api/member-applications', memberApplicationRoutes);
 
 // Admin Application Routes
