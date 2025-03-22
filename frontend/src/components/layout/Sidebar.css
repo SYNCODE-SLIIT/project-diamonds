@@ -124,20 +124,36 @@
   .sub_link:hover {
     background-color: rgba(79, 70, 229, 0.15);
   }
-  
-  /* Logout section positioned at bottom with extra padding */
-  .log_out {
-    margin-top: auto;
-    padding-top: 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-  }
-  
-  .log_out .nav_link {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-  }
-  
-  .log_out .Links_name {
-    margin-left: 10px;
-  }
+  /* Add a divider line */
+.divider {
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  margin: 10px 0;
+}
+
+/* Container for profile and logout */
+.profile_logout_container {
+  margin-top: auto;  /* Pushes this container to the bottom of the sidebar */
+}
+
+/* Optional: adjust spacing for the profile item */
+.profile_item {
+  margin-bottom: 0px;
+}
+ /* Remove border-top from .log_out */
+.log_out {
+  margin-top: auto;
+  margin-bottom: 20px;
+  padding-top: 20px;
+  /* Remove this line: border-top: 1px solid rgba(255, 255, 255, 0.2); */
+}
+
+.log_out .nav_link {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+}
+
+.log_out .Links_name {
+  margin-left: 10px;
+}

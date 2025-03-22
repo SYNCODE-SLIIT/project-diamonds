@@ -28,7 +28,7 @@ app.use(cors());
 connectDB();
 
 // Memebr Application Routes
-import memberApplicationRoutes from '../backend/routes/memberApplicationRoutes.js';
+import memberApplicationRoutes from './routes/memberApplicationRoutes.js';
 app.use('/api/member-applications', memberApplicationRoutes);
 import adminApplicationRoutes from './routes/adminApplicationRoutes.js';
 app.use('/api/admin/applications', adminApplicationRoutes);

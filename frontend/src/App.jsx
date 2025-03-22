@@ -9,6 +9,10 @@ import CreateMemberAccount from './pages/authentication/CreateMemberAccount';
 import RegisterOrganizer from './pages/authentication/RegisterOrganizer';
 import Login from './pages/authentication/Login';
 import MemberDashboardLayout from './components/layout/MemberDashboardLayout';
+import Income from './pages/Dashboard/Income';
+import Expense from './pages/Dashboard/Expense';
+import Dashboard from './pages/Dashboard/Dashboard';
+import RecentTransactionPage from './pages/Dashboard/RecentTransaction';
 
 // Basic dashboard pages for members
 import MemberDashboardHome from './pages/membership/MemberDashboardHome';
@@ -18,40 +22,36 @@ import MemberDashboardInbox from './pages/membership/MemberDashboardInbox';
 import MemberDashboardNewRequest from './pages/membership/MemberDashboardNewRequest';
 import MemberDashboardUpcomingEvents from './pages/membership/MemberDashboardUpcomingEvents';
 
-
-import Navbar from './components/Navbar';
+// public layout and pages
+import PublicLayout from './components/layout/PublicLayout';
 import Home from './pages/home';
 import Contactus from './pages/Contactus';
 import Profile from './pages/Profile';
-import FinancialDashboard from './components/FinancialDashboard';
-import Income from './pages/Dashboard/Income';
-import UserProvider from './context/userContext';
 import { Toaster } from 'react-hot-toast';
-import Dashboard from './pages/Dashboard/Dashboard';
-import Expense from './pages/Dashboard/Expense';
-import RecentTransactionPage from './pages/Dashboard/RecentTransaction';
+
+import AdminLayout from './components/layout/AdminLayout';
+import UserProvider from './context/userContext';
+import FinancialDashboard from './components/FinancialDashboard';
+
 
 const App = () => {
   return (
     <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
       <UserProvider>
         <Router>
-          <Navbar />
+          
           <Routes>
-            <Route path='/' element={<Home />} />
-
-            {/* UserManagement */}
-            <Route path='/register/member/application' element={<MemberApplication />} />
-            <Route path='/admin/applications' element={<AdminApplicationsList />} />
-            <Route path='/admin/applications/:id' element={<AdminApplicationDetails />} />
-            <Route path='/register/member/createAccount' element={<CreateMemberAccount />} />
-            <Route path='/register/organizer' element={<RegisterOrganizer />} />
-            <Route path='/login' element={<Login />} />
-
-            <Route path='/contactUs' element={<Contactus />} />
-            <Route path='/profile' element={<Profile />} />
-
-            <Route path='/financial' element={<FinancialDashboard />} />
+          <Route element={<PublicLayout />}>
+              <Route path='/' element={<Home />} />
+              <Route path='/contactUs' element={<Contactus />} />
+              <Route path='/profile' element={<Profile />} />
+              <Route path='/login' element={<Login />} />
+              <Route path='/register/member/application' element={<MemberApplication />} />
+              <Route path='/register/member/createAccount' element={<CreateMemberAccount />} />
+              <Route path='/register/organizer' element={<RegisterOrganizer />} />
+              {/* <Route path='/organizer/new-event' element={<OrganizerNewEvent />} />
+              <Route path='/organizer/manage-events' element={<OrganizerManageEvents />} /> */}
+            </Route>
 
        
             <Route path="/member-dashboard" element={<MemberDashboardLayout />}>
@@ -65,12 +65,15 @@ const App = () => {
               <Route path="inbox" element={<MemberDashboardInbox />} />
               <Route path="new-request" element={<MemberDashboardNewRequest />} />
               <Route path="upcoming-events" element={<MemberDashboardUpcomingEvents />} />
-         
           </Route>
 
-          
-          </Routes>
+          <Route element={<AdminLayout />}>
+            <Route path='/admin/applications' element={<AdminApplicationsList />} />
+            <Route path='/admin/applications/:id' element={<AdminApplicationDetails />} />
+            <Route path='/financial' element={<FinancialDashboard />} />
+          </Route>
 
+          </Routes>
           {/* Use for notifications */}
           <Toaster
             toastOptions={{

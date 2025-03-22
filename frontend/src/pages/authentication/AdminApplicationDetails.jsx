@@ -47,9 +47,11 @@ const AdminApplicationDetails = () => {
       });
   };
 
-  if (loading) return <div style={{ margin: '20px', padding: '20px' }}>Loading...</div>;
+  if (loading) 
+    return <div style={{ margin: '20px', padding: '20px' }}>Loading...</div>;
 
-  if (errorMsg) return <div style={{ margin: '20px', padding: '20px', color: 'red' }}>{errorMsg}</div>;
+  if (errorMsg) 
+    return <div style={{ margin: '20px', padding: '20px', color: 'red' }}>{errorMsg}</div>;
 
   return (
     <div style={{ margin: '20px', padding: '20px', maxWidth: '800px', border: '1px solid #ccc', borderRadius: '8px' }}>
@@ -58,6 +60,9 @@ const AdminApplicationDetails = () => {
       <p><strong>Full Name:</strong> {application.fullName}</p>
       <p><strong>Email:</strong> {application.email}</p>
       <p><strong>Contact Number:</strong> {application.contactNumber}</p>
+      <p>
+        <strong>Birth Date:</strong> {application.birthDate ? new Date(application.birthDate).toLocaleDateString() : 'N/A'}
+      </p>
       <p><strong>Age:</strong> {application.age}</p>
       <p><strong>Dance Style:</strong> {application.danceStyle}</p>
       <p><strong>Years of Experience:</strong> {application.yearsOfExperience}</p>

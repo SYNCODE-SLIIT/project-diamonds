@@ -1,12 +1,24 @@
 import React, { useState } from 'react';
 import './MemberApplication.css'; // Don't forget to create this CSS file
 
+// Helper function to calculate age from a birth date string (YYYY-MM-DD)
+const calculateAge = (birthDateStr) => {
+  const birthDateObj = new Date(birthDateStr);
+  const today = new Date();
+  let age = today.getFullYear() - birthDateObj.getFullYear();
+  const m = today.getMonth() - birthDateObj.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDateObj.getDate())) {
+    age--;
+  }
+  return age;
+};
+
 const MemberApplication = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
     contactNumber: '',
-    age: '',
+    birthDate: '', // new field for birth date
     danceStyle: '',
     yearsOfExperience: '',
     biography: '',
@@ -26,23 +38,26 @@ const MemberApplication = () => {
   const [errorMsg, setErrorMsg] = useState('');
   
   const validateField = (name, value) => {
-    let errorMsg = "";
+    let errMsg = "";
     switch(name) {
-      case "age":
-        if (value && Number(value) < 18) {
-          errorMsg = "Applicants must be at least 18 years old.";
+      case "birthDate":
+        if (value) {
+          const age = calculateAge(value);
+          if (age < 18) {
+            errMsg = "Applicants must be at least 18 years old.";
+          }
         }
         break;
       case "email":
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (value && !emailRegex.test(value)) {
-          errorMsg = "Invalid email format.";
+          errMsg = "Invalid email format.";
         }
         break;
       default:
         break;
     }
-    setErrors(prev => ({ ...prev, [name]: errorMsg }));
+    setErrors(prev => ({ ...prev, [name]: errMsg }));
   };
 
   const handleChange = (e) => {
@@ -95,7 +110,7 @@ const MemberApplication = () => {
       fullName: formData.fullName,
       email: formData.email,
       contactNumber: formData.contactNumber,
-      age: Number(formData.age),
+      birthDate: formData.birthDate,  // sending birthDate instead of age
       danceStyle: formData.danceStyle,
       yearsOfExperience: formData.yearsOfExperience ? Number(formData.yearsOfExperience) : undefined,
       availability: availabilities,
@@ -164,15 +179,15 @@ const MemberApplication = () => {
           {errors.contactNumber && <div className="error-text">{errors.contactNumber}</div>}
         </div>
         <div className="form-group">
-          <label>Age:</label>
+          <label>Birth Date:</label>
           <input 
-            type="number" 
-            name="age" 
-            value={formData.age} 
+            type="date" 
+            name="birthDate" 
+            value={formData.birthDate} 
             onChange={handleChange} 
             required 
           />
-          {errors.age && <div className="error-text">{errors.age}</div>}
+          {errors.birthDate && <div className="error-text">{errors.birthDate}</div>}
         </div>
         <div className="form-group">
           <label>Dance Style:</label>

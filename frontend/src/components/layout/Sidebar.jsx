@@ -4,12 +4,11 @@ import './Sidebar.css';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/userContext';
 
-
 const Sidebar = () => {
   const [expenseToggle, setExpenseToggle] = useState(false);
   const [eventsToggle, setEventsToggle] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const { clearUser } = useContext(UserContext);
+  const { user, clearUser } = useContext(UserContext);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -39,13 +38,6 @@ const Sidebar = () => {
             {!collapsed && <span className="Links_name">Dashboard</span>}
           </NavLink>
         </li>
-        {/* Profile */}
-        <li>
-          <NavLink to="/member-dashboard/profile" className="nav_link">
-            <box-icon name="user" color="#ffffff" type="solid"></box-icon>
-            {!collapsed && <span className="Links_name">Profile</span>}
-          </NavLink>
-        </li>
         {/* Expense Tracker with dropdown */}
         <li>
           <div className="nav_link toggle_item" onClick={() => setExpenseToggle(!expenseToggle)}>
@@ -72,7 +64,7 @@ const Sidebar = () => {
                 </NavLink>
               </li>
               <li>
-                <NavLink to="/member-dashboard/dashboard" className="sub_link">
+                <NavLink to="/member-dashboard/transactions" className="sub_link">
                   Transactions
                 </NavLink>
               </li>
@@ -122,16 +114,40 @@ const Sidebar = () => {
           </NavLink>
         </li>
       </ul>
-      {/* Logout at the bottom */}
-      <div className="log_out">
-        <button 
-          className="nav_link logout_btn" 
-          onClick={handleLogout}
-          style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', padding: '10px', display: 'flex', alignItems: 'center', color: '#fff', cursor: 'pointer' }}
-        >
-          <box-icon name="log-out" color="#ffffff"></box-icon>
-          {!collapsed && <span className="Links_name" style={{ marginLeft: '10px' }}>Log out</span>}
-        </button>
+      
+      {/* New container for profile and logout */}
+      <div className="profile_logout_container">
+        <hr className="divider" />
+        {/* Profile Item */}
+        <div className="profile_item">
+          <NavLink to="/member-dashboard/profile" className="nav_link">
+            {user && user.profilePicture ? (
+              <img
+                src={user.profilePicture}
+                alt="Profile"
+                style={{ width: '24px', height: '24px', borderRadius: '50%' }}
+              />
+            ) : (
+              <box-icon name="user" color="#ffffff" type="solid"></box-icon>
+            )}
+            {!collapsed && (
+              <span className="Links_name">
+                {user ? user.fullName : "Profile"}
+              </span>
+            )}
+          </NavLink>
+        </div>
+        {/* Logout */}
+        <div className="log_out">
+          <button 
+            className="nav_link logout_btn" 
+            onClick={handleLogout}
+            style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', padding: '10px', display: 'flex', alignItems: 'center', color: '#fff', cursor: 'pointer' }}
+          >
+            <box-icon name="log-out" color="#ffffff"></box-icon>
+            {!collapsed && <span className="Links_name" style={{ marginLeft: '10px' }}>Log out</span>}
+          </button>
+        </div>
       </div>
     </div>
   );
