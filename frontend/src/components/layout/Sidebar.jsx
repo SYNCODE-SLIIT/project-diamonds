@@ -33,7 +33,7 @@ const Sidebar = () => {
       <ul className="nav_list">
         {/* Dashboard */}
         <li>
-          <NavLink to="/member-dashboard" className="nav_link">
+        <NavLink to="/member-dashboard" end className={({ isActive }) => `nav_link ${isActive ? "active" : ""}`}>
             <box-icon name="grid-alt" color="#ffffff" type="solid"></box-icon>
             {!collapsed && <span className="Links_name">Dashboard</span>}
           </NavLink>
@@ -54,18 +54,18 @@ const Sidebar = () => {
           {!collapsed && expenseToggle && (
             <ul className="sub_menu">
               <li>
-                <NavLink to="/member-dashboard/income" className="sub_link">
+                <NavLink to="/member-dashboard/dashboard" className={({ isActive }) => `nav_link ${isActive ? "active" : ""}`}>
+                  Transactions
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/member-dashboard/income" className={({ isActive }) => `nav_link ${isActive ? "active" : ""}`}>
                   Income
                 </NavLink>
               </li>
               <li>
-                <NavLink to="/member-dashboard/expense" className="sub_link">
+                <NavLink to="/member-dashboard/expense" className={({ isActive }) => `nav_link ${isActive ? "active" : ""}`}>
                   Expense
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to="/member-dashboard/transactions" className="sub_link">
-                  Transactions
                 </NavLink>
               </li>
             </ul>
@@ -87,12 +87,12 @@ const Sidebar = () => {
           {!collapsed && eventsToggle && (
             <ul className="sub_menu">
               <li>
-                <NavLink to="/member-dashboard/new-request" className="sub_link">
+                <NavLink to="/member-dashboard/new-request" className={({ isActive }) => `nav_link ${isActive ? "active" : ""}`}>
                   New Request
                 </NavLink>
               </li>
               <li>
-                <NavLink to="/member-dashboard/upcoming-events" className="sub_link">
+                <NavLink to="/member-dashboard/upcoming-events" className={({ isActive }) => `nav_link ${isActive ? "active" : ""}`}>
                   Upcoming Events
                 </NavLink>
               </li>
@@ -101,14 +101,14 @@ const Sidebar = () => {
         </li>
         {/* Calender */}
         <li>
-          <NavLink to="/member-dashboard/calender" className="nav_link">
+          <NavLink to="/member-dashboard/calender" className={({ isActive }) => `nav_link ${isActive ? "active" : ""}`}>
             <box-icon name="calendar-week" color="#ffffff"></box-icon>
             {!collapsed && <span className="Links_name">Calender</span>}
           </NavLink>
         </li>
         {/* Inbox */}
         <li>
-          <NavLink to="/member-dashboard/inbox" className="nav_link">
+          <NavLink to="/member-dashboard/inbox" className={({ isActive }) => `nav_link ${isActive ? "active" : ""}`}>
             <box-icon name="message-square-dots" color="#ffffff"></box-icon>
             {!collapsed && <span className="Links_name">Inbox</span>}
           </NavLink>
@@ -120,7 +120,7 @@ const Sidebar = () => {
         <hr className="divider" />
         {/* Profile Item */}
         <div className="profile_item">
-          <NavLink to="/member-dashboard/profile" className="nav_link">
+          <NavLink to="/member-dashboard/profile" className={({ isActive }) => `nav_link ${isActive ? "active" : ""}`}>
             {user && user.profilePicture ? (
               <img
                 src={user.profilePicture}
