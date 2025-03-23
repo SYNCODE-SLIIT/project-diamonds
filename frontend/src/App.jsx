@@ -1,7 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
-
+import { Routes, Route } from 'react-router-dom';
 // Content Management Imports
 import AboutUs from './pages/aboutUs';
 import ContentMediaDashboard from "./pages/ContentMediaDashboard";
@@ -24,6 +22,7 @@ import MemberDashboardCalender from './pages/membership/MemberDashboardCalender'
 import MemberDashboardInbox from './pages/membership/MemberDashboardInbox';
 import MemberDashboardNewRequest from './pages/membership/MemberDashboardNewRequest';
 import MemberDashboardUpcomingEvents from './pages/membership/MemberDashboardUpcomingEvents';
+import EditMemberProfile from './pages/membership/EditMemberProfile';
 
 // public layout and pages
 import PublicLayout from './components/layout/PublicLayout';
@@ -41,7 +40,7 @@ const App = () => {
   return (
     <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
       <UserProvider>
-        <Router>
+        
           
           <Routes>
           <Route element={<PublicLayout />}>
@@ -64,6 +63,7 @@ const App = () => {
               <Route path='income' element={<Income />} />
               <Route path="transactions" element={<RecentTransactionPage />} />
               <Route path="profile" element={<MemberDashboardProfile />} />
+              <Route path="edit-member-profile" element={<EditMemberProfile />} />
               <Route path="calender" element={<MemberDashboardCalender />} />
               <Route path="inbox" element={<MemberDashboardInbox />} />
               <Route path="new-request" element={<MemberDashboardNewRequest />} />
@@ -86,7 +86,7 @@ const App = () => {
               },
             }}
           />
-        </Router>
+        
       </UserProvider>
     </div>
   );

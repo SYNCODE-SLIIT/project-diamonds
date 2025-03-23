@@ -115,9 +115,12 @@ export const updateUserProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
-    // Update allowed fields
+    // Update allowed fields in the user collection
     if (req.body.fullName) user.fullName = req.body.fullName;
     if (req.body.profilePicture) user.profilePicture = req.body.profilePicture;
+    // Optionally update the email if you want it to be synchronized
+    if (req.body.email) user.email = req.body.email;
+    
     const updatedUser = await user.save();
     return res.status(200).json({ message: "Profile updated", user: updatedUser });
   } catch (error) {
@@ -170,3 +173,4 @@ export const updatePassword = async (req, res) => {
     return res.status(500).json({ message: "Error updating password", error: error.message });
   }
 };
+

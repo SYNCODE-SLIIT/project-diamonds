@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/userContext';
 import 'boxicons';
 // Import the CSS file
@@ -10,6 +11,7 @@ const MemberDashboardProfile = () => {
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const navigate = useNavigate();
 
   useUserAuth();
 
@@ -43,17 +45,19 @@ const MemberDashboardProfile = () => {
     <div className="profile-container">
       <div className="profile-header">
         <h2 className="profile-title">Profile Details</h2>
-        <div className="profile-picture-container">
-          {profileData && profileData.profilePicture ? (
-            <img
-              src={profileData.profilePicture}
-              alt="Profile"
-              className="profile-picture"
-            />
-          ) : (
-            <box-icon name="user" className="profile-icon"></box-icon>
-          )}
-        </div>
+          <div className="flex justify-center mb-8">
+           {profileData && profileData.profilePicture ? (
+             <img
+               src={profileData.profilePicture}
+               alt="Profile"
+               className="w-24 h-24 rounded-full object-cover border-4 border-blue-500"
+             />
+           ) : (
+             <div className="w-24 h-24 flex items-center justify-center rounded-full bg-gray-200 border-4 border-blue-500">
+               <box-icon name="user" color="#2a2a5a" size="lg"></box-icon>
+             </div>
+           )}
+         </div>
       </div>
       
       {profileData && (
@@ -114,8 +118,7 @@ const MemberDashboardProfile = () => {
           </table>
           <button
             className="edit-button"
-            onClick={() => console.log('Edit Profile clicked')}
-          >
+            onClick={() => navigate('/member-dashboard/edit-member-profile')}>
             Edit Profile
           </button>
         </div>

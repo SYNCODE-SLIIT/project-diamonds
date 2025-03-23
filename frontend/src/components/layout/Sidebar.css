@@ -86,6 +86,12 @@
     transition: background-color 0.3s ease;
   }
   
+  /* Active link styling */
+.nav_link.active, .sub_link.active {
+  background-color: rgba(79, 70, 229, 0.25); /* Similar to hover effect */
+  font-weight: bold;
+}
+
   .toggle_item:hover {
     background-color: rgba(79, 70, 229, 0.15);
   }
