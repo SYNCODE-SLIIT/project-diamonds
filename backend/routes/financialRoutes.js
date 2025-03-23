@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { generateExcelReport, getBudget, getDashboardData, getInvoices, processFullPayment, updateBudget, updateInvoice } from "../controllers/financialController.js";
+import { generateExcelReport, getBudget, getDashboardData, getInvoices, getPayments, getRefunds, processFullPayment, updateBudget, updateInvoice, updatePayment, updateRefund } from "../controllers/financialController.js";
 
 
 const router = express.Router();
@@ -14,10 +14,18 @@ router.get("/report", generateExcelReport);
 router.get('/', getDashboardData);
 
 router.get('/b', getBudget);
-router.patch('b/:id', updateBudget);
+router.patch('/b/:id', updateBudget);
 
 router.get('/i', getInvoices);
-router.patch('i/:id', updateInvoice);
+router.patch('/i/:id', updateInvoice);
+
+router.get('/p', getPayments);
+router.patch('/p/:id', updatePayment);
+
+router.get('/r/', getRefunds);
+router.patch('/r/:id', updateRefund);
+
+
 
 
 export default router;

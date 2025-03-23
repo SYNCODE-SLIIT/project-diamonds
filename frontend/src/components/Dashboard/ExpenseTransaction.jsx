@@ -13,7 +13,7 @@ const ExpenseTransaction = ({ transactions, onSeeMore }) => {
         </button>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 space-y-4">
         {transactions?.slice(0, 5).map((expense) => (
           <TransactionInfoCard
             key={expense._id}
