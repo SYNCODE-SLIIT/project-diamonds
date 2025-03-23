@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaInstagram, FaFacebook, FaTiktok, FaYoutube } from 'react-icons/fa';
 import '../styles/Footer.css';
-import logo from '../assets/Realistic_Golden_Logo_Mockup.png';
+import assets from '../assets/assets.js';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -14,7 +14,7 @@ const Footer = () => {
           {/* Logo column */}
           <div className="mb-8 md:mb-0">
             <div className="text-7xl font-bold mb-6">
-              <img src = {logo}  alt="Logo" className="h-35" />
+              <img src = {assets.logo2}  alt="Logo" className="h-35" />
             </div>
           </div>
           
