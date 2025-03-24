@@ -8,6 +8,7 @@ import expenseRoutes from "./routes/expenseRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import financialRoutes from './routes/financialRoutes.js';
 import transactionRoutes from "./routes/transactionRoutes.js";
+import packageRoutes from './routes/packageRoutes.js';
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -31,25 +32,29 @@ connectDB();
 // Memebr Application Routes
 import memberApplicationRoutes from '../backend/routes/memberApplicationRoutes.js';
 app.use('/api/member-applications', memberApplicationRoutes);
+
+// Admin Application Routes
 import adminApplicationRoutes from './routes/adminApplicationRoutes.js';
 app.use('/api/admin/applications', adminApplicationRoutes);
+
 // User Routes
 import userRoutes from './routes/userRoutes.js';
 app.use('/api/users', userRoutes);
 
-// Other imports and middleware setup...
+// Organizer Routes
 import organizerRoutes from './routes/organizerRoutes.js';
-
-// Mount the organizer routes
 app.use('/api/organizers', organizerRoutes);
 
-
+// Financial Management Routes
 app.use('/api/finance', financialRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/income", incomeRoutes);
 app.use("/api/v1/expense", expenseRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes);
 app.use("/api/v1/transaction", transactionRoutes);
+
+// Package Routes from the 'dev' branch
+app.use('/api/packages', packageRoutes);
 
 // API Endpoints
 app.get('/register/member/application', (req, res) => {
