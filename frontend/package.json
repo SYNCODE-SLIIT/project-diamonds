@@ -19,6 +19,7 @@
     "emoji-picker-react": "^4.12.2",
     "font-awesome": "^4.7.0",
     "framer-motion": "^12.5.0",
+    "lucide-react": "^0.483.0",
     "moment": "^2.30.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

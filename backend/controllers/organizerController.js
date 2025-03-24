@@ -45,7 +45,7 @@ export const createOrganizerAccount = async (req, res) => {
     const newUser = new User({
       fullName,
       email,
-      passwordHashed: password, // plaintext for now
+      passwordHashed: password, 
       role: "organizer",
       profileId: savedOrganizer._id,
       profileModel: "Organizer"
@@ -60,5 +60,31 @@ export const createOrganizerAccount = async (req, res) => {
   } catch (error) {
     console.error("Error creating organizer account:", error);
     return res.status(500).json({ message: "Error creating organizer account", error: error.message });
+  }
+};
+
+export const getOrganizerProfile = async (req, res) => {
+  try {
+    // req.user is set by your auth middleware (protect)
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Check that the logged-in user is an organizer
+    if (user.role !== "organizer") {
+      return res.status(403).json({ message: "Not authorized to view organizer profile." });
+    }
+
+    // Use the profileId reference in the user document to fetch the organizer profile
+    const organizer = await Organizer.findById(user.profileId);
+    if (!organizer) {
+      return res.status(404).json({ message: "Organizer profile not found." });
+    }
+
+    return res.status(200).json(organizer);
+  } catch (error) {
+    console.error("Error fetching organizer profile:", error);
+    return res.status(500).json({ message: "Error fetching organizer profile", error: error.message });
   }
 };

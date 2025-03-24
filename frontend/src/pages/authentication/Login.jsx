@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Login.css'; // Make sure to create this CSS file
+import './Login.css'; 
 
 const Login = () => {
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ const Login = () => {
         if (data.user.role === 'member') {
           navigate('/member-dashboard');
         } else if (data.user.role === 'organizer') {
-          navigate('/organizer-dashboard');
+          navigate('/organizer-profile');
         } else {
           navigate('/dashboard');
         }

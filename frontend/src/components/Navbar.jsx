@@ -1,17 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import '../styles/DropdownMenu.css';
 import assets from '../assets/assets.js';
-
-
 
 const Navbar = () => {
   const [dropdown, setDropdown] = useState(null);
   const [activeSubmenu, setActiveSubmenu] = useState(null);
   const [isLeaving, setIsLeaving] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const timeoutRef = useRef(null);
   const dropdownRef = useRef(null);
+  const navigate = useNavigate();
 
   // Clear timeout on unmount
   useEffect(() => {
@@ -19,6 +19,25 @@ const Navbar = () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+    };
+  }, []);
+
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      // Change to black background after scrolling down 100px
+      if (window.scrollY > 100) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    
+    // Cleanup event listener
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
@@ -565,7 +584,9 @@ const Navbar = () => {
 
       
       <motion.nav 
-        className="bg-transparent text-white fixed top-0 left-0 w-full z-50"
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
+          scrolled ? 'bg-black' : 'bg-transparent'
+        }`}
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
@@ -574,6 +595,7 @@ const Navbar = () => {
           {/* Left side: Logo and nav items - Now aligned to the far left */}
           <div className="flex items-center space-x-8 pl-4">
             {/* Logo with subtle animation */}
+            <Link to="/">
             <motion.img 
               src={assets.logo2} 
               alt="Diamonds Logo" 
@@ -583,6 +605,7 @@ const Navbar = () => {
               transition={{ duration: 0.5 }}
               whileHover={{ scale: 1.05 }}
             />
+            </Link>
 
             {/* Navbar Items */}
             <ul className="flex space-x-6">
@@ -597,7 +620,7 @@ const Navbar = () => {
                   transition={{ duration: 0.3, delay: index * 0.05 + 0.2 }}
                 >
                   <motion.button 
-                    className="px-4 py-2 text-lg font-semibold hover:bg-gray-800 hover:bg-opacity-70 rounded-lg transition duration-300"
+                    className="px-4 py-2 text-lg font-semibold hover:bg-gray-800 hover:bg-opacity-70 rounded-lg transition duration-300 text-amber-50"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -630,6 +653,18 @@ const Navbar = () => {
                   transition: { duration: 0.4 } 
                 }}
                 whileTap={{ scale: 0.9 }}
+                onClick={
+                  item.icon === "fa-solid fa-user"
+                    ? () => {
+                        const token = localStorage.getItem("token");
+                        if (token) {
+                          navigate("/organizer-profile");
+                        } else {
+                          navigate("/login");
+                        }
+                      }
+                    : undefined
+                }
               >
                 <i className={item.icon}></i>
               </motion.button>

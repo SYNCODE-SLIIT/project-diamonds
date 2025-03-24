@@ -7,7 +7,6 @@ const OrganizerSchema = new Schema({
   email: { type: String, required: true, unique: true },
   contactNumber: { type: String },
   profilePicture: { type: String },
-  // Removed paymentDetails and added new fields:
   organizationDescription: { type: String },
   businessAddress: { type: String },
   website: { type: String },
