@@ -24,21 +24,19 @@ import MemberDashboardInbox from './pages/membership/MemberDashboardInbox';
 import MemberDashboardNewRequest from './pages/membership/MemberDashboardNewRequest';
 import MemberDashboardUpcomingEvents from './pages/membership/MemberDashboardUpcomingEvents';
 import EditMemberProfile from './pages/membership/EditMemberProfile';
+import FinancialDashboard from './components/Financial/FinancialDashboard'
 
 // public layout and pages
 import PublicLayout from './components/layout/PublicLayout';
 import Home from './pages/home';
 import Contactus from './pages/Contactus';
 import Profile from './pages/Profile';
-import { Toaster } from 'react-hot-toast';
 
 import AdminLayout from './components/layout/AdminLayout';
 import UserProvider from './context/userContext';
 import { Toaster } from 'react-hot-toast';
-import Dashboard from './pages/Dashboard/Dashboard';
-import Expense from './pages/Dashboard/Expense';
-import RecentTransactionPage from './pages/Dashboard/RecentTransaction';
-import FinancialReport from './components/Financial/FinancialReport';
+
+
 import PaymentForm from './components/Financial/paymentForm';
 import BudgetForm from './components/Financial/BudgetForm';
 import RefundForm from './components/Financial/RefundForm';

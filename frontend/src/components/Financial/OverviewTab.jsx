@@ -95,7 +95,7 @@ const Dashboard = () => {
         </div>
         {/* Centered row: remaining two InfoCards */}
         <div className="flex justify-center mt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-md">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InfoCard icon="↩️" label="Total Refunds" value={totalRefunds} color="bg-yellow-500" />
             <InfoCard icon="📊" label="Budget Utilization" value={`${currentSpend} / ${allocatedBudget}`} color="bg-indigo-500" />
           </div>
