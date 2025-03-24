@@ -30,8 +30,10 @@ import { Toaster } from 'react-hot-toast';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Expense from './pages/Dashboard/Expense';
 import RecentTransactionPage from './pages/Dashboard/RecentTransaction';
-import FPaymentForm from './components/Financial/FPaymentForm';
 import FinancialReport from './components/Financial/FinancialReport';
+import PaymentForm from './components/Financial/paymentForm';
+import BudgetForm from './components/Financial/BudgetForm';
+import RefundForm from './components/Financial/RefundForm';
 
 const App = () => {
   return (
@@ -53,8 +55,9 @@ const App = () => {
             <Route path='/contactUs' element={<Contactus />} />
             <Route path='/profile' element={<Profile />} />
             <Route path='/financial' element={<FinancialDashboard />} />
-            <Route path='/form' exact element={<FPaymentForm />} />
-            <Route path='/report' exact element={<FinancialReport />} />
+            <Route path='/bform' exact element={<BudgetForm/>} />
+            <Route path='/rform' exact element={<RefundForm/>} />
+            <Route path='/pform' exact element={<PaymentForm />} />
 
        
             <Route path="/member-dashboard" element={<MemberDashboardLayout />}>

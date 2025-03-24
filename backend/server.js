@@ -24,6 +24,7 @@ const port = process.env.PORT || 4000;
 // Middlewares
 app.use(express.json());
 app.use(cors());
+app.use('/uploads', express.static('uploads'));
 // Connect to MongoDB
 connectDB();
 

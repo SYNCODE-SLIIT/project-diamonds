@@ -6,8 +6,8 @@ const RefundSchema = new mongoose.Schema({
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   transactionId: { type: String },
   processedAt: { type: Date, default: Date.now },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 });
 
 const Refund = mongoose.model('Refund', RefundSchema);
-
 export default Refund;
