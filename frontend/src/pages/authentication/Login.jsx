@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { UserContext } from '../../context/userContext';
 import './Login.css'; // Make sure to create this CSS file
 
 const Login = () => {
   const navigate = useNavigate();
-  
+  const { updateUser } = useContext(UserContext);
   // States for email, password and error message
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,11 +28,17 @@ const Login = () => {
       if (res.ok) {
         // Store the token
         localStorage.setItem('token', data.token);
+        updateUser(data.user);
         // Check the user role and redirect accordingly
         if (data.user.role === 'member') {
           navigate('/member-dashboard');
         } else if (data.user.role === 'organizer') {
           navigate('/organizer-dashboard');
+        } else if (data.user.role === 'teamManager') {
+          // Redirect team managers to the account creation page
+          navigate('/messaging/create-group');
+        } else if (data.user.role === 'contentManager') {
+          navigate('/content-dashboard');
         } else {
           navigate('/dashboard');
         }

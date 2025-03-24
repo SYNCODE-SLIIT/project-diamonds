@@ -24,6 +24,8 @@ import MemberDashboardInbox from './pages/membership/MemberDashboardInbox';
 import MemberDashboardNewRequest from './pages/membership/MemberDashboardNewRequest';
 import MemberDashboardUpcomingEvents from './pages/membership/MemberDashboardUpcomingEvents';
 import EditMemberProfile from './pages/membership/EditMemberProfile';
+import ChatRoom from './pages/membership/ChatRoom';
+import GroupCreation from './pages/admin/GroupCreation';
 
 // public layout and pages
 import PublicLayout from './components/layout/PublicLayout';
@@ -67,9 +69,12 @@ const App = () => {
               <Route path="edit-member-profile" element={<EditMemberProfile />} />
               <Route path="calender" element={<MemberDashboardCalender />} />
               <Route path="inbox" element={<MemberDashboardInbox />} />
+              <Route path="messaging/chat/:groupId" element={<ChatRoom />} />
               <Route path="new-request" element={<MemberDashboardNewRequest />} />
               <Route path="upcoming-events" element={<MemberDashboardUpcomingEvents />} />
           </Route>
+
+          <Route path="/messaging/create-group" element={<GroupCreation />} />
 
           <Route element={<AdminLayout />}>
             <Route path='/admin/applications' element={<AdminApplicationsList />} />
