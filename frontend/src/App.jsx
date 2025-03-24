@@ -26,6 +26,7 @@ import MemberDashboardUpcomingEvents from './pages/membership/MemberDashboardUpc
 import EditMemberProfile from './pages/membership/EditMemberProfile';
 import ChatRoom from './pages/membership/ChatRoom';
 import GroupCreation from './pages/admin/GroupCreation';
+import ApplicationSubmitted from './pages/authentication/ApplicationSubmitted';
 
 // public layout and pages
 import PublicLayout from './components/layout/PublicLayout';
@@ -54,6 +55,7 @@ const App = () => {
               <Route path='/register/member/application' element={<MemberApplication />} />
               <Route path='/register/member/createAccount' element={<CreateMemberAccount />} />
               <Route path='/register/organizer' element={<RegisterOrganizer />} />
+              <Route path="/application-submitted" element={<ApplicationSubmitted />} />
               {/* <Route path='/organizer/new-event' element={<OrganizerNewEvent />} />
               <Route path='/organizer/manage-events' element={<OrganizerManageEvents />} /> */}
             </Route>
