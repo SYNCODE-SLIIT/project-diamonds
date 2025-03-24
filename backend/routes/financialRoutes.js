@@ -1,5 +1,5 @@
 import express from 'express';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect } from '../middleware/authmiddleware.js';
 import {
   getAllPaymentsWithUserData,
   getAllBudgetsWithUserData,
@@ -44,8 +44,6 @@ router.get('/dashboard', getDashboardData);
 router.get('/invoice-report', generateInvoiceReport);
 router.get('/excel-report', generateExcelReport);
 router.get("/report", getFinancialReport);
-
-
 
 
 // DELETE

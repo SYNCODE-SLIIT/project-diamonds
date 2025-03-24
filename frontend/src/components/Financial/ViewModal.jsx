@@ -315,21 +315,28 @@ const ViewModal = ({ item, onClose, activeTab }) => {
 
   const handleSendEmail = async () => {
     try {
+      // Generate the PDF document
       const doc = generatePDF();
       const pdfData = doc.output('datauristring');
+      
+      // Make a POST request to your API to send the email.
       await axiosInstance.post('/api/finance/send-email', { 
-        recordId: item._id,
+        recordId: item._id, // used by the server to retrieve email from the database
         pdfData,
+        // The email field can be optional if the server already retrieves it by recordId.
         email: item.user && item.user.email,
       });
+      
+      // Update UI on success
       setMessage('Email sent successfully');
       setMessageType('success');
     } catch (err) {
       console.error('Error sending email:', err);
       setMessage('Error sending email');
       setMessageType('error');
-    }
+    } 
   };
+  
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">

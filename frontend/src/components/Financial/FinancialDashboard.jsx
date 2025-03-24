@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
 import EditModal from './EditModal';
 import ViewModal from './ViewModal';
 import OverviewTab from './OverviewTab';
@@ -66,6 +67,7 @@ const Dashboard = () => {
     } catch (err) {
       console.error('Error fetching data:', err);
       setError('Error fetching data');
+      toast.error('Error fetching data');
     }
   };
 
@@ -89,9 +91,11 @@ const Dashboard = () => {
         const recordType = recordTypeMap[activeTab];
         const deleteUrl = `/api/finance/${recordType}/${item._id}`;
         await axiosInstance.delete(deleteUrl);
+        toast.success('Record deleted successfully.');
         fetchData();
       } catch (err) {
         console.error('Error deleting record:', err);
+        toast.error('Error deleting record.');
       }
     }
   };
@@ -101,9 +105,11 @@ const Dashboard = () => {
       const recordType = updateRecordMap[activeTab];
       const updateData = activeTab === 'invoices' ? { paymentStatus: newStatus } : { status: newStatus };
       await axiosInstance.patch(`/api/finance/${recordType}/${item._id}`, updateData);
+      toast.success('Status updated successfully.');
       fetchData();
     } catch (err) {
       console.error('Error updating status:', err);
+      toast.error('Error updating status.');
     }
   };
 
@@ -114,17 +120,17 @@ const Dashboard = () => {
   const handlePaySalary = async (memberId) => {
     const salaryAmount = salaryInputs[memberId];
     if (!salaryAmount || isNaN(salaryAmount) || salaryAmount <= 0) {
-      alert('Please enter a valid salary amount.');
+      toast.error('Please enter a valid salary amount.');
       return;
     }
     try {
       await axiosInstance.post('/api/finance/salary/pay', { memberId, salaryAmount });
-      alert('Salary paid successfully.');
+      toast.success('Salary paid successfully.');
       setSalaryInputs(prev => ({ ...prev, [memberId]: '' }));
       fetchData();
     } catch (err) {
       console.error('Error paying salary:', err);
-      alert('Error paying salary.');
+      toast.error('Error paying salary.');
     }
   };
 

@@ -10,6 +10,7 @@ import Expense from '../models/Expense.js';
 import Salary from '../models/Salary.js';
 import User from '../models/User.js';
 import moment from 'moment';
+import nodemailer from "nodemailer";
 
 
 // GET all payments with user data
@@ -271,13 +272,53 @@ export const getDashboardData = async (req, res) => {
 // Send PDF via Email: expects recordId, pdfData, and email in the request body.
 export const sendPdfByEmail = async (req, res) => {
   try {
-    const { recordId, pdfData, email } = req.body;
-    // Implement your email sending logic here (e.g., using NodeMailer)
-    res.status(200).json({ message: `PDF sent successfully to ${email}` });
+    const { recordId, pdfData } = req.body;
+
+    // Retrieve the user (and email) from the database using recordId
+    const user = await User.findById(recordId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const email = user.email;
+
+    // Set up the NodeMailer transporter (using Gmail as an example)
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "neeleee7@gmail.com", // your email
+        pass: "12345@Npl",  // your email password or app-specific password
+      },
+    });
+
+    // Define the mail options, including the PDF attachment
+    const mailOptions = {
+      from: "neeleee7@gmail.com",
+      to: email,
+      subject: "Your PDF Document",
+      text: "Please find your PDF attached.",
+      attachments: [
+        {
+          filename: "document.pdf",
+          content: pdfData,
+          encoding: "base64", // adjust if your pdfData is encoded differently
+        },
+      ],
+    };
+
+    // Send the email
+    await transporter.sendMail(mailOptions);
+
+    res
+      .status(200)
+      .json({ message: `PDF sent successfully to ${email}` });
   } catch (error) {
-    res.status(500).json({ message: "Error sending PDF email", error: error.message });
+    res.status(500).json({
+      message: "Error sending PDF email",
+      error: error.message,
+    });
   }
 };
+
 
 
 // Delete a financial record (Payment, Budget, Invoice, Refund, or Transaction)
