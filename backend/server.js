@@ -29,7 +29,7 @@ app.use(cors());
 // Connect to MongoDB
 connectDB();
 
-// Member Application Routes
+// Memebr Application Routes
 import memberApplicationRoutes from '../backend/routes/memberApplicationRoutes.js';
 app.use('/api/member-applications', memberApplicationRoutes);
 

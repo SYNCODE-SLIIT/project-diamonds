@@ -1,14 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import logo from '../assets/Realistic_Golden_Logo_Mockup.png';
-import ourStory from '../assets/our-story-background.png';
-import community from '../assets/community-background.png';
-import perfomances from '../assets/performances-background.png';
-import training from '../assets/training-background.png';
-import classes from '../assets/classes-background.png';
-import give from '../assets/give-background.png';
 import '../styles/DropdownMenu.css';
+import assets from '../assets/assets.js';
 
 
 
@@ -137,7 +131,7 @@ const Navbar = () => {
           ]
         },
       ],
-      image: ourStory,
+      image: assets.navbar_ourStory,
     },
     {
       title: 'PERFORMANCES',
@@ -176,7 +170,7 @@ const Navbar = () => {
           ]
         },
       ],
-      image: perfomances,
+      image: assets.navbar_performances,
     },
     {
       title: 'JOIN US',
@@ -226,7 +220,7 @@ const Navbar = () => {
           ]
         },
       ],
-      image: training,
+      image: assets.navbar_joinUs,
     },
     {
       title: 'COMMUNITY',
@@ -265,7 +259,7 @@ const Navbar = () => {
           ]
         },
       ],
-      image: community,
+      image: assets.navbar_community,
     },
     {
       title: 'GALLERY',
@@ -304,7 +298,7 @@ const Navbar = () => {
           ]
         },
       ],
-      image: classes,
+      image: assets.navbar_gallery,
     },
     {
       title: 'GIVE',
@@ -343,7 +337,7 @@ const Navbar = () => {
           ]
         },
       ],
-      image: give,
+      image: assets.navbar_give,
     },
   ];
 
@@ -581,7 +575,7 @@ const Navbar = () => {
           <div className="flex items-center space-x-8 pl-4">
             {/* Logo with subtle animation */}
             <motion.img 
-              src={logo} 
+              src={assets.logo2} 
               alt="Diamonds Logo" 
               className="h-20 w-auto" 
               initial={{ opacity: 0, scale: 0.95 }}
