@@ -2,8 +2,8 @@ import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/userContext';
 import 'boxicons';
-// Import the CSS file
-import './MemberDashboardProfile.css'; // Make sure to save the CSS in this file
+
+import './MemberDashboardProfile.css'; 
 import { useUserAuth } from '../../hooks/useUserAuth';
 
 const MemberDashboardProfile = () => {
