@@ -28,11 +28,14 @@ import ChatRoom from './pages/membership/ChatRoom';
 import GroupCreation from './pages/admin/GroupCreation';
 import ApplicationSubmitted from './pages/authentication/ApplicationSubmitted';
 
+import PackageList from './components/PackageList';
+
+
 // public layout and pages
 import PublicLayout from './components/layout/PublicLayout';
 import Home from './pages/home';
 import Contactus from './pages/Contactus';
-import Profile from './pages/Profile';
+import OrganizerProfile from './pages/EventOrganizerProfile';
 import { Toaster } from 'react-hot-toast';
 
 import AdminLayout from './components/layout/AdminLayout';
@@ -50,12 +53,13 @@ const App = () => {
           <Route element={<PublicLayout />}>
               <Route path='/' element={<Home />} />
               <Route path='/contactUs' element={<Contactus />} />
-              <Route path='/profile' element={<Profile />} />
+              <Route path='/organizer-profile' element={<OrganizerProfile />} />
               <Route path='/login' element={<Login />} />
               <Route path='/register/member/application' element={<MemberApplication />} />
               <Route path='/register/member/createAccount' element={<CreateMemberAccount />} />
               <Route path='/register/organizer' element={<RegisterOrganizer />} />
               <Route path="/application-submitted" element={<ApplicationSubmitted />} />
+
               {/* <Route path='/organizer/new-event' element={<OrganizerNewEvent />} />
               <Route path='/organizer/manage-events' element={<OrganizerManageEvents />} /> */}
             </Route>
@@ -81,6 +85,7 @@ const App = () => {
           <Route element={<AdminLayout />}>
             <Route path='/admin/applications' element={<AdminApplicationsList />} />
             <Route path='/admin/applications/:id' element={<AdminApplicationDetails />} />
+            <Route path="/admin/packages" element={<PackageList />} />
             {/* <Route path='/financial' element={<FinancialDashboard />} /> */}
           </Route>
 

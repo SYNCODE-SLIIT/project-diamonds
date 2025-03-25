@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/userContext';
 import './Login.css';
 
+
 const Login = () => {
   const navigate = useNavigate();
   const { updateUser } = useContext(UserContext);
@@ -37,7 +38,7 @@ const Login = () => {
         if (data.user.role === 'member') {
           navigate('/member-dashboard');
         } else if (data.user.role === 'organizer') {
-          navigate('/organizer-dashboard');
+          navigate('/organizer-profile');
         } else if (data.user.role === 'teamManager') {
           navigate('/messaging/create-group');
         } else if (data.user.role === 'contentManager') {
