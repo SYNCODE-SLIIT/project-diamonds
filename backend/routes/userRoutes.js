@@ -9,7 +9,8 @@ import {
     updateUserProfile,
     deleteUser,
     getAllUsers,
-    updatePassword
+    updatePassword,
+    checkEmail
   } from '../controllers/userController.js';
 // GET /api/users/create?applicationId=xxx -> Returns fullName and email from the MemberApplication
 router.get('/create', getApplicationDetailsForAccountCreation);
@@ -32,5 +33,7 @@ router.get('/', getAllUsers);
 
 // Route to update the user's password
 router.put('/password', updatePassword);
+
+router.get('/check-email', checkEmail);
 
 export default router;

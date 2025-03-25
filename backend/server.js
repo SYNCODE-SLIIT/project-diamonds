@@ -40,6 +40,11 @@ app.use('/api/admin/applications', adminApplicationRoutes);
 // User Routes
 import userRoutes from './routes/userRoutes.js';
 app.use('/api/users', userRoutes);
+// chatGroupRoutes
+import chatGroupRoutes from './routes/chatGroupRoutes.js';
+import messageRoutes from './routes/messageRoutes.js';
+app.use('/api/chat-groups', chatGroupRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Organizer Routes
 import organizerRoutes from './routes/organizerRoutes.js';

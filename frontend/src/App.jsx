@@ -24,7 +24,12 @@ import MemberDashboardInbox from './pages/membership/MemberDashboardInbox';
 import MemberDashboardNewRequest from './pages/membership/MemberDashboardNewRequest';
 import MemberDashboardUpcomingEvents from './pages/membership/MemberDashboardUpcomingEvents';
 import EditMemberProfile from './pages/membership/EditMemberProfile';
+import ChatRoom from './pages/membership/ChatRoom';
+import GroupCreation from './pages/admin/GroupCreation';
+import ApplicationSubmitted from './pages/authentication/ApplicationSubmitted';
+
 import PackageList from './components/PackageList';
+
 
 // public layout and pages
 import PublicLayout from './components/layout/PublicLayout';
@@ -53,7 +58,8 @@ const App = () => {
               <Route path='/register/member/application' element={<MemberApplication />} />
               <Route path='/register/member/createAccount' element={<CreateMemberAccount />} />
               <Route path='/register/organizer' element={<RegisterOrganizer />} />
-              
+              <Route path="/application-submitted" element={<ApplicationSubmitted />} />
+
               {/* <Route path='/organizer/new-event' element={<OrganizerNewEvent />} />
               <Route path='/organizer/manage-events' element={<OrganizerManageEvents />} /> */}
             </Route>
@@ -69,9 +75,12 @@ const App = () => {
               <Route path="edit-member-profile" element={<EditMemberProfile />} />
               <Route path="calender" element={<MemberDashboardCalender />} />
               <Route path="inbox" element={<MemberDashboardInbox />} />
+              <Route path="messaging/chat/:groupId" element={<ChatRoom />} />
               <Route path="new-request" element={<MemberDashboardNewRequest />} />
               <Route path="upcoming-events" element={<MemberDashboardUpcomingEvents />} />
           </Route>
+
+          <Route path="/messaging/create-group" element={<GroupCreation />} />
 
           <Route element={<AdminLayout />}>
             <Route path='/admin/applications' element={<AdminApplicationsList />} />

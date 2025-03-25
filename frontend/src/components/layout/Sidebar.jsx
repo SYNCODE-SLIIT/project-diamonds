@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import 'boxicons';
 import './Sidebar.css';
 import { NavLink, useNavigate } from 'react-router-dom';
@@ -8,8 +8,23 @@ const Sidebar = () => {
   const [expenseToggle, setExpenseToggle] = useState(false);
   const [eventsToggle, setEventsToggle] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [totalUnread, setTotalUnread] = useState(0);
   const { user, clearUser } = useContext(UserContext);
   const navigate = useNavigate();
+
+  // Fetch chat groups for the logged-in user to calculate total unread messages
+  useEffect(() => {
+    if (user && user._id) {
+      fetch(`http://localhost:4000/api/chat-groups/user/${user._id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          const groups = data.groups || [];
+          const unread = groups.reduce((sum, group) => sum + (group.unreadCount || 0), 0);
+          setTotalUnread(unread);
+        })
+        .catch((err) => console.error("Error fetching chat groups for unread count:", err));
+    }
+  }, [user]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -33,7 +48,7 @@ const Sidebar = () => {
       <ul className="nav_list">
         {/* Dashboard */}
         <li>
-        <NavLink to="/member-dashboard" end className={({ isActive }) => `nav_link ${isActive ? "active" : ""}`}>
+          <NavLink to="/member-dashboard" end className={({ isActive }) => `nav_link ${isActive ? "active" : ""}`}>
             <box-icon name="grid-alt" color="#ffffff" type="solid"></box-icon>
             {!collapsed && <span className="Links_name">Dashboard</span>}
           </NavLink>
@@ -111,6 +126,11 @@ const Sidebar = () => {
           <NavLink to="/member-dashboard/inbox" className={({ isActive }) => `nav_link ${isActive ? "active" : ""}`}>
             <box-icon name="message-square-dots" color="#ffffff"></box-icon>
             {!collapsed && <span className="Links_name">Inbox</span>}
+            {!collapsed && totalUnread > 0 && (
+              <span className="ml-auto bg-blue-500 text-white px-2 py-1 rounded-full text-xs">
+                {totalUnread}
+              </span>
+            )}
           </NavLink>
         </li>
       </ul>
