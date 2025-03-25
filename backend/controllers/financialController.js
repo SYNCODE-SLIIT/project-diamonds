@@ -95,15 +95,20 @@ export const getAllTransactionsWithUserData = async (req, res) => {
 // Create Budget Request and record transaction.
 export const createBudget = async (req, res) => {
   try {
-    const { allocatedBudget, remainingBudget, status } = req.body;
+    const { allocatedBudget, remainingBudget, status, reason } = req.body;
+    // Use Multer's file object if available (same as payment)
+    const infoFile = req.file ? req.file.filename : null;
+
     const newBudget = new Budget({
       allocatedBudget,
       remainingBudget,
       status,
+      reason,
+      infoFile,
       user: req.user._id,
     });
     await newBudget.save();
-    
+
     const budgetTransaction = new Transaction({
       transactionType: "budget",
       user: req.user._id,
@@ -111,7 +116,7 @@ export const createBudget = async (req, res) => {
       details: { note: "Budget request created" },
     });
     await budgetTransaction.save();
-    
+
     res.status(201).json({
       message: "Budget created successfully",
       budget: newBudget,
@@ -122,17 +127,23 @@ export const createBudget = async (req, res) => {
   }
 };
 
+
 // Create Refund Request and record transaction.
 export const requestRefund = async (req, res) => {
   try {
-    const { refundAmount, reason } = req.body;
+    const { refundAmount, reason, invoiceNumber } = req.body;
+    // Use Multer's file object if available (like in your payment function)
+    const receiptFile = req.file ? req.file.filename : null;
+
     const refund = new Refund({
       refundAmount,
       reason,
+      invoiceNumber,
+      receiptFile,
       user: req.user._id,
     });
     await refund.save();
-    
+
     const refundTransaction = new Transaction({
       transactionType: "refund",
       user: req.user._id,
@@ -140,7 +151,7 @@ export const requestRefund = async (req, res) => {
       details: { note: "Refund requested" },
     });
     await refundTransaction.save();
-    
+
     res.status(201).json({
       message: "Refund requested successfully",
       refund,
@@ -151,8 +162,8 @@ export const requestRefund = async (req, res) => {
   }
 };
 
+
 // Make Payment: auto-create an invoice and record the payment/transaction.
-// If a deposit slip is provided (as a URL or file path), it is stored.
 export const makePayment = async (req, res) => {
   const session = await mongoose.startSession();
   try {
@@ -208,7 +219,6 @@ export const makePayment = async (req, res) => {
     res.status(500).json({ message: "Error processing payment", error: error.message });
   }
 };
-
 
 // Generate Invoice Report (unchanged)
 export const generateInvoiceReport = async (req, res) => {
@@ -318,8 +328,6 @@ export const sendPdfByEmail = async (req, res) => {
     });
   }
 };
-
-
 
 // Delete a financial record (Payment, Budget, Invoice, Refund, or Transaction)
 export const deleteFinancialRecord = async (req, res) => {
@@ -499,7 +507,6 @@ export const paySalary = async (req, res) => {
   }
 };
 
-// Dummy Data: In a real application, replace this with your Transaction model query.
 const dummyTransactions = [
   { date: new Date("2023-07-01"), totalAmount: 1000 },
   { date: new Date("2023-07-02"), totalAmount: 1500 },

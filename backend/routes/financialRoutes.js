@@ -27,12 +27,10 @@ const router = express.Router();
 router.use(protect);
 
 // POST endpoints
-router.post('/cb', createBudget);
-router.post('/ef', requestRefund);
+router.post('/cb', upload.single('infoFile'), createBudget); // Updated to process file upload for budget
+router.post('/ef', upload.single('receiptFile'), requestRefund);
 router.post('/mp', upload.single('bankSlip'), makePayment);
 router.post('/send-email', sendPdfByEmail);
-
-
 
 // GET endpoints
 router.get('/getp', getAllPaymentsWithUserData);
@@ -43,8 +41,7 @@ router.get('/gett', getAllTransactionsWithUserData);
 router.get('/dashboard', getDashboardData);
 router.get('/invoice-report', generateInvoiceReport);
 router.get('/excel-report', generateExcelReport);
-router.get("/report", getFinancialReport);
-
+router.get('/report', getFinancialReport);
 
 // DELETE
 router.delete('/:recordType/:id', deleteFinancialRecord);

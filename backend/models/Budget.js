@@ -4,8 +4,9 @@ const BudgetSchema = new mongoose.Schema({
   allocatedBudget: { type: Number, required: true },
   currentSpend: { type: Number, default: 0 },
   remainingBudget: { type: Number, required: true },
+  reason: { type: String, required: true },      
+  infoFile: { type: String },                      
   lastUpdated: { type: Date, default: Date.now },
-  // Added "pending" option for budget requests
   status: { type: String, enum: ['approved', 'declined', 'pending'], required: true },
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 });

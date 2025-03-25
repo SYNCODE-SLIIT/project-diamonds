@@ -215,7 +215,7 @@ const EditModal = ({ item, onClose, activeTab }) => {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
+    <div className="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-50 z-50 p-4">
       <div className="bg-white bg-opacity-80 w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 rounded-lg shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="bg-gray-100 bg-opacity-80 px-6 py-4 border-b border-gray-200 flex justify-between items-center">

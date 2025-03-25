@@ -304,9 +304,6 @@ const ViewModal = ({ item, onClose, activeTab }) => {
   
     return doc;
   };
-  
-  
-  
 
   const handleDownload = () => {
     const doc = generatePDF();
@@ -336,10 +333,9 @@ const ViewModal = ({ item, onClose, activeTab }) => {
       setMessageType('error');
     } 
   };
-  
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
+    <div className="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-50 z-50 p-4">
       <div className="bg-white w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 rounded-lg shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="bg-gray-100 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
@@ -358,7 +354,7 @@ const ViewModal = ({ item, onClose, activeTab }) => {
         
         {/* Body */}
         <div className="p-6 overflow-y-auto max-h-[calc(100vh-12rem)]">
-          {/* Bank Slip (if available) */}
+          {/* Payment Deposit Slip (if available) */}
           {activeTab === 'payments' && item.bankSlipFile && (
             <div className="mb-8 bg-white rounded-lg shadow-md overflow-hidden">
               <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
@@ -383,7 +379,59 @@ const ViewModal = ({ item, onClose, activeTab }) => {
               </div>
             </div>
           )}
+
+          {/* Refund Receipt (if available) */}
+          {activeTab === 'refunds' && item.receiptFile && (
+            <div className="mb-8 bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                <h3 className="text-sm font-medium text-gray-700">Receipt File</h3>
+              </div>
+              <div className="p-4">
+                {item.receiptFile.toLowerCase().endsWith('.pdf') ? (
+                  <iframe
+                    src={`http://localhost:4000/uploads/${item.receiptFile}`}
+                    width="100%"
+                    height="400"
+                    title="Receipt PDF"
+                    className="rounded border border-gray-200"
+                  />
+                ) : (
+                  <img
+                    src={`http://localhost:4000/uploads/${item.receiptFile}`}
+                    alt="Receipt"
+                    className="max-w-full h-auto rounded"
+                  />
+                )}
+              </div>
+            </div>
+          )}
           
+           {/* Budget Receipt (if available) */}
+           {activeTab === 'budgets' && item.infoFile && (
+            <div className="mb-8 bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                <h3 className="text-sm font-medium text-gray-700">Information File</h3>
+              </div>
+              <div className="p-4">
+                {item.infoFile.toLowerCase().endsWith('.pdf') ? (
+                  <iframe
+                    src={`http://localhost:4000/uploads/${item.infoFile}`}
+                    width="100%"
+                    height="400"
+                    title="Receipt PDF"
+                    className="rounded border border-gray-200"
+                  />
+                ) : (
+                  <img
+                    src={`http://localhost:4000/uploads/${item.infoFile}`}
+                    alt="Receipt"
+                    className="max-w-full h-auto rounded"
+                  />
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Record Details */}
           {renderFieldGroups()}
           

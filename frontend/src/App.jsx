@@ -36,10 +36,9 @@ import AdminLayout from './components/layout/AdminLayout';
 import UserProvider from './context/userContext';
 import { Toaster } from 'react-hot-toast';
 
-
-import PaymentForm from './components/Financial/paymentForm';
 import BudgetForm from './components/Financial/BudgetForm';
 import RefundForm from './components/Financial/RefundForm';
+import PaymentOptions from './components/Financial/PaymentOptions';
 
 const App = () => {
   return (
@@ -63,7 +62,7 @@ const App = () => {
             <Route path='/financial' element={<FinancialDashboard />} />
             <Route path='/bform' exact element={<BudgetForm/>} />
             <Route path='/rform' exact element={<RefundForm/>} />
-            <Route path='/pform' exact element={<PaymentForm />} />
+            <Route path='/pform' exact element={<PaymentOptions />} />
 
        
             <Route path="/member-dashboard" element={<MemberDashboardLayout />}>
