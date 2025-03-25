@@ -9,6 +9,7 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 import financialRoutes from './routes/financialRoutes.js';
 import transactionRoutes from "./routes/transactionRoutes.js";
 import packageRoutes from './routes/packageRoutes.js';
+import calendarRoutes from './routes/calendarRoutes.js'; 
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -53,6 +54,9 @@ app.use("/api/v1/income", incomeRoutes);
 app.use("/api/v1/expense", expenseRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes);
 app.use("/api/v1/transaction", transactionRoutes);
+
+//Team Manager Routes
+app.use('/api/calendar', calendarRoutes);
 
 // Package Routes from the 'dev' branch
 app.use('/api/packages', packageRoutes);

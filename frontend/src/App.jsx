@@ -10,7 +10,7 @@ import AdminApplicationDetails from './pages/authentication/AdminApplicationDeta
 import CreateMemberAccount from './pages/authentication/CreateMemberAccount';
 import RegisterOrganizer from './pages/authentication/RegisterOrganizer';
 import Login from './pages/authentication/Login';
-import MemberDashboardLayout from './components/layout/MemberDashboardLayout';
+// import MemberDashboardLayout from './components/layout/MemberDashboardLayout';
 import MemberDashboardHome from './pages/membership/MemberDashboardHome';
 import MemberDashboardProfile from './pages/membership/MemberDashboardProfile';
 import MemberDashboardCalender from './pages/membership/MemberDashboardCalender';
@@ -28,31 +28,19 @@ import FinancialReport from './components/Financial/FinancialReport';
 import UserProvider from './context/userContext';
 import Contactus from './pages/Contactus';
 import Profile from './pages/Profile';
+import MemberDashboardLayout from './components/layout/MemberDashboardLayout';
+import CalendarEvents from './pages/CalendarEvents';
 
-// Dev branch imports
-import Homepage from './pages/Home.jsx';
-import AboutUs from './pages/AboutUs';
 
 const App = () => {
   return (
     <div className="px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw] mx-auto">
       <UserProvider>
-        <Navbar />
+      
         <Routes>
           {/* Dev Branch Routes */}
-          <Route path="/" element={<Homepage />} />
-          <Route path="/aboutUs" element={<AboutUs />} />
-
-<<<<<<< HEAD
-      <Navbar />
-      <Routes>
-        <Route path='/' element={<Home />}  />
-        <Route path='/aboutUs' element={<AboutUs />} />
-        <Route path='/contactUs' element={<Contactus />} />
-        <Route path='/profile' element={<Profile />} />
-  
-      </Routes>
-=======
+          <Route path="/" element={<Home />} />
+          {/* <Route path="/aboutUs" element={<AboutUs />} /> */}
           {/* Financial Management Routes */}
           <Route path="/home" element={<Home />} />
           <Route path="/register/member/application" element={<MemberApplication />} />
@@ -78,6 +66,9 @@ const App = () => {
             <Route path="inbox" element={<MemberDashboardInbox />} />
             <Route path="new-request" element={<MemberDashboardNewRequest />} />
             <Route path="upcoming-events" element={<MemberDashboardUpcomingEvents />} />
+            <Route path="calendar-events" element={<CalendarEvents />} />
+
+
           </Route>
         </Routes>
         <Toaster
@@ -87,7 +78,6 @@ const App = () => {
           }}
         />
       </UserProvider>
->>>>>>> 7c956ce5285980710c1b501093b911d26b8da7a7
     </div>
   );
 };
