@@ -26,7 +26,6 @@ import MemberDashboardNewRequest from './pages/membership/MemberDashboardNewRequ
 import MemberDashboardUpcomingEvents from './pages/membership/MemberDashboardUpcomingEvents';
 import EditMemberProfile from './pages/membership/EditMemberProfile';
 
-import FinancialDashboard from './components/Financial/FinancialDashboard'
 import ChatRoom from './pages/membership/ChatRoom';
 import GroupCreation from './pages/admin/GroupCreation';
 import ApplicationSubmitted from './pages/authentication/ApplicationSubmitted';
@@ -58,15 +57,6 @@ import CalendarEvents from './pages/CalendarEvents';
 import AdminLayout from './components/layout/AdminLayout';
 import UserProvider from './context/userContext';
 import PackageList from './components/PackageList';
-import BlogPosts from './pages/content/BlogpostView';
-import EditBlogPost from './pages/content/EditBlogPost';
-import Events from './pages/content/Events';
-import UploadMedia from './pages/content/UploadMedia';
-import AdminLayout from './components/layout/AdminLayout';
-import { Toaster } from 'react-hot-toast';
-import BudgetForm from './components/Financial/BudgetForm';
-import RefundForm from './components/Financial/RefundForm';
-import PaymentOptions from './components/Financial/PaymentOptions';
 
 
 const App = () => {
