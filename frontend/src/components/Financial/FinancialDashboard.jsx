@@ -232,7 +232,7 @@ const Dashboard = () => {
                     <div className="space-y-1 text-gray-700">
                       <div>Amount: <span className="font-medium">RS.{item.amount}</span></div>
                       <div>Method: <span className="font-medium">{item.paymentMethod}</span></div>
-                      <div className="mt-2">
+                      {/* <div className="mt-2">
                         <strong>Bank Slip:</strong>
                         {item.bankSlipFile ? (
                           item.bankSlipFile.toLowerCase().endsWith('.pdf') ? (
@@ -254,7 +254,7 @@ const Dashboard = () => {
                         ) : (
                           <span className="text-gray-500">No bank slip uploaded</span>
                         )}
-                      </div>
+                      </div> */}
                     </div>
                   )}
                   {activeTab === 'budgets' && (
