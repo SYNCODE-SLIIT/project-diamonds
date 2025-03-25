@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/userContext';
+import { 
+  UserPlusIcon, 
+  InformationCircleIcon, 
+  UsersIcon, 
+  CheckCircleIcon, 
+  ExclamationTriangleIcon 
+} from '@heroicons/react/24/outline';
 
 const GroupCreation = () => {
   const { user } = useContext(UserContext);
@@ -19,7 +26,6 @@ const GroupCreation = () => {
       try {
         const res = await fetch('http://localhost:4000/api/users');
         const data = await res.json();
-        // Filter only members (assuming role is stored as 'member')
         const members = data.filter((u) => u.role === 'member');
         setAllMembers(members);
       } catch (err) {
@@ -48,11 +54,10 @@ const GroupCreation = () => {
     setErrorMsg('');
     setSuccessMsg('');
 
-      // Check if user exists
-  if (!user) {
-    setErrorMsg("User not found. Please log in.");
-    return;
-  }
+    if (!user) {
+      setErrorMsg("User not found. Please log in.");
+      return;
+    }
 
     const payload = {
       groupName: formData.groupName,
@@ -61,8 +66,6 @@ const GroupCreation = () => {
       members: selectedMembers
     };
 
-    console.log('Creating group with payload:', payload); // Debug log
-
     try {
       const res = await fetch('http://localhost:4000/api/chat-groups', {
         method: 'POST',
@@ -70,7 +73,6 @@ const GroupCreation = () => {
         body: JSON.stringify(payload)
       });
       const data = await res.json();
-      console.log('Response from create group:', data); // Debug log
       if (res.ok) {
         setSuccessMsg('Chat group created successfully!');
         setFormData({ groupName: '', description: '' });
@@ -86,61 +88,111 @@ const GroupCreation = () => {
   };
 
   return (
-    <div className="max-w-lg mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Create Chat Group</h1>
-      {errorMsg && <div className="text-red-600 mb-4">{errorMsg}</div>}
-      {successMsg && <div className="text-green-600 mb-4">{successMsg}</div>}
-      <form onSubmit={handleCreateGroup} className="space-y-4">
-        <div>
-          <label className="block font-medium">Group Name:</label>
-          <input
-            type="text"
-            name="groupName"
-            value={formData.groupName}
-            onChange={handleChange}
-            required
-            className="w-full border rounded px-3 py-2"
-          />
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-xl bg-white shadow-2xl rounded-xl overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-6 flex items-center text-white">
+          <UserPlusIcon className="w-10 h-10 mr-4" />
+          <h1 className="text-2xl font-bold">Create Chat Group</h1>
         </div>
-        <div>
-          <label className="block font-medium">Description:</label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            required
-            className="w-full border rounded px-3 py-2"
-            rows="3"
-          ></textarea>
-        </div>
-        <div>
-          <label className="block font-medium mb-2">Select Members:</label>
-          <div className="border rounded p-2 max-h-60 overflow-y-auto">
-            {allMembers.length === 0 ? (
-              <p>No members found.</p>
-            ) : (
-              allMembers.map((member) => (
-                <div key={member._id} className="flex items-center mb-1">
-                  <input
-                    type="checkbox"
-                    value={member._id}
-                    onChange={handleCheckboxChange}
-                    className="mr-2"
-                    checked={selectedMembers.includes(member._id)}
-                  />
-                  <span>{member.fullName} ({member.email})</span>
-                </div>
-              ))
-            )}
+
+        <form onSubmit={handleCreateGroup} className="p-6 space-y-6">
+          {/* Error Message */}
+          {errorMsg && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 flex items-center">
+              <ExclamationTriangleIcon className="w-6 h-6 text-red-500 mr-3" />
+              <p className="text-red-700">{errorMsg}</p>
+            </div>
+          )}
+
+          {/* Success Message */}
+          {successMsg && (
+            <div className="bg-green-50 border-l-4 border-green-500 p-4 flex items-center">
+              <CheckCircleIcon className="w-6 h-6 text-green-500 mr-3" />
+              <p className="text-green-700">{successMsg}</p>
+            </div>
+          )}
+
+          {/* Group Name Input */}
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">
+              Group Name
+              <span className="text-red-500 ml-1">*</span>
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                name="groupName"
+                value={formData.groupName}
+                onChange={handleChange}
+                required
+                placeholder="Enter group name"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300"
+              />
+              <InformationCircleIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            </div>
           </div>
-        </div>
-        <button
-          type="submit"
-          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
-        >
-          Create Group
-        </button>
-      </form>
+
+          {/* Description Input */}
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">
+              Description
+              <span className="text-red-500 ml-1">*</span>
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              required
+              placeholder="Describe your group"
+              rows="4"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300"
+            ></textarea>
+          </div>
+
+          {/* Members Selection */}
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2 flex items-center">
+              <UsersIcon className="w-5 h-5 mr-2" />
+              Select Members
+            </label>
+            <div className="border border-gray-300 rounded-lg max-h-60 overflow-y-auto p-3 bg-gray-50">
+              {allMembers.length === 0 ? (
+                <p className="text-gray-500 text-center">No members found.</p>
+              ) : (
+                allMembers.map((member) => (
+                  <div 
+                    key={member._id} 
+                    className="flex items-center hover:bg-blue-50 p-2 rounded transition duration-200"
+                  >
+                    <input
+                      type="checkbox"
+                      value={member._id}
+                      onChange={handleCheckboxChange}
+                      className="mr-3 text-blue-600 focus:ring-blue-500 rounded"
+                      checked={selectedMembers.includes(member._id)}
+                    />
+                    <span className="text-gray-700">
+                      {member.fullName} 
+                      <span className="text-gray-500 text-sm ml-2">({member.email})</span>
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="w-full bg-gradient-to-r from-blue-600 to-blue-400 text-white py-3 rounded-lg 
+            hover:from-blue-700 hover:to-blue-500 
+            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 
+            transition duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+          >
+            Create Group
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
