@@ -29,8 +29,9 @@ const MemberApplication = () => {
     achievements: ''
   });
   
+  // Changed from date to day
   const [availabilityEntry, setAvailabilityEntry] = useState({
-    date: '',
+    day: '',
     start: '08:00',
     end: '22:00'
   });
@@ -71,9 +72,9 @@ const MemberApplication = () => {
   };
 
   const addAvailability = () => {
-    if (availabilityEntry.date && availabilityEntry.start && availabilityEntry.end) {
+    if (availabilityEntry.day && availabilityEntry.start && availabilityEntry.end) {
       setAvailabilities(prev => [...prev, availabilityEntry]);
-      setAvailabilityEntry({ date: '', start: '08:00', end: '22:00' });
+      setAvailabilityEntry({ day: '', start: '08:00', end: '22:00' });
     }
   };
 
@@ -231,13 +232,21 @@ const MemberApplication = () => {
             <div className="availability-section">
               <h3 className="text-lg font-semibold mb-2">Availabilities</h3>
               <div className="flex space-x-2 mb-2">
-                <input 
-                  type="date" 
-                  name="date" 
-                  value={availabilityEntry.date} 
+                <select 
+                  name="day" 
+                  value={availabilityEntry.day} 
                   onChange={handleAvailabilityChange} 
                   className="p-2 bg-gray-100 border-none rounded focus:ring-2 focus:ring-blue-900"
-                />
+                >
+                  <option value="">Select a day</option>
+                  <option value="Monday">Monday</option>
+                  <option value="Tuesday">Tuesday</option>
+                  <option value="Wednesday">Wednesday</option>
+                  <option value="Thursday">Thursday</option>
+                  <option value="Friday">Friday</option>
+                  <option value="Saturday">Saturday</option>
+                  <option value="Sunday">Sunday</option>
+                </select>
                 <input 
                   type="time" 
                   name="start" 
@@ -259,7 +268,7 @@ const MemberApplication = () => {
               {availabilities.length > 0 && (
                 <ul className="list-disc pl-5">
                   {availabilities.map((avail, index) => (
-                    <li key={index}>{avail.date} – {avail.start} to {avail.end}</li>
+                    <li key={index}>{avail.day} – {avail.start} to {avail.end}</li>
                   ))}
                 </ul>
               )}

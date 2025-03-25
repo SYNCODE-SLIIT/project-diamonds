@@ -10,8 +10,17 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 import financialRoutes from './routes/financialRoutes.js';
 import transactionRoutes from "./routes/transactionRoutes.js";
 import packageRoutes from './routes/packageRoutes.js';
+
+import userRoutes from "./routes/userRoutes.js";
+import organizerRoutes from "./routes/organizerRoutes.js";
+import blogPostRoutes from "./routes/blogPostRoutes.js";
+import managePostRoutes from "./routes/managePostRoutes.js";
+import calendarRoutes from './routes/calendarRoutes.js'; 
+
 import path from "path";
 import { fileURLToPath } from "url";
+
+
 
 // Load environment variables
 dotenv.config();
@@ -41,6 +50,7 @@ import adminApplicationRoutes from './routes/adminApplicationRoutes.js';
 app.use('/api/admin/applications', adminApplicationRoutes);
 
 // User Routes
+
 app.use('/api/users', userRoutes);
 // chatGroupRoutes
 import chatGroupRoutes from './routes/chatGroupRoutes.js';
@@ -49,7 +59,7 @@ app.use('/api/chat-groups', chatGroupRoutes);
 app.use('/api/messages', messageRoutes);
 
 // Organizer Routes
-import organizerRoutes from './routes/organizerRoutes.js';
+
 app.use('/api/organizers', organizerRoutes);
 
 // Import Routes
@@ -72,6 +82,10 @@ app.use("/api/v1/income", incomeRoutes);
 app.use("/api/v1/expense", expenseRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes);
 app.use("/api/v1/transaction", transactionRoutes);
+
+
+//Team Manager Routes
+app.use('/api/calendar', calendarRoutes);
 
 
 // Package Routes from the 'dev' branch
@@ -99,6 +113,7 @@ app.get("/", (req, res) => {
   res.send("API is running...");
 
 });
+
 
 // Start Server
 app.listen(port, () => console.log(`Server running on port ${port}`));

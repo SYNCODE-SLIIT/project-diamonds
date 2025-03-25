@@ -51,7 +51,39 @@ const sendRejectionEmail = async (application) => {
   }
 };
 
+const sendAuditionInvitationEmail = async (application, auditionDate, auditionTime, location, invitationLink) => {
+  const mailOptions = {
+    from: '"Dance Team" <no-reply@danceteam.com>',
+    to: application.email,
+    subject: 'Invitation to Audition',
+    text: `Hello ${application.fullName},
+
+You are invited to audition for our dance team.
+Audition Date: ${new Date(auditionDate).toLocaleDateString()}
+Audition Time: ${auditionTime}
+Location: ${location}
+
+Thank you!`,
+    html: `<p>Hello ${application.fullName},</p>
+           <p>You are invited to audition for our dance team.</p>
+           <p><strong>Audition Date:</strong> ${new Date(auditionDate).toLocaleDateString()}<br>
+           <strong>Audition Time:</strong> ${auditionTime}<br>
+           <strong>Location:</strong> ${location}</p>
+           <p>Thank you!</p>`
+  };
+
+  try {
+    let info = await transporter.sendMail(mailOptions);
+    console.log('Audition invitation email sent:', info.messageId);
+    console.log('Preview URL:', nodemailer.getTestMessageUrl(info));
+  } catch (error) {
+    console.error('Error sending audition invitation email:', error);
+    throw error;
+  }
+};
+
 export default {
   sendApprovalEmail,
-  sendRejectionEmail
+  sendRejectionEmail,
+  sendAuditionInvitationEmail
 };
