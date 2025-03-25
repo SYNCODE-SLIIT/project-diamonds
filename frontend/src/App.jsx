@@ -25,6 +25,7 @@ import MemberDashboardInbox from './pages/membership/MemberDashboardInbox';
 import MemberDashboardNewRequest from './pages/membership/MemberDashboardNewRequest';
 import MemberDashboardUpcomingEvents from './pages/membership/MemberDashboardUpcomingEvents';
 import EditMemberProfile from './pages/membership/EditMemberProfile';
+
 import ChatRoom from './pages/membership/ChatRoom';
 import GroupCreation from './pages/admin/GroupCreation';
 import ApplicationSubmitted from './pages/authentication/ApplicationSubmitted';
@@ -47,7 +48,9 @@ import PaymentOptions from './components/Financial/PaymentOptions';
 import PublicLayout from './components/layout/PublicLayout';
 import Home from './pages/home';
 import Contactus from './pages/Contactus';
+
 import OrganizerProfile from './pages/EventOrganizerProfile';
+
 
 import MemberDashboardLayout from './components/layout/MemberDashboardLayout';
 import CalendarEvents from './pages/CalendarEvents';
@@ -55,13 +58,14 @@ import AdminLayout from './components/layout/AdminLayout';
 import UserProvider from './context/userContext';
 import PackageList from './components/PackageList';
 
+
 const App = () => {
   return (
     <div className="">
       <UserProvider>
         <Routes>
           <Route element={<PublicLayout />}>
-          <Route path='/' element={<Home />} />
+              <Route path='/' element={<Home />} />
               <Route path='/contactUs' element={<Contactus />} />
               <Route path='/organizer-profile' element={<OrganizerProfile />} />
               <Route path='/login' element={<Login />} />
@@ -73,9 +77,8 @@ const App = () => {
               <Route path='/organizer/manage-events' element={<OrganizerManageEvents />} /> */}
             </Route>
 
-       
 
-   
+
             <Route path="/member-dashboard" element={<MemberDashboardLayout />}>
               <Route index element={<MemberDashboardHome />} />
               <Route path='dashboard' element={<Dashboard />} />
@@ -104,6 +107,7 @@ const App = () => {
             <Route path='/financial' element={<FinancialDashboard />} />
           </Route>
 
+
           {/* Financial Routes */}
 
           <Route path='/bform' element={<BudgetForm/>} />
@@ -119,6 +123,8 @@ const App = () => {
           <Route path="/upload" element={<UploadMedia />} />
           <Route path="/Cmanager" element={<ContentMediaDashboard />} />
         </Routes>
+
+
         
         {/* Notifications */}
         <Toaster
