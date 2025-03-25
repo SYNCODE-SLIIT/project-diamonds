@@ -101,14 +101,14 @@ const App = () => {
             <Route path="/admin/applications/:id/invite" element={<AdminInviteApplicant />} />
             <Route path='/admin/applications/:id' element={<AdminApplicationDetails />} />
             <Route path="/admin/packages" element={<PackageList />} />
+            <Route path='/financial' element={<FinancialDashboard />} />
           </Route>
 
           {/* Financial Routes */}
-          <Route path='/financial' element={<FinancialDashboard />} />
+
           <Route path='/bform' element={<BudgetForm/>} />
           <Route path='/rform' element={<RefundForm/>} />
           <Route path='/pform' element={<PaymentOptions />} />
-        
           <Route path='/report' element={<FinancialReport />} />
 
           {/* Content Management Routes */}
