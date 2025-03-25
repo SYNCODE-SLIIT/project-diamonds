@@ -38,7 +38,7 @@ const PaymentForm = () => {
     data.append('invoiceAmount', formData.invoiceAmount);
     data.append('invoiceCategory', formData.invoiceCategory);
     data.append('userId', formData.userId);
-    data.append('paymentAmount', formData.paymentAmount);
+    data.append('paymentAmount', formData.paymentAmount); 
     data.append('paymentMethod', formData.paymentMethod);
     data.append('allocatedBudget', formData.allocatedBudget);
     data.append('currentSpend', formData.currentSpend);

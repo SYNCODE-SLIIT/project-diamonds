@@ -1,0 +1,12 @@
+
+
+/* Animation for form transitions */
+.form-transition-enter {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  
+  .form-transition-enter-active {
+    opacity: 1;
+    transform: translateX(0);
+  }

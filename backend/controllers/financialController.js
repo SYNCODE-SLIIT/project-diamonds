@@ -129,6 +129,7 @@ export const getDashboardData = async (req, res) => {
   }
 };
 
+// Get budget function
 export const getBudget = async (req, res) => {
   try {
     const budget = await Budget.findOne({}).lean();
@@ -138,14 +139,23 @@ export const getBudget = async (req, res) => {
   }
 };
 
+
+// Update budget function
 export const updateBudget = async (req, res) => {
   try {
-    const { allocatedBudget, currentSpend } = req.body;
+    const { allocatedBudget, currentSpend, status } = req.body;
     // Calculate remaining budget
     const remainingBudget = allocatedBudget - currentSpend;
+    // Update the budget document
     const updatedBudget = await Budget.findOneAndUpdate(
       {},
-      { allocatedBudget, currentSpend, remainingBudget, lastUpdated: new Date() },
+      {
+        allocatedBudget,
+        currentSpend,
+        remainingBudget,
+        lastUpdated: new Date(),
+        status 
+      },
       { new: true, upsert: true }
     );
     res.status(200).json(updatedBudget);
