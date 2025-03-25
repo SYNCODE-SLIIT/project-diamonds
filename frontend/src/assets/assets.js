@@ -26,7 +26,7 @@ import gallery4 from './home/gallery4.jpg';
 import youtube from './home/youtube.png';
 import defaultProfile from './event/default_profile.jpg';
 import profileCover from './event/profileCover.png';
-
+import navbar_myevents from './navbar-backgrounds/myevents-background.png';
 
 export const assets = {
   logo1,
@@ -56,6 +56,7 @@ export const assets = {
   youtube,
   defaultProfile,
   profileCover,
+  navbar_myevents,
 };
 
 export default assets;
