@@ -38,7 +38,7 @@ import Income from './pages/Dashboard/Income';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Expense from './pages/Dashboard/Expense';
 import RecentTransactionPage from './pages/Dashboard/RecentTransaction';
-import FPaymentForm from './components/Financial/FPaymentForm';
+
 import FinancialReport from './components/Financial/FinancialReport';
 import BudgetForm from './components/Financial/BudgetForm';
 import RefundForm from './components/Financial/RefundForm';
@@ -48,7 +48,7 @@ import PublicLayout from './components/layout/PublicLayout';
 import Home from './pages/home';
 import Contactus from './pages/Contactus';
 import OrganizerProfile from './pages/EventOrganizerProfile';
-import Profile from './pages/Profile';
+
 import MemberDashboardLayout from './components/layout/MemberDashboardLayout';
 import CalendarEvents from './pages/CalendarEvents';
 import AdminLayout from './components/layout/AdminLayout';
@@ -57,7 +57,7 @@ import PackageList from './components/PackageList';
 
 const App = () => {
   return (
-    <div className="px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw] mx-auto">
+    <div className="">
       <UserProvider>
         <Routes>
           <Route element={<PublicLayout />}>
@@ -67,7 +67,7 @@ const App = () => {
               <Route path='/login' element={<Login />} />
               <Route path='/register/member/application' element={<MemberApplication />} />
               <Route path='/register/member/createAccount' element={<CreateMemberAccount />} />
-              <Route path='/register/organizer' element={<RegisterOrganizer />} />
+              {/* <Route path='/register/organizer' element={<RegisterOrganizer />} /> */}
               <Route path="/application-submitted" element={<ApplicationSubmitted />} />
               {/* <Route path='/organizer/new-event' element={<OrganizerNewEvent />} />
               <Route path='/organizer/manage-events' element={<OrganizerManageEvents />} /> */}
@@ -108,7 +108,7 @@ const App = () => {
           <Route path='/bform' element={<BudgetForm/>} />
           <Route path='/rform' element={<RefundForm/>} />
           <Route path='/pform' element={<PaymentOptions />} />
-          <Route path='/form' element={<FPaymentForm />} />
+        
           <Route path='/report' element={<FinancialReport />} />
 
           {/* Content Management Routes */}
