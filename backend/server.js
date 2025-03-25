@@ -11,11 +11,12 @@ import financialRoutes from './routes/financialRoutes.js';
 import transactionRoutes from "./routes/transactionRoutes.js";
 import packageRoutes from './routes/packageRoutes.js';
 
+import calendarRoutes from './routes/calendarRoutes.js'; 
 
->
 import path from "path";
 import { fileURLToPath } from "url";
 import connectDB from "./config/mongodb.js";
+
 
 // Load environment variables
 dotenv.config();
@@ -84,6 +85,10 @@ app.use("/api/v1/dashboard", dashboardRoutes);
 app.use("/api/v1/transaction", transactionRoutes);
 
 
+//Team Manager Routes
+app.use('/api/calendar', calendarRoutes);
+
+
 // Package Routes from the 'dev' branch
 app.use('/api/packages', packageRoutes);
 
@@ -109,6 +114,7 @@ app.get("/", (req, res) => {
   res.send("API is running...");
 
 });
+
 
 // Start Server
 app.listen(port, () => console.log(`Server running on port ${port}`));
