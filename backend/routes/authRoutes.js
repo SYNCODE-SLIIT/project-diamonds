@@ -3,6 +3,7 @@ import { registerUser, loginUser, getUserInfo } from "../controllers/authControl
 import upload from "../middleware/uploadmiddleware.js";
 import { protect } from "../middleware/authMiddleware.js";
 
+
 const router = express.Router();
 
 // router.post("/register", registerUser);
