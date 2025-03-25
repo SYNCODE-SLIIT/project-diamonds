@@ -106,17 +106,11 @@ const App = () => {
             <Route path="/event" element={<Events />} />
             <Route path="/upload" element={<UploadMedia />} />
 
-         
-
-
-
-
-
-
+      
             {/* Content Management Route */}
             <Route path="/Cmanager" element={<ContentMediaDashboard />} />
            
-          </Routes>
+          {/* </Routes> */}
 
 
           {/* Notifications */}
