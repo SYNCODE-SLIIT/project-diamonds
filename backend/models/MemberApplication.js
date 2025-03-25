@@ -22,7 +22,7 @@ const MemberApplicationSchema = new Schema({
   achievements: [{ type: String }],
   applicationStatus: { 
     type: String, 
-    enum: ['Pending', 'Approved', 'Rejected'], 
+    enum: ['Pending', 'Approved', 'Rejected', 'Invited'], 
     default: 'Pending'
   },
   createdAt: { type: Date, default: Date.now },
