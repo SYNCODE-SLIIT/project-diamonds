@@ -4,6 +4,9 @@ import { Routes, Route } from 'react-router-dom';
 // Content Management Imports
 import AboutUs from './pages/aboutUs';
 import ContentMediaDashboard from "./pages/ContentMediaDashboard";
+import CreateBlogPost from './pages/content/CreateBlogPost';  // Add this import for CreateBlogPost page
+
+
 
 // User Management Imports
 import MemberApplication from './pages/authentication/MemberApplication';
@@ -37,6 +40,12 @@ import Home from './pages/home';
 import Contactus from './pages/Contactus';
 import OrganizerProfile from './pages/EventOrganizerProfile';
 import { Toaster } from 'react-hot-toast';
+import BlogPosts from './pages/content/BlogpostView';
+import EditBlogPost from './pages/content/EditBlogPost';
+import Events from './pages/content/Events';
+import UploadMedia from './pages/content/UploadMedia';
+
+
 
 import AdminLayout from './components/layout/AdminLayout';
 import UserProvider from './context/userContext';
@@ -82,6 +91,7 @@ const App = () => {
 
           <Route path="/messaging/create-group" element={<GroupCreation />} />
 
+
           <Route element={<AdminLayout />}>
             <Route path='/admin/applications' element={<AdminApplicationsList />} />
             <Route path='/admin/applications/:id' element={<AdminApplicationDetails />} />
@@ -89,8 +99,31 @@ const App = () => {
             {/* <Route path='/financial' element={<FinancialDashboard />} /> */}
           </Route>
 
+  <Route path="/create-blog-post" element={<CreateBlogPost />} /> {/* Route to CreateBlogPost page */}
+            <Route path="/blog" element={<BlogPosts />} />
+            <Route path="/blog/edit/:id" element={<EditBlogPost />}/>
+
+            <Route path="/event" element={<Events />} />
+            <Route path="/upload" element={<UploadMedia />} />
+
+         
+
+
+
+
+
+
+            {/* Content Management Route */}
+            <Route path="/Cmanager" element={<ContentMediaDashboard />} />
+           
+          </Routes>
+
+
+          {/* Notifications */}
+
           </Routes>
           {/* Use for notifications */}
+
           <Toaster
             toastOptions={{
               className: '',
