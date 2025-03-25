@@ -10,7 +10,7 @@ import MemberApplication from './pages/authentication/MemberApplication';
 import AdminApplicationsList from './pages/authentication/AdminApplicationsList';
 import AdminApplicationDetails from './pages/authentication/AdminApplicationDetails';
 import CreateMemberAccount from './pages/authentication/CreateMemberAccount';
-import RegisterOrganizer from './pages/authentication/RegisterOrganizer';
+// import RegisterOrganizer from './pages/authentication/RegisterOrganizer';
 import Login from './pages/authentication/Login';
 import MemberDashboardLayout from './components/layout/MemberDashboardLayout';
 import Income from './pages/Dashboard/Income';
@@ -57,7 +57,7 @@ const App = () => {
               <Route path='/login' element={<Login />} />
               <Route path='/register/member/application' element={<MemberApplication />} />
               <Route path='/register/member/createAccount' element={<CreateMemberAccount />} />
-              <Route path='/register/organizer' element={<RegisterOrganizer />} />
+              {/* <Route path='/register/organizer' element={<RegisterOrganizer />} /> */}
               <Route path="/application-submitted" element={<ApplicationSubmitted />} />
 
               {/* <Route path='/organizer/new-event' element={<OrganizerNewEvent />} />
