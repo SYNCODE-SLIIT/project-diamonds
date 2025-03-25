@@ -14,13 +14,14 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import moment from "moment";
 
 const Dashboard = () => {
+  // State to hold dashboard data from the backend
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Fetch dashboard data on component mount
   useEffect(() => {
     axiosInstance
       .get("/api/finance/dashboard")
@@ -29,7 +30,11 @@ const Dashboard = () => {
         setLoading(false);
       })
       .catch((err) => {
-        setError(err.response?.data?.message || err.message || "Error fetching data");
+        setError(
+          err.response?.data?.message ||
+            err.message ||
+            "Error fetching dashboard data"
+        );
         setLoading(false);
       });
   }, []);
@@ -37,57 +42,59 @@ const Dashboard = () => {
   if (loading) {
     return <div className="p-6 text-center">Loading dashboard data...</div>;
   }
-
   if (error) {
     return <div className="p-6 text-center text-red-600">{error}</div>;
   }
 
-  // Destructure returned data
-  const { totalIncome, totalExpense, transactions, refunds, payments, invoices, budget } = dashboardData;
+  // Destructure data received from backend
+  const {
+    totalIncome,
+    totalExpense,
+    transactions,
+    refunds,
+    payments,
+    invoices,
+    budget,
+    dailyTrends, // Aggregated daily trends from the backend
+  } = dashboardData;
 
-  // Derive KPI values
+  // Calculate derived KPI values
   const totalPayments = payments ? payments.reduce((acc, p) => acc + p.amount, 0) : 0;
   const totalRefunds = refunds ? refunds.reduce((acc, r) => acc + r.refundAmount, 0) : 0;
   const allocatedBudget = budget ? budget.allocatedBudget : 0;
-  const currentSpend = budget ? budget.currentSpend : 0;
+  const remainingBudget = budget ? budget.remainingBudget : 0;
 
-  // Process transactions to build a time-series for monthly trends.
-  const monthMap = {};
-  transactions.forEach((tx) => {
-    const month = moment(tx.createdAt).format("MMM");
-    if (!monthMap[month]) monthMap[month] = 0;
-    monthMap[month] += tx.totalAmount;
-  });
-  const timeSeriesData = Object.keys(monthMap).map((month) => ({
-    month,
-    amount: monthMap[month],
+  // Process daily trends data for charting
+  // dailyTrends is expected as an array of objects with _id (YYYY-MM-DD), total, and count.
+  const dailyTrendsChartData = dailyTrends.map((item) => ({
+    date: item._id, // Day as a string (YYYY-MM-DD)
+    total: item.total,
+    count: item.count,
   }));
 
-  // Group payments by status for pie chart (assuming payments have a "status" field)
+  // Group payments by status for a pie chart.
   const paymentStatusData = {};
   payments.forEach((p) => {
     const status = p.status || "unknown";
-    if (!paymentStatusData[status]) paymentStatusData[status] = 0;
-    paymentStatusData[status] += p.amount;
+    paymentStatusData[status] = (paymentStatusData[status] || 0) + p.amount;
   });
   const paymentStatusDataArray = Object.keys(paymentStatusData).map((key) => ({
     name: key.charAt(0).toUpperCase() + key.slice(1),
     amount: paymentStatusData[key],
   }));
 
-  // Group refunds by reason for a bar chart (if no reason, use "Other")
+  // Group refunds by reason for a bar chart.
   const refundData = {};
   refunds.forEach((r) => {
     const reason = r.reason || "Other";
-    if (!refundData[reason]) refundData[reason] = 0;
-    refundData[reason] += r.refundAmount;
+    refundData[reason] = (refundData[reason] || 0) + r.refundAmount;
   });
   const refundDataArray = Object.keys(refundData).map((key) => ({
     reason: key,
     refundAmount: refundData[key],
   }));
 
-  // Build scatter chart data by grouping transactions per user
+  // Build scatter chart data: group transactions by user.
   const scatterMap = {};
   transactions.forEach((tx) => {
     if (tx.user) {
@@ -101,11 +108,12 @@ const Dashboard = () => {
   });
   const scatterData = Object.values(scatterMap);
 
-  // Create waterfall chart data based on budget details
+  // Build waterfall chart data based on budget details.
   const waterfallData = [
     { name: "Allocated Budget", change: allocatedBudget },
+    { name: "Current Spend", change: -remainingBudget },
     { name: "Refunds", change: totalRefunds },
-    { name: "Net Balance", change: allocatedBudget - currentSpend + totalRefunds },
+    { name: "Net Balance", change: allocatedBudget - remainingBudget + totalRefunds },
   ];
 
   return (
@@ -126,27 +134,14 @@ const Dashboard = () => {
             <InfoCard
               icon="📊"
               label="Budget Utilization"
-              value={`${currentSpend} / ${allocatedBudget}`}
+              value={`${remainingBudget} / ${allocatedBudget}`}
               color="bg-indigo-500"
             />
           </div>
         </div>
       </section>
 
-      {/* 2. Time-Series Analysis */}
-      <section>
-        <h2 className="text-2xl font-semibold text-purple-700 mb-4">
-          Time-Series Analysis
-        </h2>
-        <div className="bg-white rounded-xl shadow p-4">
-          <h4 className="font-semibold text-lg text-purple-700 mb-2">
-            Monthly Transaction Trend
-          </h4>
-          <CustomLineChart data={timeSeriesData} />
-        </div>
-      </section>
-
-      {/* 3. Payment & Invoice Analysis */}
+      {/* 3. Payment & Refund Analysis */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow p-4">
           <h4 className="font-semibold text-lg text-purple-700 mb-2">
@@ -156,69 +151,24 @@ const Dashboard = () => {
             data={paymentStatusDataArray}
             label="Payments"
             totalAmount={paymentStatusDataArray.reduce((acc, cur) => acc + cur.amount, 0)}
-            colors={["#4caf50", "#f44336", "#ff9800"]}
+            colors={["#4caf50", "#ff9800", "#f44336"]}
             showTextAnchor={true}
           />
         </div>
-        <div className="bg-white rounded-xl shadow p-4">
-          <h4 className="font-semibold text-lg text-purple-700 mb-2">
-            Invoice Trends by Category
-          </h4>
-          <CustomBarChart
-            data={invoices.map((inv) => ({
-              category: inv.category || "Other",
-              amount: inv.amount || 0,
-            }))}
-          />
-        </div>
-      </section>
-
-      {/* 4. Budget Utilization */}
-      <section>
-        <h2 className="text-2xl font-semibold text-purple-700 mb-4">
-          Budget Utilization & Variance Analysis
-        </h2>
-        <div className="bg-white rounded-xl shadow p-4">
-          <h4 className="font-semibold text-lg text-purple-700 mb-2">
-            Budget Utilization Overview
-          </h4>
-          <p className="mt-2 text-sm text-gray-600">
-            Allocated Budget: RS. {allocatedBudget}, Current Spend: RS. {currentSpend}
-          </p>
-        </div>
-      </section>
-
-      {/* 5. Refund and Transaction Analytics */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow p-4">
           <h4 className="font-semibold text-lg text-purple-700 mb-2">
             Refund Analysis
           </h4>
           <CustomBarChart
             data={refundDataArray.map((item) => ({
-              month: item.reason,
+              category: item.reason,
               amount: item.refundAmount,
             }))}
           />
         </div>
-        <div className="bg-white rounded-xl shadow p-4">
-          <h4 className="font-semibold text-lg text-purple-700 mb-2">
-            Transaction Breakdown
-          </h4>
-          <CustomPieChart
-            data={[
-              { name: "Payments", amount: totalPayments },
-              { name: "Refunds", amount: totalRefunds },
-            ]}
-            label="Transactions"
-            totalAmount={totalPayments + totalRefunds}
-            colors={["#2196f3", "#f44336"]}
-            showTextAnchor={true}
-          />
-        </div>
       </section>
 
-      {/* 6. User-Centric Analysis */}
+      {/* 4. User-Centric Analysis */}
       <section>
         <h2 className="text-2xl font-semibold text-purple-700 mb-4">
           User-Centric Analysis
@@ -239,7 +189,7 @@ const Dashboard = () => {
         </div>
       </section>
 
-      {/* 7. Predictive Analytics & Forecasting */}
+      {/* 5. Predictive Analytics & Forecasting */}
       <section>
         <h2 className="text-2xl font-semibold text-purple-700 mb-4">
           Predictive Analytics & Forecasting
@@ -248,16 +198,19 @@ const Dashboard = () => {
           <h4 className="font-semibold text-lg text-purple-700 mb-2">
             Future Cash Flow Forecast
           </h4>
+          {/* For forecasting, we assume a 5% growth on the daily totals */}
           <CustomLineChart
-            data={timeSeriesData.map((item) => ({
-              month: item.month,
-              amount: Math.round(item.amount * 1.05), // assume 5% growth
+            data={dailyTrendsChartData.map((item) => ({
+              date: item.date,
+              amount: Math.round(item.total * 1.05),
             }))}
+            xKey="date"
+            yKey="amount"
           />
         </div>
       </section>
 
-      {/* 8. Comparative Analysis */}
+      {/* 6. Comparative Analysis */}
       <section>
         <h2 className="text-2xl font-semibold text-purple-700 mb-4">
           Comparative Analysis
@@ -265,30 +218,30 @@ const Dashboard = () => {
         <div className="bg-white rounded-xl shadow p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <h4 className="font-semibold text-lg text-purple-700 mb-2">
-              Payments: This Month vs. Last Month
+              Payments: Today vs. Yesterday
             </h4>
             <CustomBarChart
               data={[
-                { month: "Last Month", amount: totalPayments * 0.8 },
-                { month: "This Month", amount: totalPayments },
+                { day: "Yesterday", amount: totalPayments * 0.9 },
+                { day: "Today", amount: totalPayments },
               ]}
             />
           </div>
           <div>
             <h4 className="font-semibold text-lg text-purple-700 mb-2">
-              Refunds: This Month vs. Last Month
+              Refunds: Today vs. Yesterday
             </h4>
             <CustomBarChart
               data={[
-                { month: "Last Month", amount: totalRefunds * 0.8 },
-                { month: "This Month", amount: totalRefunds },
+                { day: "Yesterday", amount: totalRefunds * 0.9 },
+                { day: "Today", amount: totalRefunds },
               ]}
             />
           </div>
         </div>
       </section>
 
-      {/* 9. Advanced Visualization Techniques */}
+      {/* 7. Advanced Visualization Techniques */}
       <section>
         <h2 className="text-2xl font-semibold text-purple-700 mb-4">
           Advanced Visualization Techniques

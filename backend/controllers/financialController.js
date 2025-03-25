@@ -253,17 +253,40 @@ export const generateExcelReport = async (req, res) => {
 // Dashboard Data: returns analytic overview for the financial manager.
 export const getDashboardData = async (req, res) => {
   try {
-    const totalIncomeAgg = await Income.aggregate([{ $group: { _id: null, total: { $sum: "$amount" } } }]);
-    const totalExpenseAgg = await Expense.aggregate([{ $group: { _id: null, total: { $sum: "$amount" } } }]);
+    // Aggregate total income from the Income collection.
+    const totalIncomeAgg = await Income.aggregate([
+      { $group: { _id: null, total: { $sum: "$amount" } } }
+    ]);
     const totalIncome = totalIncomeAgg.length > 0 ? totalIncomeAgg[0].total : 0;
+
+    // Aggregate total expense from the Expense collection.
+    const totalExpenseAgg = await Expense.aggregate([
+      { $group: { _id: null, total: { $sum: "$amount" } } }
+    ]);
     const totalExpense = totalExpenseAgg.length > 0 ? totalExpenseAgg[0].total : 0;
     
+    // Retrieve all detailed financial records with populated user data.
     const transactions = await Transaction.find({}).populate("user").lean();
     const refunds = await Refund.find({}).populate("user").lean();
     const payments = await Payment.find({}).populate("user").lean();
     const invoices = await Invoice.find({}).populate("user").lean();
     const budget = await Budget.findOne({}).lean();
+
+    // --- Daily Trends Aggregation ---
+    // This aggregation groups transactions by day (formatted as YYYY-MM-DD).
+    // It calculates both the sum of totalAmount and the count of transactions for each day.
+    const dailyTrends = await Transaction.aggregate([
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+          total: { $sum: "$totalAmount" },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } } // Sorts the results in ascending order by date.
+    ]);
     
+    // Return all the aggregated dashboard data including daily trends.
     res.status(200).json({
       totalIncome,
       totalExpense,
@@ -272,6 +295,7 @@ export const getDashboardData = async (req, res) => {
       payments,
       invoices,
       budget,
+      dailyTrends, // New field: daily trends for transactions.
     });
   } catch (error) {
     console.error("Error fetching dashboard data:", error);
