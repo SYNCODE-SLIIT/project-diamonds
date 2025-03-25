@@ -1,7 +1,7 @@
 import express from 'express';
 const router = express.Router();
 
-import { createApplication, updateApplicationStatus, getApplicationById, updateProfilePicture, upload, updateMemberProfile } from '../controllers/memberApplicationController.js';
+import { createApplication, updateApplicationStatus, getApplicationById, updateProfilePicture, upload, updateMemberProfile, checkMemberEmail } from '../controllers/memberApplicationController.js';
 import { validateMemberApplication } from '../middleware/validateMemberApplication.js';
 
 // Route to submit a new member application
@@ -15,6 +15,8 @@ router.put('/update-profile', updateMemberProfile);
 
 // Route to update the application status (for manager to approve/reject)
 router.put('/:id/status', updateApplicationStatus);
+router.get('/check-email', checkMemberEmail);
 
 router.get('/:id', getApplicationById);
+
 export default router;
