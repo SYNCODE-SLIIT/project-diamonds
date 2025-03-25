@@ -1,4 +1,3 @@
-// models/Package.js - Mongoose model for dance packages
 import mongoose from 'mongoose';
 
 const PackageSchema = new mongoose.Schema({

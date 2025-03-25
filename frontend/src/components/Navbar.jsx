@@ -1,23 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import logo from '../assets/Realistic_Golden_Logo_Mockup.png';
-import ourStory from '../assets/our-story-background.png';
-import community from '../assets/community-background.png';
-import perfomances from '../assets/performances-background.png';
-import training from '../assets/training-background.png';
-import classes from '../assets/classes-background.png';
-import give from '../assets/give-background.png';
 import '../styles/DropdownMenu.css';
-
-
+import assets from '../assets/assets.js';
 
 const Navbar = () => {
   const [dropdown, setDropdown] = useState(null);
   const [activeSubmenu, setActiveSubmenu] = useState(null);
   const [isLeaving, setIsLeaving] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const timeoutRef = useRef(null);
   const dropdownRef = useRef(null);
+  const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Clear timeout on unmount
   useEffect(() => {
@@ -25,6 +20,30 @@ const Navbar = () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+    };
+  }, []);
+
+  useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+  }, []);
+
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 100) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    
+    // Cleanup event listener
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
@@ -56,7 +75,6 @@ const Navbar = () => {
     const handleMouseMove = (e) => {
       if (dropdownRef.current && isLeaving) {
         const rect = dropdownRef.current.getBoundingClientRect();
-        // If mouse is inside dropdown, cancel the leaving state
         if (
           e.clientX >= rect.left &&
           e.clientX <= rect.right &&
@@ -137,7 +155,7 @@ const Navbar = () => {
           ]
         },
       ],
-      image: ourStory,
+      image: assets.navbar_ourStory,
     },
     {
       title: 'PERFORMANCES',
@@ -176,7 +194,7 @@ const Navbar = () => {
           ]
         },
       ],
-      image: perfomances,
+      image: assets.navbar_performances,
     },
     {
       title: 'JOIN US',
@@ -226,7 +244,7 @@ const Navbar = () => {
           ]
         },
       ],
-      image: training,
+      image: assets.navbar_joinUs,
     },
     {
       title: 'COMMUNITY',
@@ -265,7 +283,7 @@ const Navbar = () => {
           ]
         },
       ],
-      image: community,
+      image: assets.navbar_community,
     },
     {
       title: 'GALLERY',
@@ -304,7 +322,7 @@ const Navbar = () => {
           ]
         },
       ],
-      image: classes,
+      image: assets.navbar_gallery,
     },
     {
       title: 'GIVE',
@@ -343,9 +361,55 @@ const Navbar = () => {
           ]
         },
       ],
-      image: give,
+      image: assets.navbar_give,
     },
-  ];
+    isLoggedIn && {
+      title: 'MY EVENTS',
+      submenu: [
+        { 
+          name: 'EVENTS', 
+          description: 'Manage your upcoming and past events.',
+          bulletPoints: [
+            'View and manage upcoming events',
+            'Edit event details and schedule',
+            'Check attendee registrations',
+            'Review and archive past events'
+          ]
+        },
+        { 
+          name: 'EVENT REQUESTS', 
+          description: 'Create and manage event requests.',
+          bulletPoints: [
+            'Submit a new event request',
+            'Track approval status',
+            'Update or cancel pending requests',
+            'View request history'
+          ]
+        },
+        { 
+          name: 'EVENT DASHBOARD', 
+          description: 'Analyze event performance and insights.',
+          bulletPoints: [
+            'View event attendance analytics',
+            'Track ticket sales and revenue',
+            'Monitor marketing effectiveness',
+            'Generate reports on event success'
+          ]
+        },
+        { 
+          name: 'EVENT FEEDBACK & REVIEWS', 
+          description: 'Gather insights to enhance future events.',
+          bulletPoints: [
+            'Collect attendee reviews and ratings',
+            'Analyze feedback trends',
+            'Improve future event planning',
+            'Showcase positive testimonials'
+          ]
+        }
+      ],
+      image: assets.navbar_events,
+    },
+  ].filter(Boolean);
 
   // Animation variants
   const dropdownVariants = {
@@ -571,7 +635,9 @@ const Navbar = () => {
 
       
       <motion.nav 
-        className="bg-transparent text-white fixed top-0 left-0 w-full z-50"
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
+          scrolled ? 'bg-black' : 'bg-transparent'
+        }`}
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
@@ -580,8 +646,9 @@ const Navbar = () => {
           {/* Left side: Logo and nav items - Now aligned to the far left */}
           <div className="flex items-center space-x-8 pl-4">
             {/* Logo with subtle animation */}
+            <Link to="/">
             <motion.img 
-              src={logo} 
+              src={assets.logo2} 
               alt="Diamonds Logo" 
               className="h-20 w-auto" 
               initial={{ opacity: 0, scale: 0.95 }}
@@ -589,6 +656,7 @@ const Navbar = () => {
               transition={{ duration: 0.5 }}
               whileHover={{ scale: 1.05 }}
             />
+            </Link>
 
             {/* Navbar Items */}
             <ul className="flex space-x-6">
@@ -603,7 +671,7 @@ const Navbar = () => {
                   transition={{ duration: 0.3, delay: index * 0.05 + 0.2 }}
                 >
                   <motion.button 
-                    className="px-4 py-2 text-lg font-semibold hover:bg-gray-800 hover:bg-opacity-70 rounded-lg transition duration-300"
+                    className="px-4 py-2 text-lg font-semibold hover:bg-gray-800 hover:bg-opacity-70 rounded-lg transition duration-300 text-amber-50"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -636,6 +704,18 @@ const Navbar = () => {
                   transition: { duration: 0.4 } 
                 }}
                 whileTap={{ scale: 0.9 }}
+                onClick={
+                  item.icon === "fa-solid fa-user"
+                    ? () => {
+                        const token = localStorage.getItem("token");
+                        if (token) {
+                          navigate("/organizer-profile");
+                        } else {
+                          navigate("/login");
+                        }
+                      }
+                    : undefined
+                }
               >
                 <i className={item.icon}></i>
               </motion.button>

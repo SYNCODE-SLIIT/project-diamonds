@@ -94,4 +94,97 @@ export const loginUser = async (req, res) => {
       console.error("Login error:", error);
       return res.status(500).json({ message: "Server error during login." });
     }
-  };
+};
+
+export const getUserProfile = async (req, res) => {
+  try {
+    // Assuming req.user contains the authenticated user's ID (set by auth middleware)
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    return res.status(200).json(user);
+  } catch (error) {
+    return res.status(500).json({ message: "Error fetching user profile", error: error.message });
+  }
+};
+
+export const updateUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    // Update allowed fields in the user collection
+    if (req.body.fullName) user.fullName = req.body.fullName;
+    if (req.body.profilePicture) user.profilePicture = req.body.profilePicture;
+    // Optionally update the email if you want it to be synchronized
+    if (req.body.email) user.email = req.body.email;
+    
+    const updatedUser = await user.save();
+    return res.status(200).json({ message: "Profile updated", user: updatedUser });
+  } catch (error) {
+    return res.status(500).json({ message: "Error updating profile", error: error.message });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    return res.status(200).json({ message: "User deleted successfully." });
+  } catch (error) {
+    return res.status(500).json({ message: "Error deleting user", error: error.message });
+  }
+};
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find();
+    return res.status(200).json(users);
+  } catch (error) {
+    return res.status(500).json({ message: "Error fetching users", error: error.message });
+  }
+};
+
+export const updatePassword = async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  if (!oldPassword || !newPassword) {
+    return res.status(400).json({ message: "Old and new passwords are required." });
+  }
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    // Since password is stored in plaintext for now, compare directly
+    if (oldPassword !== user.passwordHashed) {
+      return res.status(400).json({ message: "Old password is incorrect." });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: "New password must be at least 8 characters long." });
+    }
+    user.passwordHashed = newPassword;
+    await user.save();
+    return res.status(200).json({ message: "Password updated successfully." });
+  } catch (error) {
+    return res.status(500).json({ message: "Error updating password", error: error.message });
+  }
+};
+
+// Check if an email already exists in the database
+export const checkEmail = async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required." });
+    }
+    // Assuming you have imported the User model
+    const user = await User.findOne({ email });
+    res.status(200).json({ exists: !!user });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
