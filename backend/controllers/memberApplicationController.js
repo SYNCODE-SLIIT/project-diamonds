@@ -195,3 +195,16 @@ export const updateMemberProfile = async (req, res) => {
     res.status(500).json({ message: "Error updating profile", error: error.message });
   }
 };
+
+export const checkMemberEmail = async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required." });
+    }
+    const existingApplication = await MemberApplication.findOne({ email });
+    res.status(200).json({ exists: !!existingApplication });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

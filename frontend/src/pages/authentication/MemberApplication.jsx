@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './MemberApplication.css'; // Don't forget to create this CSS file
+import { useNavigate } from 'react-router-dom';
 
 // Helper function to calculate age from a birth date string (YYYY-MM-DD)
 const calculateAge = (birthDateStr) => {
@@ -14,48 +14,47 @@ const calculateAge = (birthDateStr) => {
 };
 
 const MemberApplication = () => {
+  const navigate = useNavigate();
+  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
+    // Step 1 fields:
     fullName: '',
     email: '',
     contactNumber: '',
-    birthDate: '', // new field for birth date
+    birthDate: '',
+    // Step 2 fields:
     danceStyle: '',
     yearsOfExperience: '',
     biography: '',
     achievements: ''
   });
   
-  const [errors, setErrors] = useState({});
   const [availabilityEntry, setAvailabilityEntry] = useState({
-    day: '',
-    start: '',
-    end: ''
+    date: '',
+    start: '08:00',
+    end: '22:00'
   });
-  
   const [availabilities, setAvailabilities] = useState([]);
-  
+  const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState('');
   const [responseMsg, setResponseMsg] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-  
+
+  // Validate individual fields
   const validateField = (name, value) => {
-    let errMsg = "";
-    switch(name) {
-      case "birthDate":
-        if (value) {
-          const age = calculateAge(value);
-          if (age < 18) {
-            errMsg = "Applicants must be at least 18 years old.";
-          }
+    let errMsg = '';
+    if (name === 'email') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (value && !emailRegex.test(value)) {
+        errMsg = 'Invalid email format.';
+      }
+    }
+    if (name === 'birthDate') {
+      if (value) {
+        const age = calculateAge(value);
+        if (age < 18) {
+          errMsg = 'You must be at least 18 years old.';
         }
-        break;
-      case "email":
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (value && !emailRegex.test(value)) {
-          errMsg = "Invalid email format.";
-        }
-        break;
-      default:
-        break;
+      }
     }
     setErrors(prev => ({ ...prev, [name]: errMsg }));
   };
@@ -65,52 +64,60 @@ const MemberApplication = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
     validateField(name, value);
   };
-  
+
   const handleAvailabilityChange = (e) => {
     const { name, value } = e.target;
     setAvailabilityEntry(prev => ({ ...prev, [name]: value }));
   };
-  
+
   const addAvailability = () => {
-    if (availabilityEntry.day && availabilityEntry.start && availabilityEntry.end) {
+    if (availabilityEntry.date && availabilityEntry.start && availabilityEntry.end) {
       setAvailabilities(prev => [...prev, availabilityEntry]);
-      setAvailabilityEntry({ day: '', start: '', end: '' });
+      setAvailabilityEntry({ date: '', start: '08:00', end: '22:00' });
     }
   };
 
-  const checkEmailUniqueness = async () => {
-    if(formData.email) {
-      try {
-        const res = await fetch(`http://localhost:4000/api/member-applications/check-email?email=${encodeURIComponent(formData.email)}`);
-        const data = await res.json();
-        if(data.exists) {
-          setErrors(prev => ({ ...prev, email: "An application with that email already exists." }));
-        } else {
-          setErrors(prev => ({ ...prev, email: "" }));
-        }
-      } catch (err) {
-        console.error("Error checking email uniqueness", err);
-      }
-    }
-  };
-  
-  const handleApplicationSubmit = async (e) => {
+  // Step 1: When "Next" is pressed, check required fields and email uniqueness.
+  const handleStep1Next = async (e) => {
     e.preventDefault();
-    setResponseMsg('');
-    setErrorMsg('');
-    
-    for (let key in errors) {
-      if (errors[key]) {
-        setErrorMsg("Please fix the errors before submitting.");
+    setSubmitError('');
+    // Validate required fields for step 1
+    if (!formData.fullName || !formData.email || !formData.contactNumber || !formData.birthDate) {
+      setSubmitError('Please fill in all required fields.');
+      return;
+    }
+    if (errors.email || errors.birthDate) {
+      setSubmitError('Please fix the errors before continuing.');
+      return;
+    }
+    // Check if email already exists in the member applications collection
+    try {
+      const res = await fetch(`http://localhost:4000/api/member-applications/check-email?email=${encodeURIComponent(formData.email)}`);
+      const data = await res.json();
+      if (data.exists) {
+        setSubmitError('An application with that email already exists.');
         return;
       }
+    } catch (err) {
+      setSubmitError('Error checking email uniqueness: ' + err.message);
+      return;
     }
-    
+    // Proceed to step 2 if no errors
+    setSubmitError('');
+    setStep(2);
+  };
+
+  // Final submission (Step 2)
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitError('');
+    setResponseMsg('');
+    // Construct payload
     const payload = {
       fullName: formData.fullName,
       email: formData.email,
       contactNumber: formData.contactNumber,
-      birthDate: formData.birthDate,  // sending birthDate instead of age
+      birthDate: formData.birthDate,
       danceStyle: formData.danceStyle,
       yearsOfExperience: formData.yearsOfExperience ? Number(formData.yearsOfExperience) : undefined,
       availability: availabilities,
@@ -119,177 +126,172 @@ const MemberApplication = () => {
         ? formData.achievements.split(',').map(item => item.trim()) 
         : []
     };
-    
+
     try {
       const res = await fetch('http://localhost:4000/api/member-applications/register/member/application', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (res.ok) {
-        setResponseMsg('Application submitted successfully!');
+        // Redirect to Application Submitted page
+        navigate('/application-submitted', { state: { message: data.message } });
       } else {
-        setErrorMsg(data.message || 'Submission failed');
+        setSubmitError(data.message || 'Submission failed');
       }
     } catch (error) {
-      setErrorMsg('Error: ' + error.message);
+      setSubmitError('Error: ' + error.message);
     }
   };
 
   return (
-    <div className="application-container">
-      <h2 className="application-title">Member Application</h2>
-      {responseMsg && <div className="success-message">{responseMsg}</div>}
-      {errorMsg && <div className="error-message">{errorMsg}</div>}
-      <form onSubmit={handleApplicationSubmit} className="application-form">
-        <div className="form-group">
-          <label>Full Name:</label>
-          <input 
-            type="text" 
-            name="fullName" 
-            value={formData.fullName} 
-            onChange={handleChange} 
-            required 
-          />
-          {errors.fullName && <div className="error-text">{errors.fullName}</div>}
-        </div>
-        <div className="form-group">
-          <label>Email:</label>
-          <input 
-            type="email" 
-            name="email" 
-            value={formData.email} 
-            onChange={handleChange} 
-            onBlur={checkEmailUniqueness}
-            required 
-          />
-          {errors.email && <div className="error-text">{errors.email}</div>}
-        </div>
-        <div className="form-group">
-          <label>Contact Number:</label>
-          <input 
-            type="text" 
-            name="contactNumber" 
-            value={formData.contactNumber} 
-            onChange={handleChange} 
-          />
-          {errors.contactNumber && <div className="error-text">{errors.contactNumber}</div>}
-        </div>
-        <div className="form-group">
-          <label>Birth Date:</label>
-          <input 
-            type="date" 
-            name="birthDate" 
-            value={formData.birthDate} 
-            onChange={handleChange} 
-            required 
-          />
-          {errors.birthDate && <div className="error-text">{errors.birthDate}</div>}
-        </div>
-        <div className="form-group">
-          <label>Dance Style:</label>
-          <input 
-            type="text" 
-            name="danceStyle" 
-            value={formData.danceStyle} 
-            onChange={handleChange} 
-            required 
-          />
-          {errors.danceStyle && <div className="error-text">{errors.danceStyle}</div>}
-        </div>
-        <div className="form-group">
-          <label>Years of Experience:</label>
-          <input 
-            type="number" 
-            name="yearsOfExperience" 
-            value={formData.yearsOfExperience} 
-            onChange={handleChange} 
-          />
-          {errors.yearsOfExperience && <div className="error-text">{errors.yearsOfExperience}</div>}
-        </div>
-        <div className="availability-section">
-          <h3>Availabilities</h3>
-          <div className="availability-inputs">
-            <div className="form-group">
-              <label>Select Day:</label>
-              <select 
-                name="day" 
-                value={availabilityEntry.day} 
-                onChange={handleAvailabilityChange} 
-              >
-                <option value="">Select a day</option>
-                <option value="Monday">Monday</option>
-                <option value="Tuesday">Tuesday</option>
-                <option value="Wednesday">Wednesday</option>
-                <option value="Thursday">Thursday</option>
-                <option value="Friday">Friday</option>
-                <option value="Saturday">Saturday</option>
-                <option value="Sunday">Sunday</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Start Time:</label>
+    <div className="min-h-screen flex justify-center items-center bg-cover bg-center" style={{ backgroundImage: "url('/images/background.jpeg')" }}>
+      <div className="w-[600px] h-[700px] bg-white rounded-xl shadow-2xl p-8">
+        {step === 1 && (
+          <form onSubmit={handleStep1Next} className="flex flex-col space-y-4">
+            <h1 className="text-2xl font-bold text-gray-800">Member Application</h1>
+            <div>
+              <label className="block mb-1">Full Name:</label>
               <input 
-                type="time" 
-                name="start" 
-                value={availabilityEntry.start} 
-                onChange={handleAvailabilityChange} 
+                type="text" 
+                name="fullName" 
+                value={formData.fullName} 
+                onChange={handleChange} 
+                required 
+                className="w-full p-2 bg-gray-100 border-none rounded focus:ring-2 focus:ring-blue-900"
               />
+              {errors.fullName && <p className="text-red-500 text-sm">{errors.fullName}</p>}
             </div>
-            <div className="form-group">
-              <label>End Time:</label>
+            <div>
+              <label className="block mb-1">Email:</label>
               <input 
-                type="time" 
-                name="end" 
-                value={availabilityEntry.end} 
-                onChange={handleAvailabilityChange} 
+                type="email" 
+                name="email" 
+                value={formData.email} 
+                onChange={handleChange} 
+                required 
+                className="w-full p-2 bg-gray-100 border-none rounded focus:ring-2 focus:ring-blue-900"
               />
+              {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
             </div>
-            <button type="button" onClick={addAvailability} className="add-button">
-              Add Availability
+            <div>
+              <label className="block mb-1">Contact Number:</label>
+              <input 
+                type="text" 
+                name="contactNumber" 
+                value={formData.contactNumber} 
+                onChange={handleChange} 
+                required 
+                className="w-full p-2 bg-gray-100 border-none rounded focus:ring-2 focus:ring-blue-900"
+              />
+              {errors.contactNumber && <p className="text-red-500 text-sm">{errors.contactNumber}</p>}
+            </div>
+            <div>
+              <label className="block mb-1">Birth Date:</label>
+              <input 
+                type="date" 
+                name="birthDate" 
+                value={formData.birthDate} 
+                onChange={handleChange} 
+                required 
+                className="w-full p-2 bg-gray-100 border-none rounded focus:ring-2 focus:ring-blue-900"
+              />
+              {errors.birthDate && <p className="text-red-500 text-sm">{errors.birthDate}</p>}
+            </div>
+            {submitError && <div className="text-red-500 text-sm">{submitError}</div>}
+            <button type="submit" className="w-full py-2 bg-blue-900 text-white font-bold uppercase rounded-full hover:bg-blue-700 transition">
+              Next
             </button>
-          </div>
-          {availabilities.length > 0 && (
-            <div className="availability-list">
-              <h4>Added Availabilities:</h4>
-              <ul>
-                {availabilities.map((avail, index) => (
-                  <li key={index}>
-                    {avail.day} — {avail.start} to {avail.end}
-                  </li>
-                ))}
-              </ul>
+          </form>
+        )}
+        {step === 2 && (
+          <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
+            <h1 className="text-2xl font-bold text-gray-800">Additional Details</h1>
+            <div>
+              <label className="block mb-1">Dance Style (Optional):</label>
+              <input 
+                type="text" 
+                name="danceStyle" 
+                value={formData.danceStyle} 
+                onChange={handleChange} 
+                className="w-full p-2 bg-gray-100 border-none rounded focus:ring-2 focus:ring-blue-900"
+              />
             </div>
-          )}
-        </div>
-        <div className="form-group">
-          <label>Biography:</label>
-          <textarea 
-            name="biography" 
-            value={formData.biography} 
-            onChange={handleChange} 
-            rows="5"
-          />
-          {errors.biography && <div className="error-text">{errors.biography}</div>}
-        </div>
-        <div className="form-group">
-          <label>Achievements:</label>
-          <input 
-            type="text" 
-            name="achievements" 
-            value={formData.achievements} 
-            onChange={handleChange} 
-            placeholder="Separate achievements with commas" 
-          />
-          {errors.achievements && <div className="error-text">{errors.achievements}</div>}
-        </div>
-        <button type="submit" className="submit-button">
-          Submit Application
-        </button>
-      </form>
+            <div>
+              <label className="block mb-1">Years of Experience:</label>
+              <input 
+                type="number" 
+                name="yearsOfExperience" 
+                value={formData.yearsOfExperience} 
+                onChange={handleChange} 
+                className="w-full p-2 bg-gray-100 border-none rounded focus:ring-2 focus:ring-blue-900"
+              />
+            </div>
+            <div className="availability-section">
+              <h3 className="text-lg font-semibold mb-2">Availabilities</h3>
+              <div className="flex space-x-2 mb-2">
+                <input 
+                  type="date" 
+                  name="date" 
+                  value={availabilityEntry.date} 
+                  onChange={handleAvailabilityChange} 
+                  className="p-2 bg-gray-100 border-none rounded focus:ring-2 focus:ring-blue-900"
+                />
+                <input 
+                  type="time" 
+                  name="start" 
+                  value={availabilityEntry.start} 
+                  onChange={handleAvailabilityChange} 
+                  className="p-2 bg-gray-100 border-none rounded focus:ring-2 focus:ring-blue-900"
+                />
+                <input 
+                  type="time" 
+                  name="end" 
+                  value={availabilityEntry.end} 
+                  onChange={handleAvailabilityChange} 
+                  className="p-2 bg-gray-100 border-none rounded focus:ring-2 focus:ring-blue-900"
+                />
+                <button type="button" onClick={addAvailability} className="py-2 px-3 bg-blue-900 text-white rounded-full hover:bg-blue-700 transition">
+                  Add
+                </button>
+              </div>
+              {availabilities.length > 0 && (
+                <ul className="list-disc pl-5">
+                  {availabilities.map((avail, index) => (
+                    <li key={index}>{avail.date} – {avail.start} to {avail.end}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div>
+              <label className="block mb-1">Biography:</label>
+              <textarea 
+                name="biography" 
+                value={formData.biography} 
+                onChange={handleChange} 
+                rows="4" 
+                className="w-full p-2 bg-gray-100 border-none rounded focus:ring-2 focus:ring-blue-900"
+              ></textarea>
+            </div>
+            <div>
+              <label className="block mb-1">Achievements (Comma-separated):</label>
+              <input 
+                type="text" 
+                name="achievements" 
+                value={formData.achievements} 
+                onChange={handleChange} 
+                placeholder="Separate achievements with commas" 
+                className="w-full p-2 bg-gray-100 border-none rounded focus:ring-2 focus:ring-blue-900"
+              />
+            </div>
+            {submitError && <div className="text-red-500 text-sm">{submitError}</div>}
+            <button type="submit" className="w-full py-2 bg-blue-900 text-white font-bold uppercase rounded-full hover:bg-blue-700 transition">
+              Sign Up
+            </button>
+          </form>
+        )}
+      </div>
     </div>
   );
 };

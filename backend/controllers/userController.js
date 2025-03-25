@@ -174,3 +174,17 @@ export const updatePassword = async (req, res) => {
   }
 };
 
+// Check if an email already exists in the database
+export const checkEmail = async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required." });
+    }
+    // Assuming you have imported the User model
+    const user = await User.findOne({ email });
+    res.status(200).json({ exists: !!user });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
