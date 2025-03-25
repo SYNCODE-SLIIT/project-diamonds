@@ -64,12 +64,6 @@ app.use('/api/organizers', organizerRoutes);
 
 // Import Routes
 
-
-
-import userRoutes from "./routes/userRoutes.js";
-import blogPostRoutes from "./routes/blogPostRoutes.js";
-import managePostRoutes from "./routes/managePostRoutes.js";
-
 // Financial Management Routes
 app.use('/api/finance', financialRoutes);
 
