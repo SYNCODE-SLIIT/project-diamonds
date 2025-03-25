@@ -11,6 +11,9 @@ import Profile from './pages/Profile';
 // Content Management Imports
 import AboutUs from './pages/aboutUs';
 import ContentMediaDashboard from "./pages/ContentMediaDashboard";
+import CreateBlogPost from './pages/content/CreateBlogPost';  // Add this import for CreateBlogPost page
+
+
 
 // User Management Imports
 import MemberApplication from './pages/authentication/MemberApplication';
@@ -35,6 +38,12 @@ import FPaymentForm from './components/Financial/FPaymentForm';
 import FinancialReport from './components/Financial/FinancialReport';
 import UserProvider from './context/userContext';
 import { Toaster } from 'react-hot-toast';
+import BlogPosts from './pages/content/BlogpostView';
+import EditBlogPost from './pages/content/EditBlogPost';
+import Events from './pages/content/Events';
+import UploadMedia from './pages/content/UploadMedia';
+
+
 
 const App = () => {
   return (
@@ -74,9 +83,25 @@ const App = () => {
             <Route path='/form' element={<FPaymentForm />} />
             <Route path='/report' element={<FinancialReport />} />
 
+            <Route path="/create-blog-post" element={<CreateBlogPost />} /> {/* Route to CreateBlogPost page */}
+            <Route path="/blog" element={<BlogPosts />} />
+            <Route path="/blog/edit/:id" element={<EditBlogPost />}/>
+
+            <Route path="/event" element={<Events />} />
+            <Route path="/upload" element={<UploadMedia />} />
+
+         
+
+
+
+
+
+
             {/* Content Management Route */}
             <Route path="/Cmanager" element={<ContentMediaDashboard />} />
+           
           </Routes>
+
 
           {/* Notifications */}
           <Toaster
