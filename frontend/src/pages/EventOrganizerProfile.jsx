@@ -33,7 +33,7 @@ const EventOrganizerProfile = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    navigate('/login');
+    navigate('/');
   };
 
   if (loading) {

@@ -31,7 +31,7 @@ const Login = () => {
         if (data.user.role === 'member') {
           navigate('/member-dashboard');
         } else if (data.user.role === 'organizer') {
-          navigate('/organizer-profile');
+          navigate('/');
         } else {
           navigate('/dashboard');
         }
