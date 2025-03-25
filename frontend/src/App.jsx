@@ -27,6 +27,7 @@ import MemberDashboardInbox from './pages/membership/MemberDashboardInbox';
 import MemberDashboardNewRequest from './pages/membership/MemberDashboardNewRequest';
 import MemberDashboardUpcomingEvents from './pages/membership/MemberDashboardUpcomingEvents';
 import EditMemberProfile from './pages/membership/EditMemberProfile';
+
 import ChatRoom from './pages/membership/ChatRoom';
 import GroupCreation from './pages/admin/GroupCreation';
 import ApplicationSubmitted from './pages/authentication/ApplicationSubmitted';
@@ -34,10 +35,14 @@ import ApplicationSubmitted from './pages/authentication/ApplicationSubmitted';
 import PackageList from './components/PackageList';
 
 
+import FinancialDashboard from './components/Financial/FinancialDashboard'
+
+
 // public layout and pages
 import PublicLayout from './components/layout/PublicLayout';
 import Home from './pages/home';
 import Contactus from './pages/Contactus';
+
 import OrganizerProfile from './pages/EventOrganizerProfile';
 import { Toaster } from 'react-hot-toast';
 import BlogPosts from './pages/content/BlogpostView';
@@ -47,10 +52,16 @@ import UploadMedia from './pages/content/UploadMedia';
 
 
 
+import Profile from './pages/Profile';
+
+
 import AdminLayout from './components/layout/AdminLayout';
 import UserProvider from './context/userContext';
-// import FinancialDashboard from './components/FinancialDashboard';
+import { Toaster } from 'react-hot-toast';
 
+import BudgetForm from './components/Financial/BudgetForm';
+import RefundForm from './components/Financial/RefundForm';
+import PaymentOptions from './components/Financial/PaymentOptions';
 
 const App = () => {
   return (
@@ -59,6 +70,7 @@ const App = () => {
         
           
           <Routes>
+
           <Route element={<PublicLayout />}>
               <Route path='/' element={<Home />} />
               <Route path='/contactUs' element={<Contactus />} />
@@ -72,6 +84,23 @@ const App = () => {
               {/* <Route path='/organizer/new-event' element={<OrganizerNewEvent />} />
               <Route path='/organizer/manage-events' element={<OrganizerManageEvents />} /> */}
             </Route>
+
+            <Route path='/' element={<Home />} />
+
+            {/* UserManagement */}
+            <Route path='/register/member/application' element={<MemberApplication />} />
+            <Route path='/admin/applications' element={<AdminApplicationsList />} />
+            <Route path='/admin/applications/:id' element={<AdminApplicationDetails />} />
+            <Route path='/register/member/createAccount' element={<CreateMemberAccount />} />
+            <Route path='/register/organizer' element={<RegisterOrganizer />} />
+            <Route path='/login' element={<Login />} />
+
+            <Route path='/contactUs' element={<Contactus />} />
+            <Route path='/profile' element={<Profile />} />
+            <Route path='/financial' element={<FinancialDashboard />} />
+            <Route path='/bform' exact element={<BudgetForm/>} />
+            <Route path='/rform' exact element={<RefundForm/>} />
+            <Route path='/pform' exact element={<PaymentOptions />} />
 
        
             <Route path="/member-dashboard" element={<MemberDashboardLayout />}>
