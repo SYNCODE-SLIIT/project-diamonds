@@ -27,8 +27,10 @@ import EditMemberProfile from './pages/membership/EditMemberProfile';
 import ChatRoom from './pages/membership/ChatRoom';
 import GroupCreation from './pages/admin/GroupCreation';
 import ApplicationSubmitted from './pages/authentication/ApplicationSubmitted';
-
+import AdminInviteApplicant from './pages/authentication/AdminInviteApplicant';
 import PackageList from './components/PackageList';
+import AdminInvitedApplicationsList from './pages/authentication/AdminInvitedApplicationsList';
+
 
 
 // public layout and pages
@@ -59,7 +61,6 @@ const App = () => {
               <Route path='/register/member/createAccount' element={<CreateMemberAccount />} />
               <Route path='/register/organizer' element={<RegisterOrganizer />} />
               <Route path="/application-submitted" element={<ApplicationSubmitted />} />
-
               {/* <Route path='/organizer/new-event' element={<OrganizerNewEvent />} />
               <Route path='/organizer/manage-events' element={<OrganizerManageEvents />} /> */}
             </Route>
@@ -80,10 +81,13 @@ const App = () => {
               <Route path="upcoming-events" element={<MemberDashboardUpcomingEvents />} />
           </Route>
 
-          <Route path="/messaging/create-group" element={<GroupCreation />} />
+          
 
           <Route element={<AdminLayout />}>
-            <Route path='/admin/applications' element={<AdminApplicationsList />} />
+            <Route path="/messaging/create-group" element={<GroupCreation />} />
+            <Route path="/admin/invited-applications" element={<AdminInvitedApplicationsList />} />
+            <Route path='/admin/pending-applicationsList' element={<AdminApplicationsList />} />
+            <Route path="/admin/applications/:id/invite" element={<AdminInviteApplicant />} />
             <Route path='/admin/applications/:id' element={<AdminApplicationDetails />} />
             <Route path="/admin/packages" element={<PackageList />} />
             {/* <Route path='/financial' element={<FinancialDashboard />} /> */}
