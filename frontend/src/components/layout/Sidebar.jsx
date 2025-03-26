@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
 import 'boxicons';
-import './Sidebar.css';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/userContext';
 
@@ -33,53 +32,110 @@ const Sidebar = () => {
   };
 
   return (
-    <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
-      <div className="logo_content">
-        <div className="logo">
-          {!collapsed && <div className="logo_name">Profile</div>}
+    <div
+      className={`
+        fixed top-0 left-0 
+        ${collapsed ? 'w-[80px]' : 'w-[250px]'} 
+        h-full bg-[#1e1e2f] text-white 
+        pt-[6px] pb-[6px] pl-[14px] pr-[14px] 
+        shadow-[2px_0_12px_rgba(0,0,0,0.2)] 
+        flex flex-col 
+        transition-[width] duration-300 ease
+      `}
+    >
+      <div className="flex items-center justify-between mb-[30px]">
+        <div className="flex items-center">
+          {!collapsed && (
+            <div className="text-[22px] font-bold ml-[10px] transition-opacity duration-300 ease">
+              Profile
+            </div>
+          )}
         </div>
         <box-icon
           name="menu"
           color="#ffffff"
           onClick={() => setCollapsed(!collapsed)}
-          style={{ cursor: 'pointer' }}
+          className="cursor-pointer"
         ></box-icon>
       </div>
-      <ul className="nav_list">
+      <ul className="list-none p-0 m-0">
         {/* Dashboard */}
-        <li>
-          <NavLink to="/member-dashboard" end className={({ isActive }) => `nav_link ${isActive ? "active" : ""}`}>
+        <li className="mb-[15px]">
+          <NavLink
+            to="/member-dashboard"
+            end
+            className={({ isActive }) =>
+              `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+              flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px] 
+              transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+            }
+          >
             <box-icon name="grid-alt" color="#ffffff" type="solid"></box-icon>
-            {!collapsed && <span className="Links_name">Dashboard</span>}
+            {!collapsed && (
+              <span className="ml-[10px] transition-opacity duration-300 ease">
+                Dashboard
+              </span>
+            )}
           </NavLink>
         </li>
         {/* Expense Tracker with dropdown */}
-        <li>
-          <div className="nav_link toggle_item" onClick={() => setExpenseToggle(!expenseToggle)}>
-            <div className="left_content">
+        <li className="mb-[15px]">
+          <div
+            className="flex items-center justify-between cursor-pointer p-[10px] rounded-[8px] transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]"
+            onClick={() => setExpenseToggle(!expenseToggle)}
+          >
+            <div className="flex items-center">
               <box-icon name="credit-card" rotate="180" color="#ffffff"></box-icon>
-              {!collapsed && <span className="Links_name">Expense Tracker</span>}
+              {!collapsed && (
+                <span className="ml-[10px] transition-opacity duration-300 ease">
+                  Expense Tracker
+                </span>
+              )}
             </div>
             {!collapsed && (
-              <div className="right_arrow">
-                <box-icon name={expenseToggle ? "chevron-down" : "chevron-right"} color="#ffffff"></box-icon>
+              <div className="ml-[10px]">
+                <box-icon
+                  name={expenseToggle ? "chevron-down" : "chevron-right"}
+                  color="#ffffff"
+                ></box-icon>
               </div>
             )}
           </div>
           {!collapsed && expenseToggle && (
-            <ul className="sub_menu">
-              <li>
-                <NavLink to="/member-dashboard/dashboard" className={({ isActive }) => `nav_link ${isActive ? "active" : ""}`}>
+            <ul className="list-none pl-[20px] transition-all duration-300 ease">
+              <li className="mb-[15px]">
+                <NavLink
+                  to="/member-dashboard/dashboard"
+                  className={({ isActive }) =>
+                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px] 
+                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                  }
+                >
                   Transactions
                 </NavLink>
               </li>
-              <li>
-                <NavLink to="/member-dashboard/income" className={({ isActive }) => `nav_link ${isActive ? "active" : ""}`}>
+              <li className="mb-[15px]">
+                <NavLink
+                  to="/member-dashboard/income"
+                  className={({ isActive }) =>
+                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px] 
+                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                  }
+                >
                   Income
                 </NavLink>
               </li>
-              <li>
-                <NavLink to="/member-dashboard/expense" className={({ isActive }) => `nav_link ${isActive ? "active" : ""}`}>
+              <li className="mb-[15px]">
+                <NavLink
+                  to="/member-dashboard/expense"
+                  className={({ isActive }) =>
+                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px] 
+                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                  }
+                >
                   Expense
                 </NavLink>
               </li>
@@ -87,27 +143,51 @@ const Sidebar = () => {
           )}
         </li>
         {/* Events with dropdown */}
-        <li>
-          <div className="nav_link toggle_item" onClick={() => setEventsToggle(!eventsToggle)}>
-            <div className="left_content">
+        <li className="mb-[15px]">
+          <div
+            className="flex items-center justify-between cursor-pointer p-[10px] rounded-[8px] transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]"
+            onClick={() => setEventsToggle(!eventsToggle)}
+          >
+            <div className="flex items-center">
               <box-icon name="calendar-event" color="#ffffff"></box-icon>
-              {!collapsed && <span className="Links_name">Events</span>}
+              {!collapsed && (
+                <span className="ml-[10px] transition-opacity duration-300 ease">
+                  Events
+                </span>
+              )}
             </div>
             {!collapsed && (
-              <div className="right_arrow">
-                <box-icon name={eventsToggle ? "chevron-down" : "chevron-right"} color="#ffffff"></box-icon>
+              <div className="ml-[10px]">
+                <box-icon
+                  name={eventsToggle ? "chevron-down" : "chevron-right"}
+                  color="#ffffff"
+                ></box-icon>
               </div>
             )}
           </div>
           {!collapsed && eventsToggle && (
-            <ul className="sub_menu">
-              <li>
-                <NavLink to="/member-dashboard/new-request" className={({ isActive }) => `nav_link ${isActive ? "active" : ""}`}>
+            <ul className="list-none pl-[20px] transition-all duration-300 ease">
+              <li className="mb-[15px]">
+                <NavLink
+                  to="/member-dashboard/new-request"
+                  className={({ isActive }) =>
+                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px] 
+                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                  }
+                >
                   New Request
                 </NavLink>
               </li>
-              <li>
-                <NavLink to="/member-dashboard/upcoming-events" className={({ isActive }) => `nav_link ${isActive ? "active" : ""}`}>
+              <li className="mb-[15px]">
+                <NavLink
+                  to="/member-dashboard/upcoming-events"
+                  className={({ isActive }) =>
+                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px] 
+                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                  }
+                >
                   Upcoming Events
                 </NavLink>
               </li>
@@ -115,17 +195,39 @@ const Sidebar = () => {
           )}
         </li>
         {/* Calender */}
-        <li>
-          <NavLink to="/member-dashboard/calender" className={({ isActive }) => `nav_link ${isActive ? "active" : ""}`}>
+        <li className="mb-[15px]">
+          <NavLink
+            to="/member-dashboard/calender"
+            className={({ isActive }) =>
+              `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+              flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px] 
+              transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+            }
+          >
             <box-icon name="calendar-week" color="#ffffff"></box-icon>
-            {!collapsed && <span className="Links_name">Calender</span>}
+            {!collapsed && (
+              <span className="ml-[10px] transition-opacity duration-300 ease">
+                Calender
+              </span>
+            )}
           </NavLink>
         </li>
         {/* Inbox */}
-        <li>
-          <NavLink to="/member-dashboard/inbox" className={({ isActive }) => `nav_link ${isActive ? "active" : ""}`}>
+        <li className="mb-[15px]">
+          <NavLink
+            to="/member-dashboard/inbox"
+            className={({ isActive }) =>
+              `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+              flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px] 
+              transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+            }
+          >
             <box-icon name="message-square-dots" color="#ffffff"></box-icon>
-            {!collapsed && <span className="Links_name">Inbox</span>}
+            {!collapsed && (
+              <span className="ml-[10px] transition-opacity duration-300 ease">
+                Inbox
+              </span>
+            )}
             {!collapsed && totalUnread > 0 && (
               <span className="ml-auto bg-blue-500 text-white px-2 py-1 rounded-full text-xs">
                 {totalUnread}
@@ -135,37 +237,47 @@ const Sidebar = () => {
         </li>
       </ul>
       
-      {/* New container for profile and logout */}
-      <div className="profile_logout_container">
-        <hr className="divider" />
+      {/* Profile and Logout */}
+      <div className="mt-auto">
+        <hr className="border-0 border-t border-t-[rgba(255,255,255,0.2)] my-[10px]" />
         {/* Profile Item */}
-        <div className="profile_item">
-          <NavLink to="/member-dashboard/profile" className={({ isActive }) => `nav_link ${isActive ? "active" : ""}`}>
+        <div>
+          <NavLink
+            to="/member-dashboard/profile"
+            className={({ isActive }) =>
+              `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+              flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px] 
+              transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+            }
+          >
             {user && user.profilePicture ? (
               <img
                 src={user.profilePicture}
                 alt="Profile"
-                style={{ width: '24px', height: '24px', borderRadius: '50%' }}
+                className="w-[24px] h-[24px] rounded-full"
               />
             ) : (
               <box-icon name="user" color="#ffffff" type="solid"></box-icon>
             )}
             {!collapsed && (
-              <span className="Links_name">
+              <span className="ml-[10px] transition-opacity duration-300 ease">
                 {user ? user.fullName : "Profile"}
               </span>
             )}
           </NavLink>
         </div>
         {/* Logout */}
-        <div className="log_out">
+        <div className="mt-auto mb-[20px] pt-[20px]">
           <button 
-            className="nav_link logout_btn" 
+            className="flex items-center w-full text-left p-[10px] bg-transparent border-0 text-white cursor-pointer transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]"
             onClick={handleLogout}
-            style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', padding: '10px', display: 'flex', alignItems: 'center', color: '#fff', cursor: 'pointer' }}
           >
             <box-icon name="log-out" color="#ffffff"></box-icon>
-            {!collapsed && <span className="Links_name" style={{ marginLeft: '10px' }}>Log out</span>}
+            {!collapsed && (
+              <span className="ml-[10px] transition-opacity duration-300 ease">
+                Log out
+              </span>
+            )}
           </button>
         </div>
       </div>

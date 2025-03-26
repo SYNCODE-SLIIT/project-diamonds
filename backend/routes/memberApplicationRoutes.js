@@ -1,7 +1,7 @@
 import express from 'express';
 const router = express.Router();
 
-import { createApplication, updateApplicationStatus, getApplicationById, updateProfilePicture, upload, updateMemberProfile, checkMemberEmail } from '../controllers/memberApplicationController.js';
+import { createApplication, updateApplicationStatus, getApplicationById, updateProfilePicture, upload, updateMemberProfile, checkMemberEmail, inviteApplication, getInvitedApplications, getFinalizedApplications, deleteApplication } from '../controllers/memberApplicationController.js';
 import { validateMemberApplication } from '../middleware/validateMemberApplication.js';
 
 // Route to submit a new member application
@@ -17,6 +17,12 @@ router.put('/update-profile', updateMemberProfile);
 router.put('/:id/status', updateApplicationStatus);
 router.get('/check-email', checkMemberEmail);
 
-router.get('/:id', getApplicationById);
+router.get('/invited', getInvitedApplications);
+router.get('/finalized', getFinalizedApplications);
 
+router.delete('/:id', deleteApplication);
+
+// New route for inviting an applicant
+router.put('/:id/invite', inviteApplication);
+router.get('/:id', getApplicationById);
 export default router;

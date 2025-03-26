@@ -5,10 +5,11 @@ import ChatGroup from '../models/ChatGroup.js';
 export const createChatGroup = async (req, res) => {
   try {
     const { groupName, description, createdBy, members } = req.body;
+    // Do not reference a variable "user" here; just use createdBy from the payload.
     const newGroup = new ChatGroup({
       groupName,
       description,
-      createdBy,
+      createdBy, // this comes from the payload
       members
     });
     const savedGroup = await newGroup.save();
