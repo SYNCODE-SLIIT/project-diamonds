@@ -12,7 +12,10 @@ const AdminInbox = () => {
   useEffect(() => {
     if (user && user._id) {
       fetch(`http://localhost:4000/api/chat-groups/user/${user._id}`)
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) throw new Error(`Error: ${res.status}`);
+          return res.json();
+        })
         .then((data) => {
           setGroups(data.groups || []);
           setLoading(false);
@@ -30,14 +33,14 @@ const AdminInbox = () => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-bold">Admin Inbox</h2>
         <button 
-          onClick={() => navigate('/messaging/create-group')}
+          onClick={() => navigate('/admin/messaging/create-group')}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
         >
           Create Group
         </button>
       </div>
 
-      {/* Bottom Section: Existing Chat Groups List */}
+      {/* Groups List */}
       {loading && <div className="text-center py-8">Loading groups...</div>}
       {errorMsg && <div className="text-center text-red-500">{errorMsg}</div>}
       {!loading && groups.length === 0 && (
@@ -69,12 +72,12 @@ const AdminInbox = () => {
                     {group.description}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <Link 
-                      to={`/messaging/chat/${group._id}`}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-300"
-                    >
-                      View Group
-                    </Link>
+                  <Link 
+  to={`/admin/chat/${group._id}`}
+  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-300"
+>
+  View Group
+</Link>
                   </td>
                 </tr>
               ))}

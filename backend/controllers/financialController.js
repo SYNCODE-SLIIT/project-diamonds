@@ -220,7 +220,7 @@ export const makePayment = async (req, res) => {
   }
 };
 
-// Generate Invoice Report (unchanged)
+// Generate Invoice Report 
 export const generateInvoiceReport = async (req, res) => {
   try {
     const payments = await Payment.find({}).populate("user").lean();
@@ -233,7 +233,7 @@ export const generateInvoiceReport = async (req, res) => {
   }
 };
 
-// Generate Excel Report (unchanged)
+// Generate Excel Report 
 export const generateExcelReport = async (req, res) => {
   try {
     const transactions = await Transaction.find({}).lean();
@@ -272,9 +272,6 @@ export const getDashboardData = async (req, res) => {
     const invoices = await Invoice.find({}).populate("user").lean();
     const budget = await Budget.findOne({}).lean();
 
-    // --- Daily Trends Aggregation ---
-    // This aggregation groups transactions by day (formatted as YYYY-MM-DD).
-    // It calculates both the sum of totalAmount and the count of transactions for each day.
     const dailyTrends = await Transaction.aggregate([
       {
         $group: {
@@ -420,7 +417,7 @@ export const deleteFinancialRecord = async (req, res) => {
 //Edit financial record
 export const updateFinancialRecord = async (req, res) => {
   try {
-    // Destructure recordType (shorthand) and id from the URL parameters
+    // Destructure recordType and id from the URL parameters
     const { recordType, id } = req.params;
     // Data to update is provided in the request body
     const updateData = req.body;
@@ -511,7 +508,7 @@ export const paySalary = async (req, res) => {
     // Create an Income record with the specified icon and source
     const incomeRecord = await Income.create({
       userId: member._id,
-      icon: ":woman_dancing:",
+      icon: LuHandCoins,
       source: "Team Diamond Salary",
       amount: salaryAmount,
     });
@@ -531,13 +528,7 @@ export const paySalary = async (req, res) => {
   }
 };
 
-const dummyTransactions = [
-  { date: new Date("2023-07-01"), totalAmount: 1000 },
-  { date: new Date("2023-07-02"), totalAmount: 1500 },
-  { date: new Date("2023-07-03"), totalAmount: 1200 },
-  { date: new Date("2023-07-04"), totalAmount: 1800 },
-  { date: new Date("2023-06-15"), totalAmount: 2000 },
-];
+
 
 export const getFinancialReport = async (req, res) => {
   try {
