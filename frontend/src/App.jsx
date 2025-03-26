@@ -68,7 +68,7 @@ import EventRequestForm from './components/event/EventRequestForm';
 import OrganizerEventRequests from './components/event/OrganizerEventRequests';
 
 import MemberDashboardLayout from './components/layout/MemberDashboardLayout';
-import CalendarEvents from './pages/CalendarEvents';
+
 import AdminLayout from './components/layout/AdminLayout';
 import UserProvider from './context/userContext';
 

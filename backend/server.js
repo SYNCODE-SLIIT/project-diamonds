@@ -21,6 +21,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import additionalServiceRoutes from './routes/additionalServiceRoutes.js';
 import eventRequestRoutes from './routes/eventRequestRoutes.js';
+import organizerRoutes from './routes/organizerRoutes.js'
 
 
 
