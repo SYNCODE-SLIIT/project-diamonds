@@ -52,3 +52,12 @@ export const getChatGroupsForUser = async (req, res) => {
     res.status(500).json({ message: 'Error fetching chat groups', error: error.message });
   }
 };
+// Get all chat groups (for admin to view all available groups)
+export const getAllChatGroups = async (req, res) => {
+  try {
+    const groups = await ChatGroup.find();
+    res.status(200).json({ groups });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching chat groups', error: error.message });
+  }
+};

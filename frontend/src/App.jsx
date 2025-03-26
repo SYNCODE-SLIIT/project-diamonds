@@ -14,7 +14,7 @@ import UploadMedia from './pages/content/UploadMedia';
 
 // User Management Imports
 import MemberApplication from './pages/authentication/MemberApplication';
-import AdminApplicationsList from './pages/authentication/AdminApplicationsList';
+// import AdminApplicationsList from './pages/authentication/AdminApplicationsList';
 import AdminApplicationDetails from './pages/authentication/AdminApplicationDetails';
 import CreateMemberAccount from './pages/authentication/CreateMemberAccount';
 import Login from './pages/authentication/Login';
@@ -29,12 +29,13 @@ import AdminMembersList from './pages/authentication/AdminMembersList';
 import AdminOrganizersList from './pages/authentication/AdminOrganizersList';
 import ViewOrganizerDetails from './pages/authentication/ViewOrganizerDetails';
 import AdminInbox from './pages/admin/AdminInbox';
-
+import HeadmanChatRoom from './pages/admin/HeadmanChatRoom';
 import ChatRoom from './pages/membership/ChatRoom';
 import GroupCreation from './pages/admin/GroupCreation';
 import ApplicationSubmitted from './pages/authentication/ApplicationSubmitted';
 import AdminInviteApplicant from './pages/authentication/AdminInviteApplicant';
-import AdminInvitedApplicationsList from './pages/authentication/AdminInvitedApplicationsList';
+import AdminProfile from './pages/authentication/AdminProfile';
+// import AdminInvitedApplicationsList from './pages/authentication/AdminInvitedApplicationsList';
 import FinalizedDetails from './pages/authentication/FinalizedDetails';
 
 
@@ -61,12 +62,18 @@ import Contactus from './pages/Contactus';
 import OrganizerProfile from './pages/EventOrganizerProfile';
 
 import EventBookingPage from './pages/EventBookingPage';
+
+import EventRequestForm from './components/event/EventRequestForm';
+
 import OrganizerEventRequests from './components/event/OrganizerEventRequests';
 
 import MemberDashboardLayout from './components/layout/MemberDashboardLayout';
 import CalendarEvents from './pages/CalendarEvents';
 import AdminLayout from './components/layout/AdminLayout';
 import UserProvider from './context/userContext';
+
+import CalendarEvents from './pages/CalendarEvents';
+
 
 const App = () => {
   return (
@@ -78,8 +85,12 @@ const App = () => {
               <Route path='/contactUs' element={<Contactus />} />
               <Route path='/organizer-profile' element={<OrganizerProfile />} />
               <Route path='/login' element={<Login />} />
+
               {/* <Route path='/event-request' element={<EventRequestForm />} /> */}
               <Route path='/register/member/application' element={<MemberApplication />} />
+
+              <Route path='/apply-now' element={<MemberApplication />} />
+
               <Route path='/register/member/createAccount' element={<CreateMemberAccount />} />
               <Route path="/application-submitted" element={<ApplicationSubmitted />} />
 
@@ -109,25 +120,23 @@ const App = () => {
 
 
 
-          <Route element={<AdminLayout />}>
-            <Route path="/messaging/create-group" element={<GroupCreation />} />
-            <Route path="/admin/inbox" element={<AdminInbox />} />
-            {/* <Route path="/admin/invited-applications" element={<AdminInvitedApplicationsList />} /> */}
-            {/* <Route path='/admin/pending-applicationsList' element={<AdminApplicationsList />} /> */}
-            <Route path="/admin/organizers" element={<AdminOrganizersList />} />
-            <Route path="/admin/organizers/:id" element={<ViewOrganizerDetails />} />
-            <Route path="/admin/applications/:id/invite" element={<AdminInviteApplicant />} />
-            <Route path='/admin/applications/:id' element={<AdminApplicationDetails />} />
-            <Route path="/admin/members" element={<AdminMembersList />} />
-            <Route path="/admin/packages" element={<PackageList />} />
-
-            <Route path="/admin/services" element={<ServicesList />} />
-            {/* <Route path='/financial' element={<FinancialDashboard />} /> */}
-
-            <Route path='/financial' element={<FinancialDashboard />} />
-            <Route path="/admin/applications/combined" element={<AdminApplicationsCombinedList />} />
-            <Route path="/admin/finalized/:id" element={<FinalizedDetails />} />
-
+          <Route path="/admin" element={<AdminLayout />}>
+            {/* All admin routes are now relative to /admin */}
+            <Route path="messaging/create-group" element={<GroupCreation />} />
+            <Route path="inbox" element={<AdminInbox />} />
+            <Route path="profile" element={<AdminProfile />} />
+            <Route path="chat/:groupId" element={<HeadmanChatRoom />} />
+            <Route path="organizers" element={<AdminOrganizersList />} />
+            <Route path="services" element={<ServicesList />} />
+            <Route path="organizers/:id" element={<ViewOrganizerDetails />} />
+            <Route path="applications/:id/invite" element={<AdminInviteApplicant />} />
+            <Route path="applications/:id" element={<AdminApplicationDetails />} />
+            <Route path="members" element={<AdminMembersList />} />
+            <Route path="packages" element={<PackageList />} />
+            {/* If FinancialDashboard is admin-specific, consider nesting it as well */}
+            <Route path="financial" element={<FinancialDashboard />} />
+            <Route path="applications/combined" element={<AdminApplicationsCombinedList />} />
+            <Route path="finalized/:id" element={<FinalizedDetails />} />
           </Route>
 
           {/* Financial Routes */}

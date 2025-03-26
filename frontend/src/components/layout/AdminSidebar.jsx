@@ -113,7 +113,7 @@ const AdminSidebar = () => {
         {/* Financial Management */}
         <li className="mb-[15px]">
           <NavLink
-            to="/financial"
+            to="/admin/financial"
             className={({ isActive }) =>
               `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
               flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import EditModal from './EditModal';
 import ViewModal from './ViewModal';
 import OverviewTab from './OverviewTab';
@@ -232,29 +232,6 @@ const Dashboard = () => {
                     <div className="space-y-1 text-gray-700">
                       <div>Amount: <span className="font-medium">RS.{item.amount}</span></div>
                       <div>Method: <span className="font-medium">{item.paymentMethod}</span></div>
-                      {/* <div className="mt-2">
-                        <strong>Bank Slip:</strong>
-                        {item.bankSlipFile ? (
-                          item.bankSlipFile.toLowerCase().endsWith('.pdf') ? (
-                            <iframe
-                              src={`http://localhost:4000/uploads/${item.bankSlipFile}`}
-                              width="200"
-                              height="200"
-                              title="Bank Slip PDF"
-                              className="mt-2 rounded shadow-md"
-                            />
-                          ) : (
-                            <img
-                              src={`http://localhost:4000/uploads/${item.bankSlipFile}`}
-                              alt="Bank Slip"
-                              width="200"
-                              className="mt-2 rounded shadow-md"
-                            />
-                          )
-                        ) : (
-                          <span className="text-gray-500">No bank slip uploaded</span>
-                        )}
-                      </div> */}
                     </div>
                   )}
                   {activeTab === 'budgets' && (
@@ -283,12 +260,14 @@ const Dashboard = () => {
                 </td>
                 <td className="p-4">
                   <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleEdit(item)}
-                      className="bg-gray-600 hover:bg-gray-700 text-white py-1 px-3 rounded shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1"
-                    >
-                      Edit
-                    </button>
+                    {activeTab === 'budgets' && (
+                      <button
+                        onClick={() => handleEdit(item)}
+                        className="bg-gray-600 hover:bg-gray-700 text-white py-1 px-3 rounded shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1"
+                      >
+                        Edit
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDelete(item)}
                       className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1"

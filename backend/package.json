@@ -12,9 +12,7 @@
   "description": "",
   "dependencies": {
     "bcrypt": "^5.1.1",
-
-    "cloudinary": "^1.26.3",
-
+    "cloudinary": "^1.41.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
@@ -30,7 +28,7 @@
     "react-icons": "^5.5.0",
     "streamifier": "^0.1.1",
     "stripe": "^17.7.0",
-    "validator": "^13.12.0",
+    "validator": "^13.15.0",
     "xlsx": "^0.18.5"
   }
 }
