@@ -45,13 +45,14 @@ import OrganizerProfile from './pages/EventOrganizerProfile';
 import { Toaster } from 'react-hot-toast';
 import BlogPosts from './pages/content/BlogpostView';
 import EditBlogPost from './pages/content/EditBlogPost';
-import Events from './pages/content/Events';
 import UploadMedia from './pages/content/UploadMedia';
 
 
 import AdminLayout from './components/layout/AdminLayout';
 import UserProvider from './context/userContext';
-import { Toaster } from 'react-hot-toast';
+import ViewMedia from './pages/content/ViewMedia';
+import EditMedia from './pages/content/EditMedia';
+import ViewAllMedia from './pages/content/ViewAllMedia';
 
 import BudgetForm from './components/Financial/BudgetForm';
 import RefundForm from './components/Financial/RefundForm';
@@ -64,23 +65,17 @@ const App = () => {
         
           
           <Routes>
-
-            <Route path='/' element={<Home />} />
-
-            {/* UserManagement */}
-            <Route path='/register/member/application' element={<MemberApplication />} />
-            <Route path='/admin/applications' element={<AdminApplicationsList />} />
-            <Route path='/admin/applications/:id' element={<AdminApplicationDetails />} />
-            <Route path='/register/member/createAccount' element={<CreateMemberAccount />} />
-            <Route path='/register/organizer' element={<RegisterOrganizer />} />
-            <Route path='/login' element={<Login />} />
-
-            <Route path='/contactUs' element={<Contactus />} />
           
             <Route path='/financial' element={<FinancialDashboard />} />
             <Route path='/bform' exact element={<BudgetForm/>} />
             <Route path='/rform' exact element={<RefundForm/>} />
             <Route path='/pform' exact element={<PaymentOptions />} />
+
+            <Route path="/media/:id" component={<ViewMedia/>} />
+            <Route path="/media/edit/:id" element={<EditMedia />} />
+
+            <Route path="/media" element={<ViewAllMedia />} 
+            />
 
           <Route element={<PublicLayout />}>
               <Route path='/' element={<Home />} />
@@ -89,11 +84,8 @@ const App = () => {
               <Route path='/login' element={<Login />} />
               <Route path='/register/member/application' element={<MemberApplication />} />
               <Route path='/register/member/createAccount' element={<CreateMemberAccount />} />
-              {/* <Route path='/register/organizer' element={<RegisterOrganizer />} /> */}
               <Route path="/application-submitted" element={<ApplicationSubmitted />} />
 
-              {/* <Route path='/organizer/new-event' element={<OrganizerNewEvent />} />
-              <Route path='/organizer/manage-events' element={<OrganizerManageEvents />} /> */}
             </Route>
 
 
@@ -127,10 +119,7 @@ const App = () => {
             <Route path="/blog" element={<BlogPosts />} />
             <Route path="/blog/edit/:id" element={<EditBlogPost />}/>
 
-            <Route path="/event" element={<Events />} />
             <Route path="/upload" element={<UploadMedia />} />
-
-         
 
 
             {/* Content Management Route */}

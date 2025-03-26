@@ -56,7 +56,6 @@ app.use("/api/organizers", organizerRoutes);
 app.use("/api/packages", packageRoutes);
 app.use("/api/blogposts", blogPostRoutes);
 app.use("/api/media", managePostRoutes);
-
 // API Endpoints
 app.get('/register/member/application', (req, res) => {
     res.send('API Working');
