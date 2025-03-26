@@ -72,6 +72,10 @@ import AdminLayout from './components/layout/AdminLayout';
 import UserProvider from './context/userContext';
 import CalendarEvents from './pages/CalendarEvents';
 
+import AdminDashboard from './components/team/AdminDashboard';
+
+
+
 const App = () => {
   return (
     <div className="">
@@ -124,17 +128,16 @@ const App = () => {
             <Route path='/admin/applications/:id' element={<AdminApplicationDetails />} />
             <Route path="/admin/members" element={<AdminMembersList />} />
             <Route path="/admin/packages" element={<PackageList />} />
-
+        
             <Route path="/admin/services" element={<ServicesList />} />
             {/* <Route path='/financial' element={<FinancialDashboard />} /> */}
 
             <Route path='/financial' element={<FinancialDashboard />} />
             <Route path="/admin/applications/combined" element={<AdminApplicationsCombinedList />} />
             <Route path="/admin/finalized/:id" element={<FinalizedDetails />} />
-
           </Route>
 
-
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
           {/* Financial Routes */}
 
           <Route path='/bform' element={<BudgetForm/>} />

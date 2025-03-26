@@ -21,7 +21,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import additionalServiceRoutes from './routes/additionalServiceRoutes.js';
 import eventRequestRoutes from './routes/eventRequestRoutes.js';
-
+import adminRoutes from './routes/adminRoutes.js';
 
 
 // Load environment variables
@@ -60,6 +60,7 @@ import messageRoutes from './routes/messageRoutes.js';
 app.use('/api/chat-groups', chatGroupRoutes);
 app.use('/api/messages', messageRoutes);
 
+app.use('/api/admin', adminRoutes);
 
 
 
