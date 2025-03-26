@@ -35,6 +35,7 @@ import GroupCreation from './pages/admin/GroupCreation';
 import ApplicationSubmitted from './pages/authentication/ApplicationSubmitted';
 import AdminInviteApplicant from './pages/authentication/AdminInviteApplicant';
 import AdminProfile from './pages/authentication/AdminProfile';
+import GroupMembers from './pages/admin/GroupMembers';
 // import AdminInvitedApplicationsList from './pages/authentication/AdminInvitedApplicationsList';
 import FinalizedDetails from './pages/authentication/FinalizedDetails';
 
@@ -119,6 +120,7 @@ const App = () => {
             <Route path="inbox" element={<AdminInbox />} />
             <Route path="profile" element={<AdminProfile />} />
             <Route path="chat/:groupId" element={<HeadmanChatRoom />} />
+            <Route path="groups/:groupId/members" element={<GroupMembers />} />
             <Route path="organizers" element={<AdminOrganizersList />} />
             <Route path="services" element={<ServicesList />} />
             <Route path="organizers/:id" element={<ViewOrganizerDetails />} />
