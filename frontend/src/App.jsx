@@ -39,12 +39,17 @@ import AdminProfile from './pages/authentication/AdminProfile';
 import FinalizedDetails from './pages/authentication/FinalizedDetails';
 
 
+import PackageList from './components/event/PackageList';
+import ServicesList from './components/event/AdditionalServicesList';
+
+
 // Financial Management Imports
 import FinancialDashboard from './components/Financial/FinancialDashboard';
 import Income from './pages/Dashboard/Income';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Expense from './pages/Dashboard/Expense';
 import RecentTransactionPage from './pages/Dashboard/RecentTransaction';
+
 
 import FinancialReport from './components/Financial/FinancialReport';
 import BudgetForm from './components/Financial/BudgetForm';
@@ -57,13 +62,16 @@ import Contactus from './pages/Contactus';
 
 import OrganizerProfile from './pages/EventOrganizerProfile';
 
+import EventRequestForm from './components/event/EventRequestForm';
+import OrganizerEventRequests from './components/event/OrganizerEventRequests';
+
+
 
 import MemberDashboardLayout from './components/layout/MemberDashboardLayout';
-import CalendarEvents from './pages/CalendarEvents';
+
 import AdminLayout from './components/layout/AdminLayout';
 import UserProvider from './context/userContext';
-import PackageList from './components/PackageList';
-
+import CalendarEvents from './pages/CalendarEvents';
 
 const App = () => {
   return (
@@ -77,12 +85,14 @@ const App = () => {
               <Route path='/login' element={<Login />} />
               <Route path='/apply-now' element={<MemberApplication />} />
               <Route path='/register/member/createAccount' element={<CreateMemberAccount />} />
-              {/* <Route path='/register/organizer' element={<RegisterOrganizer />} /> */}
               <Route path="/application-submitted" element={<ApplicationSubmitted />} />
+
+              <Route path='/events' element={<EventRequestForm />} />
+              <Route path="/event-requests" element={<OrganizerEventRequests />} />
+
               {/* <Route path='/organizer/new-event' element={<OrganizerNewEvent />} />
               <Route path='/organizer/manage-events' element={<OrganizerManageEvents />} /> */}
             </Route>
-
 
 
             <Route path="/member-dashboard" element={<MemberDashboardLayout />}>
@@ -110,6 +120,7 @@ const App = () => {
             <Route path="profile" element={<AdminProfile />} />
             <Route path="chat/:groupId" element={<HeadmanChatRoom />} />
             <Route path="organizers" element={<AdminOrganizersList />} />
+            <Route path="services" element={<ServicesList />} />
             <Route path="organizers/:id" element={<ViewOrganizerDetails />} />
             <Route path="applications/:id/invite" element={<AdminInviteApplicant />} />
             <Route path="applications/:id" element={<AdminApplicationDetails />} />

@@ -28,7 +28,7 @@
     "react-icons": "^5.5.0",
     "streamifier": "^0.1.1",
     "stripe": "^17.7.0",
-    "validator": "^13.12.0",
+    "validator": "^13.15.0",
     "xlsx": "^0.18.5"
   }
 }
