@@ -1,6 +1,5 @@
-// src/components/PackageList.jsx - Component to display all packages
 import React, { useState, useEffect } from 'react';
-import { getPackages, deletePackage } from '../services/packageService';
+import { getPackages, deletePackage } from '../../services/packageService';
 import PackageForm from './PackageForm';
 
 const PackageList = () => {
@@ -51,7 +50,6 @@ const PackageList = () => {
   // Delete a package
   const handleDelete = async () => {
     if (!packageToDelete) return;
-    
     try {
       await deletePackage(packageToDelete._id);
       setShowDeleteModal(false);
@@ -96,65 +94,77 @@ const PackageList = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {packages.map((pkg) => (
-            <div key={pkg._id} className="border rounded-lg shadow-md p-5">
-              <div className="flex justify-between items-start mb-2">
-                <h2 className="text-xl font-semibold">{pkg.packageName}</h2>
-                <span className={`px-2 py-1 rounded text-xs ${
-                  pkg.status === 'approved' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {pkg.status}
-                </span>
-              </div>
-              
-              <p className="text-sm text-gray-500 mb-2">ID: {pkg.packageID}</p>
-              <p className="mb-3">{pkg.description}</p>
-              
-              <div className="mb-3">
-                <p className="font-medium">Dance Styles:</p>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {pkg.danceStyle.map((style, idx) => (
-                    <span key={idx} className="bg-gray-100 px-2 py-1 rounded text-sm">
-                      {style}
-                    </span>
-                  ))}
+            <div key={pkg._id} className="border rounded-lg shadow-md overflow-hidden">
+              {/* Package Image */} 
+              <img 
+                src={pkg.image} 
+                alt={pkg.packageName} 
+                className="w-full h-48 object-cover" 
+              />
+
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <h2 className="text-xl font-semibold">{pkg.packageName}</h2>
+                  <span className={`px-2 py-1 rounded text-xs ${
+                    pkg.status === 'approved'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {pkg.status}
+                  </span>
                 </div>
-              </div>
-              
-              <div className="mb-3">
-                <p className="font-medium">Team:</p>
-                <p className="text-sm">
-                  {pkg.teamInvolvement.dancers} dancers,&nbsp;
-                  {pkg.teamInvolvement.choreographer} choreographer(s)
-                  {pkg.teamInvolvement.MC > 0 && `, ${pkg.teamInvolvement.MC} MC(s)`}
-                </p>
-              </div>
-              
-              {pkg.price && (
-                <p className="text-lg font-bold mt-2 mb-3">
-                  ${pkg.price.toFixed(2)}
-                  {pkg.travelFees > 0 && (
-                    <span className="text-sm font-normal text-gray-600">
-                      &nbsp;+ ${pkg.travelFees.toFixed(2)} travel fee
-                    </span>
-                  )}
-                </p>
-              )}
-              
-              <div className="flex justify-end gap-2 mt-4">
-                <button
-                  className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
-                  onClick={() => handleEdit(pkg)}
-                >
-                  Edit
-                </button>
-                <button
-                  className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                  onClick={() => handleDeleteConfirm(pkg)}
-                >
-                  Delete
-                </button>
+                
+                <p className="text-sm text-gray-500 mb-2">ID: {pkg.packageID}</p>
+                <p className="mb-3">{pkg.description}</p>
+                
+                <div className="mb-3">
+                  <p className="font-medium">Dance Styles:</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {pkg.danceStyles && pkg.danceStyles.map((style, idx) => (
+                      <span key={idx} className="bg-gray-100 px-2 py-1 rounded text-sm">
+                        {style}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="mb-3">
+                  <p className="font-medium">Team:</p>
+                  <p className="text-sm">
+                    {pkg.teamInvolvement ? (
+                      <>
+                        {pkg.teamInvolvement.maleDancers} Male, {pkg.teamInvolvement.femaleDancers} Female dancers, {pkg.teamInvolvement.choreographers} choreographer(s)
+                        {pkg.teamInvolvement.MC > 0 && `, ${pkg.teamInvolvement.MC} MC(s)`}
+                      </>
+                    ) : null}
+                  </p>
+                </div>
+                
+                {pkg.price !== null && pkg.price !== undefined && (
+                  <p className="text-lg font-bold mt-2 mb-3">
+                    ${Number(pkg.price).toFixed(2)}
+                    {pkg.travelFees > 0 && (
+                      <span className="text-sm font-normal text-gray-600">
+                        &nbsp;+ ${Number(pkg.travelFees).toFixed(2)} travel fee
+                      </span>
+                    )}
+                  </p>
+                )}
+                
+                <div className="flex justify-end gap-2 mt-4">
+                  <button
+                    className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                    onClick={() => handleEdit(pkg)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                    onClick={() => handleDeleteConfirm(pkg)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))}

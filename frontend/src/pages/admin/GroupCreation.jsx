@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserContext } from '../../context/userContext';
 import { 
   UserPlusIcon, 
   InformationCircleIcon, 
@@ -10,7 +9,6 @@ import {
 } from '@heroicons/react/24/outline';
 
 const GroupCreation = () => {
-  const { user } = useContext(UserContext);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     groupName: '',
@@ -26,6 +24,7 @@ const GroupCreation = () => {
       try {
         const res = await fetch('http://localhost:4000/api/users');
         const data = await res.json();
+        // Filter for members only
         const members = data.filter((u) => u.role === 'member');
         setAllMembers(members);
       } catch (err) {
@@ -53,19 +52,23 @@ const GroupCreation = () => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
-
-    if (!user) {
-      setErrorMsg("User not found. Please log in.");
-      return;
+  
+    // Default admin ID to be included in the members list.
+    const adminId = "67e0f270314253356851facb";
+  
+    // Ensure the admin is included in the group members by default.
+    let groupMembers = [...selectedMembers];
+    if (!groupMembers.includes(adminId)) {
+      groupMembers.unshift(adminId);
     }
-
+    
     const payload = {
       groupName: formData.groupName,
       description: formData.description,
-      createdBy: user._id,
-      members: selectedMembers
+      createdBy: adminId,
+      members: groupMembers
     };
-
+  
     try {
       const res = await fetch('http://localhost:4000/api/chat-groups', {
         method: 'POST',
@@ -77,7 +80,7 @@ const GroupCreation = () => {
         setSuccessMsg('Chat group created successfully!');
         setFormData({ groupName: '', description: '' });
         setSelectedMembers([]);
-        navigate(`/messaging/chat/${data.group._id}`);
+        navigate(`/admin/inbox`);
       } else {
         setErrorMsg(data.message || 'Error creating chat group');
       }
@@ -115,8 +118,7 @@ const GroupCreation = () => {
           {/* Group Name Input */}
           <div>
             <label className="block text-gray-700 font-semibold mb-2">
-              Group Name
-              <span className="text-red-500 ml-1">*</span>
+              Group Name<span className="text-red-500 ml-1">*</span>
             </label>
             <div className="relative">
               <input
@@ -135,8 +137,7 @@ const GroupCreation = () => {
           {/* Description Input */}
           <div>
             <label className="block text-gray-700 font-semibold mb-2">
-              Description
-              <span className="text-red-500 ml-1">*</span>
+              Description<span className="text-red-500 ml-1">*</span>
             </label>
             <textarea
               name="description"

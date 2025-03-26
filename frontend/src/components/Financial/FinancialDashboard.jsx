@@ -232,29 +232,7 @@ const Dashboard = () => {
                     <div className="space-y-1 text-gray-700">
                       <div>Amount: <span className="font-medium">RS.{item.amount}</span></div>
                       <div>Method: <span className="font-medium">{item.paymentMethod}</span></div>
-                      {/* <div className="mt-2">
-                        <strong>Bank Slip:</strong>
-                        {item.bankSlipFile ? (
-                          item.bankSlipFile.toLowerCase().endsWith('.pdf') ? (
-                            <iframe
-                              src={`http://localhost:4000/uploads/${item.bankSlipFile}`}
-                              width="200"
-                              height="200"
-                              title="Bank Slip PDF"
-                              className="mt-2 rounded shadow-md"
-                            />
-                          ) : (
-                            <img
-                              src={`http://localhost:4000/uploads/${item.bankSlipFile}`}
-                              alt="Bank Slip"
-                              width="200"
-                              className="mt-2 rounded shadow-md"
-                            />
-                          )
-                        ) : (
-                          <span className="text-gray-500">No bank slip uploaded</span>
-                        )}
-                      </div> */}
+                
                     </div>
                   )}
                   {activeTab === 'budgets' && (
