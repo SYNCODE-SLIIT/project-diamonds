@@ -11,6 +11,8 @@ import transactionRoutes from "./routes/transactionRoutes.js";
 import packageRoutes from './routes/packageRoutes.js';
 import path from "path";
 import { fileURLToPath } from "url";
+import additionalServiceRoutes from './routes/additionalServiceRoutes.js';
+import eventRequestRoutes from './routes/eventRequestRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -48,6 +50,7 @@ app.use('/api/messages', messageRoutes);
 
 // Organizer Routes
 import organizerRoutes from './routes/organizerRoutes.js';
+
 app.use('/api/organizers', organizerRoutes);
 
 // Financial Management Routes
@@ -60,6 +63,8 @@ app.use("/api/v1/transaction", transactionRoutes);
 
 // Package Routes from the 'dev' branch
 app.use('/api/packages', packageRoutes);
+app.use('/api/services', additionalServiceRoutes);
+app.use('/api/event-requests', eventRequestRoutes);
 
 // API Endpoints
 app.get('/register/member/application', (req, res) => {

@@ -28,8 +28,8 @@ import ChatRoom from './pages/membership/ChatRoom';
 import GroupCreation from './pages/admin/GroupCreation';
 import ApplicationSubmitted from './pages/authentication/ApplicationSubmitted';
 
-import PackageList from './components/PackageList';
-
+import PackageList from './components/event/PackageList';
+import ServicesList from './components/event/AdditionalServicesList';
 
 // public layout and pages
 import PublicLayout from './components/layout/PublicLayout';
@@ -37,7 +37,8 @@ import Home from './pages/home';
 import Contactus from './pages/Contactus';
 import OrganizerProfile from './pages/EventOrganizerProfile';
 import { Toaster } from 'react-hot-toast';
-
+import EventRequestForm from './components/event/EventRequestForm';
+import OrganizerEventRequests from './components/event/OrganizerEventRequests';
 import AdminLayout from './components/layout/AdminLayout';
 import UserProvider from './context/userContext';
 // import FinancialDashboard from './components/FinancialDashboard';
@@ -55,15 +56,19 @@ const App = () => {
               <Route path='/contactUs' element={<Contactus />} />
               <Route path='/organizer-profile' element={<OrganizerProfile />} />
               <Route path='/login' element={<Login />} />
+              <Route path='/event-request' element={<EventRequestForm />} />
               <Route path='/register/member/application' element={<MemberApplication />} />
               <Route path='/register/member/createAccount' element={<CreateMemberAccount />} />
-              {/* <Route path='/register/organizer' element={<RegisterOrganizer />} /> */}
               <Route path="/application-submitted" element={<ApplicationSubmitted />} />
+              <Route path='/events' element={<EventRequestForm />} />
+              <Route path="/event-requests" element={<OrganizerEventRequests />} />
 
               {/* <Route path='/organizer/new-event' element={<OrganizerNewEvent />} />
               <Route path='/organizer/manage-events' element={<OrganizerManageEvents />} /> */}
             </Route>
 
+            
+            
        
             <Route path="/member-dashboard" element={<MemberDashboardLayout />}>
               <Route index element={<MemberDashboardHome />} />
@@ -86,6 +91,7 @@ const App = () => {
             <Route path='/admin/applications' element={<AdminApplicationsList />} />
             <Route path='/admin/applications/:id' element={<AdminApplicationDetails />} />
             <Route path="/admin/packages" element={<PackageList />} />
+            <Route path="/admin/services" element={<ServicesList />} />
             {/* <Route path='/financial' element={<FinancialDashboard />} /> */}
           </Route>
 
