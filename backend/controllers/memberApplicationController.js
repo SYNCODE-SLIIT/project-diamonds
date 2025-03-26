@@ -262,3 +262,33 @@ export const getInvitedApplications = async (req, res) => {
     res.status(500).json({ message: "Error fetching invited applications" });
   }
 };
+
+export const getFinalizedApplications = async (req, res) => {
+  try {
+    // Find applications with status "Approved" or "Rejected" (exact case)
+    const finalizedApplications = await MemberApplication.find({
+      applicationStatus: { $in: ['Approved', 'Rejected'] }
+    });
+    res.status(200).json({ applications: finalizedApplications });
+  } catch (error) {
+    console.error("Error fetching finalized applications:", error);
+    res.status(500).json({ message: "Error fetching finalized applications" });
+  }
+};
+
+export const deleteApplication = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const application = await MemberApplication.findById(id);
+    if (!application) {
+      return res.status(404).json({ message: "Application not found." });
+    }
+    if (application.applicationStatus !== 'Rejected') {
+      return res.status(400).json({ message: "Only rejected applications can be deleted." });
+    }
+    await MemberApplication.findByIdAndDelete(id);
+    return res.status(200).json({ message: "Application deleted successfully." });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};

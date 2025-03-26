@@ -40,7 +40,7 @@ const AdminApplicationDetails = () => {
           setApplication(data.application);
           setStatusMsg(`Application ${newStatus.toLowerCase()} successfully!`);
           // Optional: Navigate back to applications list after a short delay
-          setTimeout(() => navigate('/admin/invited-applications'), 1500);
+          setTimeout(() => navigate('/admin/applications/combined'), 1500);
         } else {
           setErrorMsg(data.message || 'Error updating status');
         }

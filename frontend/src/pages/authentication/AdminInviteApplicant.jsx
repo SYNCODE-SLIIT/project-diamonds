@@ -48,7 +48,7 @@ const AdminInviteApplicant = () => {
       if (res.ok) {
         setApplication(data.application);
         setSubmitMsg(`Application ${newStatus.toLowerCase()} successfully!`);
-        setTimeout(() => navigate('/admin/pending-applicationsList'), 1500);
+        setTimeout(() => navigate('/admin/applications/combined'), 1500);
       } else {
         setSubmitError(data.message || "Error updating status.");
       }
@@ -91,7 +91,7 @@ const AdminInviteApplicant = () => {
       const data = await res.json();
       if (res.ok) {
         setSubmitMsg("Invitation sent successfully!");
-        setTimeout(() => navigate('/admin/pending-applicationsList'), 1500);
+        setTimeout(() => navigate('/admin/applications/combined'), 1500);
       } else {
         setSubmitError(data.message || "Error sending invitation.");
       }
@@ -112,7 +112,7 @@ const AdminInviteApplicant = () => {
       <div className="bg-white p-8 rounded-xl shadow-lg text-center">
         <div className="text-red-500 text-xl mb-4">{errorMsg}</div>
         <button 
-          onClick={() => navigate('/admin/pending-applicationsList')}
+          onClick={() => navigate('/admin/applications/combined')}
           className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
         >
           Return to Applications

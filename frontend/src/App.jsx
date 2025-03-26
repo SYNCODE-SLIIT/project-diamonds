@@ -2,7 +2,7 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import { Toaster } from 'react-hot-toast';
-
+import AdminApplicationsCombinedList from './pages/authentication/AdminApplicationsCombinedList';
 // Content Management Imports
 import AboutUs from './pages/aboutUs';
 import ContentMediaDashboard from "./pages/ContentMediaDashboard";
@@ -25,12 +25,16 @@ import MemberDashboardInbox from './pages/membership/MemberDashboardInbox';
 import MemberDashboardNewRequest from './pages/membership/MemberDashboardNewRequest';
 import MemberDashboardUpcomingEvents from './pages/membership/MemberDashboardUpcomingEvents';
 import EditMemberProfile from './pages/membership/EditMemberProfile';
+import AdminMembersList from './pages/authentication/AdminMembersList';
+import AdminOrganizersList from './pages/authentication/AdminOrganizersList';
+import ViewOrganizerDetails from './pages/authentication/ViewOrganizerDetails';
 
 import ChatRoom from './pages/membership/ChatRoom';
 import GroupCreation from './pages/admin/GroupCreation';
 import ApplicationSubmitted from './pages/authentication/ApplicationSubmitted';
 import AdminInviteApplicant from './pages/authentication/AdminInviteApplicant';
 import AdminInvitedApplicationsList from './pages/authentication/AdminInvitedApplicationsList';
+import FinalizedDetails from './pages/authentication/FinalizedDetails';
 
 
 // Financial Management Imports
@@ -99,12 +103,17 @@ const App = () => {
 
           <Route element={<AdminLayout />}>
             <Route path="/messaging/create-group" element={<GroupCreation />} />
-            <Route path="/admin/invited-applications" element={<AdminInvitedApplicationsList />} />
-            <Route path='/admin/pending-applicationsList' element={<AdminApplicationsList />} />
+            {/* <Route path="/admin/invited-applications" element={<AdminInvitedApplicationsList />} /> */}
+            {/* <Route path='/admin/pending-applicationsList' element={<AdminApplicationsList />} /> */}
+            <Route path="/admin/organizers" element={<AdminOrganizersList />} />
+            <Route path="/admin/organizers/:id" element={<ViewOrganizerDetails />} />
             <Route path="/admin/applications/:id/invite" element={<AdminInviteApplicant />} />
             <Route path='/admin/applications/:id' element={<AdminApplicationDetails />} />
+            <Route path="/admin/members" element={<AdminMembersList />} />
             <Route path="/admin/packages" element={<PackageList />} />
             <Route path='/financial' element={<FinancialDashboard />} />
+            <Route path="/admin/applications/combined" element={<AdminApplicationsCombinedList />} />
+            <Route path="/admin/finalized/:id" element={<FinalizedDetails />} />
           </Route>
 
 

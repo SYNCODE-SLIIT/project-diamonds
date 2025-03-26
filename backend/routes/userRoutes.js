@@ -10,7 +10,11 @@ import {
     deleteUser,
     getAllUsers,
     updatePassword,
-    checkEmail
+    checkEmail,
+    deleteMember,
+    getAllMembers,
+    getAllOrganizers,
+    deleteOrganizer
   } from '../controllers/userController.js';
 // GET /api/users/create?applicationId=xxx -> Returns fullName and email from the MemberApplication
 router.get('/create', getApplicationDetailsForAccountCreation);
@@ -35,5 +39,12 @@ router.get('/', getAllUsers);
 router.put('/password', updatePassword);
 
 router.get('/check-email', checkEmail);
+
+router.get('/members', getAllMembers);
+router.delete('/members/:id', deleteMember);
+
+// New routes for organizers:
+router.get('/organizers', getAllOrganizers);
+router.delete('/organizers/:id', deleteOrganizer);
 
 export default router;
