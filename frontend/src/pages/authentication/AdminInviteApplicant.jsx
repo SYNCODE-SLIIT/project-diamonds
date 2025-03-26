@@ -1,24 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { AlertCircle, CheckCircle2, X, ArrowRight, ArrowLeft } from 'lucide-react';
 
 const AdminInviteApplicant = () => {
-  const { id } = useParams(); // Application ID
+  const { id } = useParams();
   const navigate = useNavigate();
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   
-  // Multi-step form state
   const [step, setStep] = useState(1);
+  
+  const getDefaultAuditionDate = () => {
+    const date = new Date();
+    date.setDate(date.getDate() + 7);
+    return date.toISOString().split('T')[0];
+  };
   const [auditionDetails, setAuditionDetails] = useState({
-    auditionDate: '',
-    auditionTime: '',
-    location: ''
+    auditionDate: getDefaultAuditionDate(),
+    auditionTime: '13:00',
+    location: 'SLIIT New Building 14th floor'
   });
+  const [auditionErrors, setAuditionErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [submitMsg, setSubmitMsg] = useState('');
 
-  // Fetch applicant details
   useEffect(() => {
     fetch(`http://localhost:4000/api/admin/applications/${id}`)
       .then(res => res.json())
@@ -36,7 +42,6 @@ const AdminInviteApplicant = () => {
       });
   }, [id]);
 
-  // Function to update status (for reject action)
   const updateStatus = async (newStatus) => {
     try {
       const res = await fetch(`http://localhost:4000/api/admin/applications/${id}/status`, {
@@ -57,25 +62,40 @@ const AdminInviteApplicant = () => {
     }
   };
 
-  // Step 1: Proceed to audition invitation step
   const handleProceed = (e) => {
     e.preventDefault();
     setStep(2);
   };
 
-  // Handle changes in audition details inputs
+  const validateAuditionField = (name, value) => {
+    let errMsg = '';
+    if(name === 'auditionDate') {
+      const chosenDate = new Date(value);
+      const minDate = new Date();
+      minDate.setDate(minDate.getDate() + 7);
+      if(chosenDate < minDate) {
+        errMsg = "Invitation date must be at least 7 days from today.";
+      }
+    }
+    setAuditionErrors(prev => ({ ...prev, [name]: errMsg }));
+  };
+
   const handleAuditionDetailChange = (e) => {
     const { name, value } = e.target;
     setAuditionDetails(prev => ({ ...prev, [name]: value }));
+    validateAuditionField(name, value);
   };
 
-  // Final submission: send invitation email and update status to "Invited"
   const handleSendInvitation = async (e) => {
     e.preventDefault();
     setSubmitError('');
     setSubmitMsg('');
     
     const { auditionDate, auditionTime, location } = auditionDetails;
+    if(auditionErrors.auditionDate) {
+      setSubmitError("Please fix the errors before sending invitation.");
+      return;
+    }
     if (!auditionDate || !auditionTime || !location) {
       setSubmitError("Please complete all audition details.");
       return;
@@ -100,20 +120,20 @@ const AdminInviteApplicant = () => {
     }
   };
 
-  // Loading and error states
   if (loading) return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gray-100">
-      <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+    <div className="flex justify-center items-center h-screen">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-blue-500"></div>
     </div>
   );
   
   if (errorMsg) return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-xl shadow-lg text-center">
-        <div className="text-red-500 text-xl mb-4">{errorMsg}</div>
+    <div className="flex justify-center items-center h-screen bg-gray-100">
+      <div className="bg-white p-8 rounded-lg shadow-md text-center">
+        <AlertCircle className="mx-auto mb-4 text-red-500" size={48} />
+        <div className="text-xl text-gray-800 mb-4">{errorMsg}</div>
         <button 
           onClick={() => navigate('/admin/applications/combined')}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
         >
           Return to Applications
         </button>
@@ -122,60 +142,80 @@ const AdminInviteApplicant = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+    <div className="min-h-screen bg-gray-100 p-6">
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
         {/* Progress Indicator */}
-        <div className="flex w-full bg-gray-100">
-          <div 
-            className={`w-1/2 h-2 ${step === 1 ? 'bg-blue-500' : 'bg-gray-300'} transition-all duration-300`}
-          ></div>
-          <div 
-            className={`w-1/2 h-2 ${step === 2 ? 'bg-blue-500' : 'bg-gray-300'} transition-all duration-300`}
-          ></div>
+        <div className="flex justify-center mb-8">
+          <div className={`w-12 h-1 mx-2 ${step === 1 ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+          <div className={`w-12 h-1 mx-2 ${step === 2 ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
         </div>
 
-        {/* Step 1: Applicant Review with Proceed and Reject options */}
+        {/* Step 1: Applicant Review with all details */}
         {step === 1 && application && (
-          <div className="p-8 space-y-6">
-            <h2 className="text-2xl font-bold text-gray-800 text-center">Applicant Review</h2>
-            <div className="space-y-4 text-gray-700">
-              <div className="flex justify-between border-b pb-2">
-                <span className="font-medium">Full Name</span>
-                <span>{application.fullName}</span>
-              </div>
-              <div className="flex justify-between border-b pb-2">
-                <span className="font-medium">Email</span>
-                <span>{application.email}</span>
-              </div>
-              <div className="flex justify-between border-b pb-2">
-                <span className="font-medium">Contact Number</span>
-                <span>{application.contactNumber}</span>
-              </div>
-              <div className="flex justify-between border-b pb-2">
-                <span className="font-medium">Birth Date</span>
-                <span>
-                  {application.birthDate 
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Applicant Review</h2>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { label: 'Full Name', value: application.fullName },
+                { label: 'Email', value: application.email },
+                { label: 'Contact Number', value: application.contactNumber },
+                { 
+                  label: 'Birth Date', 
+                  value: application.birthDate 
                     ? new Date(application.birthDate).toLocaleDateString() 
-                    : 'N/A'}
-                </span>
+                    : 'N/A' 
+                },
+                { label: 'Dance Style', value: application.danceStyle },
+                { label: 'Years of Experience', value: application.yearsOfExperience }
+              ].map(({ label, value }) => (
+                <div key={label} className="bg-gray-50 p-3 rounded">
+                  <span className="text-sm text-gray-500 block">{label}</span>
+                  <span className="text-gray-800 font-medium">{value}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6">
+              <div className="bg-gray-50 p-4 rounded mb-4">
+                <span className="text-sm text-gray-500 block mb-2">Biography:</span>
+                <p className="text-gray-800">{application.biography}</p>
               </div>
-              <div className="flex justify-between pb-2">
-                <span className="font-medium">Dance Style</span>
-                <span>{application.danceStyle}</span>
+
+              <div className="bg-gray-50 p-4 rounded mb-4">
+                <span className="text-sm text-gray-500 block mb-2">Achievements:</span>
+                <p className="text-gray-800">
+                  {application.achievements && application.achievements.join(', ')}
+                </p>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded">
+                <span className="text-sm text-gray-500 block mb-2">Availabilities:</span>
+                {application.availability && application.availability.length > 0 ? (
+                  <ul className="space-y-1">
+                    {application.availability.map((avail, index) => (
+                      <li key={index} className="text-gray-800">
+                        {avail.day} — {avail.start} to {avail.end}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500">No availabilities provided.</p>
+                )}
               </div>
             </div>
-            <div className="flex justify-between mt-6">
+
+            <div className="flex justify-between mt-8">
               <button
                 onClick={() => updateStatus("Rejected")}
-                className="w-1/2 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-300"
+                className="flex items-center bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
               >
-                Reject
+                <X className="mr-2" /> Reject
               </button>
               <button
                 onClick={handleProceed}
-                className="w-1/2 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300"
+                className="flex items-center bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
               >
-                Proceed to Invitation
+                Proceed to Invitation <ArrowRight className="ml-2" />
               </button>
             </div>
           </div>
@@ -183,9 +223,9 @@ const AdminInviteApplicant = () => {
 
         {/* Step 2: Audition Details */}
         {step === 2 && (
-          <form onSubmit={handleSendInvitation} className="p-8 space-y-6">
-            <h2 className="text-2xl font-bold text-gray-800 text-center">Audition Invitation</h2>
-            <div className="space-y-4">
+          <form onSubmit={handleSendInvitation} className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Audition Invitation</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Audition Date
@@ -196,8 +236,11 @@ const AdminInviteApplicant = () => {
                   value={auditionDetails.auditionDate} 
                   onChange={handleAuditionDetailChange} 
                   required 
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                {auditionErrors.auditionDate && (
+                  <p className="text-red-500 text-sm mt-1">{auditionErrors.auditionDate}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -209,7 +252,7 @@ const AdminInviteApplicant = () => {
                   value={auditionDetails.auditionTime} 
                   onChange={handleAuditionDetailChange} 
                   required 
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
@@ -223,35 +266,37 @@ const AdminInviteApplicant = () => {
                   value={auditionDetails.location} 
                   onChange={handleAuditionDetailChange} 
                   required 
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
 
             {submitError && (
-              <div className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-lg">
+              <div className="bg-red-50 border border-red-300 text-red-800 px-4 py-3 rounded relative flex items-center">
+                <AlertCircle className="mr-3 text-red-500" size={24} />
                 {submitError}
               </div>
             )}
             {submitMsg && (
-              <div className="text-green-500 text-sm text-center bg-green-50 p-2 rounded-lg">
+              <div className="bg-green-50 border border-green-300 text-green-800 px-4 py-3 rounded relative flex items-center">
+                <CheckCircle2 className="mr-3 text-green-500" size={24} />
                 {submitMsg}
               </div>
             )}
 
-            <div className="flex space-x-4">
+            <div className="flex justify-between mt-8">
               <button 
                 type="button"
                 onClick={() => setStep(1)}
-                className="w-1/2 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-300"
+                className="flex items-center bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 transition-colors"
               >
-                Back
+                <ArrowLeft className="mr-2" /> Back
               </button>
               <button 
                 type="submit"
-                className="w-1/2 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-300 ease-in-out transform hover:scale-105"
+                className="flex items-center bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
               >
-                Send Invitation
+                Send Invitation <ArrowRight className="ml-2" />
               </button>
             </div>
           </form>

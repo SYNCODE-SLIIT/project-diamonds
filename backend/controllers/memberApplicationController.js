@@ -184,11 +184,19 @@ export const updateProfilePicture = async (req, res) => {
 // Function to update user profile details
 export const updateMemberProfile = async (req, res) => {
   try {
-    const { userId, email, contactNumber, availability } = req.body;
+    const { userId, email, contactNumber, availability, danceStyle, achievements } = req.body;
 
-    // Ensure email is updated in both collections
+    // Update email in the User collection
     const updatedUser = await User.findOneAndUpdate({ profileId: userId }, { email }, { new: true });
-    await MemberApplication.findByIdAndUpdate(userId, { email, contactNumber, availability });
+
+    // Update the MemberApplication document with additional fields:
+    await MemberApplication.findByIdAndUpdate(userId, { 
+      email, 
+      contactNumber, 
+      availability, 
+      danceStyle, 
+      achievements 
+    });
 
     res.status(200).json({ message: "Profile updated successfully", updatedUser });
   } catch (error) {

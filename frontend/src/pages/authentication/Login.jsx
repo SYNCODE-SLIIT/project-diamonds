@@ -79,7 +79,7 @@ const AuthPage = () => {
         } else if (data.user.role === 'organizer') {
           navigate('/');
         } else if (data.user.role === 'teamManager') {
-          navigate('/messaging/create-group');
+          navigate('/admin/profile');
         } else if (data.user.role === 'contentManager') {
           navigate('/content-dashboard');
         } else {

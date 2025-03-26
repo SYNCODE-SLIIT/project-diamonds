@@ -32,6 +32,7 @@ export const updateChatGroupMembers = async (req, res) => {
 };
 
 // Delete a chat group
+// Delete a chat group
 export const deleteChatGroup = async (req, res) => {
   try {
     const { groupId } = req.params;
@@ -52,3 +53,62 @@ export const getChatGroupsForUser = async (req, res) => {
     res.status(500).json({ message: 'Error fetching chat groups', error: error.message });
   }
 };
+// Get all chat groups (for admin to view all available groups)
+export const getAllChatGroups = async (req, res) => {
+  try {
+    const groups = await ChatGroup.find();
+    res.status(200).json({ groups });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching chat groups', error: error.message });
+  }
+};
+
+// Get all members for a given chat group (populated)
+export const getGroupMembers = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const group = await ChatGroup.findById(groupId).populate('members');
+    if (!group) {
+      return res.status(404).json({ message: "Group not found." });
+    }
+    res.status(200).json({ members: group.members });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching group members", error: error.message });
+  }
+};
+
+export const removeMemberFromGroup = async (req, res) => {
+  try {
+    const { groupId, memberId } = req.params;
+    const updatedGroup = await ChatGroup.findByIdAndUpdate(
+      groupId,
+      { $pull: { members: memberId } },
+      { new: true }
+    );
+    if (!updatedGroup) {
+      return res.status(404).json({ message: "Group not found." });
+    }
+    res.status(200).json({ message: "Member removed successfully", group: updatedGroup });
+  } catch (error) {
+    res.status(500).json({ message: "Error removing member", error: error.message });
+  }
+};
+
+export const addMembersToGroup = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const { memberIds } = req.body; // Expecting an array of member IDs to add
+    const updatedGroup = await ChatGroup.findByIdAndUpdate(
+      groupId,
+      { $addToSet: { members: { $each: memberIds } } },
+      { new: true }
+    );
+    if (!updatedGroup) {
+      return res.status(404).json({ message: "Group not found." });
+    }
+    res.status(200).json({ message: "Members added successfully", group: updatedGroup });
+  } catch (error) {
+    res.status(500).json({ message: "Error adding members", error: error.message });
+  }
+};
+
