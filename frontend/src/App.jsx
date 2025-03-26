@@ -14,7 +14,6 @@ import UploadMedia from './pages/content/UploadMedia';
 
 // User Management Imports
 import MemberApplication from './pages/authentication/MemberApplication';
-// import AdminApplicationsList from './pages/authentication/AdminApplicationsList';
 import AdminApplicationDetails from './pages/authentication/AdminApplicationDetails';
 import CreateMemberAccount from './pages/authentication/CreateMemberAccount';
 import Login from './pages/authentication/Login';
@@ -36,22 +35,15 @@ import ApplicationSubmitted from './pages/authentication/ApplicationSubmitted';
 import AdminInviteApplicant from './pages/authentication/AdminInviteApplicant';
 import AdminProfile from './pages/authentication/AdminProfile';
 import GroupMembers from './pages/admin/GroupMembers';
-// import AdminInvitedApplicationsList from './pages/authentication/AdminInvitedApplicationsList';
 import FinalizedDetails from './pages/authentication/FinalizedDetails';
-
-
 import PackageList from './components/event/PackageList';
 import ServicesList from './components/event/AdditionalServicesList';
-
-
 // Financial Management Imports
 import FinancialDashboard from './components/Financial/FinancialDashboard';
 import Income from './pages/Dashboard/Income';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Expense from './pages/Dashboard/Expense';
 import RecentTransactionPage from './pages/Dashboard/RecentTransaction';
-
-
 import FinancialReport from './components/Financial/FinancialReport';
 import BudgetForm from './components/Financial/BudgetForm';
 import RefundForm from './components/Financial/RefundForm';
@@ -60,151 +52,77 @@ import PaymentOptions from './components/Financial/PaymentOptions';
 import PublicLayout from './components/layout/PublicLayout';
 import Home from './pages/home';
 import Contactus from './pages/Contactus';
-
 import OrganizerProfile from './pages/EventOrganizerProfile';
-
-import { Toaster } from 'react-hot-toast';
-import BlogPosts from './pages/content/BlogpostView';
-import EditBlogPost from './pages/content/EditBlogPost';
-import UploadMedia from './pages/content/UploadMedia';
-
-
 import EventRequestForm from './components/event/EventRequestForm';
 import OrganizerEventRequests from './components/event/OrganizerEventRequests';
-
-
-
 import MemberDashboardLayout from './components/layout/MemberDashboardLayout';
-
 import AdminLayout from './components/layout/AdminLayout';
 import UserProvider from './context/userContext';
-
 import ViewMedia from './pages/content/ViewMedia';
 import EditMedia from './pages/content/EditMedia';
 import ViewAllMedia from './pages/content/ViewAllMedia';
-
-import BudgetForm from './components/Financial/BudgetForm';
-import RefundForm from './components/Financial/RefundForm';
-import PaymentOptions from './components/Financial/PaymentOptions';
-
 import CalendarEvents from './pages/CalendarEvents';
-
+import AdminDashboard from './components/team/AdminDashboard';
 
 const App = () => {
   return (
     <div className="">
       <UserProvider>
-
-        
-          
-          <Routes>
-          
-            <Route path='/financial' element={<FinancialDashboard />} />
-            <Route path='/bform' exact element={<BudgetForm/>} />
-            <Route path='/rform' exact element={<RefundForm/>} />
-            <Route path='/pform' exact element={<PaymentOptions />} />
-
-            <Route path="/media/:id" component={<ViewMedia/>} />
-            <Route path="/media/edit/:id" element={<EditMedia />} />
-
-            <Route path="/media" element={<ViewAllMedia />} 
-            />
-
-          <Route element={<PublicLayout />}>
-              <Route path='/' element={<Home />} />
-              <Route path='/contactUs' element={<Contactus />} />
-              <Route path='/organizer-profile' element={<OrganizerProfile />} />
-              <Route path='/login' element={<Login />} />
-              <Route path='/apply-now' element={<MemberApplication />} />
-              <Route path='/register/member/createAccount' element={<CreateMemberAccount />} />
-              <Route path="/application-submitted" element={<ApplicationSubmitted />} />
-
-              <Route path='/events' element={<EventRequestForm />} />
-              <Route path="/event-requests" element={<OrganizerEventRequests />} />
-
-              {/* <Route path='/organizer/new-event' element={<OrganizerNewEvent />} />
-              <Route path='/organizer/manage-events' element={<OrganizerManageEvents />} /> */}
-
-            </Route>
-
-
-            <Route path="/member-dashboard" element={<MemberDashboardLayout />}>
-              <Route index element={<MemberDashboardHome />} />
-              <Route path='dashboard' element={<Dashboard />} />
-              <Route path='expense' element={<Expense />} />
-              <Route path='income' element={<Income />} />
-              <Route path="transactions" element={<RecentTransactionPage />} />
-              <Route path="profile" element={<MemberDashboardProfile />} />
-              <Route path="edit-member-profile" element={<EditMemberProfile />} />
-              <Route path="calender" element={<MemberDashboardCalender />} />
-              <Route path="inbox" element={<MemberDashboardInbox />} />
-              <Route path="messaging/chat/:groupId" element={<ChatRoom />} />
-              <Route path="new-request" element={<MemberDashboardNewRequest />} />
-              <Route path="upcoming-events" element={<MemberDashboardUpcomingEvents />} />
-              <Route path="calendar-events" element={<CalendarEvents />} />
-          </Route>
-
-
-
-          <Route path="/admin" element={<AdminLayout />}>
-            {/* All admin routes are now relative to /admin */}
-            <Route path="messaging/create-group" element={<GroupCreation />} />
-            <Route path="inbox" element={<AdminInbox />} />
-            <Route path="profile" element={<AdminProfile />} />
-            <Route path="chat/:groupId" element={<HeadmanChatRoom />} />
-            <Route path="groups/:groupId/members" element={<GroupMembers />} />
-            <Route path="organizers" element={<AdminOrganizersList />} />
-            <Route path="services" element={<ServicesList />} />
-            <Route path="organizers/:id" element={<ViewOrganizerDetails />} />
-            <Route path="applications/:id/invite" element={<AdminInviteApplicant />} />
-            <Route path="applications/:id" element={<AdminApplicationDetails />} />
-            <Route path="members" element={<AdminMembersList />} />
-            <Route path="packages" element={<PackageList />} />
-            {/* If FinancialDashboard is admin-specific, consider nesting it as well */}
-            <Route path="financial" element={<FinancialDashboard />} />
-            <Route path="applications/combined" element={<AdminApplicationsCombinedList />} />
-            <Route path="finalized/:id" element={<FinalizedDetails />} />
-          </Route>
-
-
-  <Route path="/create-blog-post" element={<CreateBlogPost />} /> {/* Route to CreateBlogPost page */}
-            <Route path="/blog" element={<BlogPosts />} />
-            <Route path="/blog/edit/:id" element={<EditBlogPost />}/>
-
-            <Route path="/upload" element={<UploadMedia />} />
-
-
-            {/* Content Management Route */}
-            <Route path="/Cmanager" element={<ContentMediaDashboard />} />
-           
-          {/* </Routes> */}
-
-
+        <Routes>
+          <Route path='/financial' element={<FinancialDashboard />} />
           <Route path='/bform' element={<BudgetForm/>} />
           <Route path='/rform' element={<RefundForm/>} />
           <Route path='/pform' element={<PaymentOptions />} />
           <Route path='/report' element={<FinancialReport />} />
-
-          {/* Content Management Routes */}
-          <Route path="/create-blog-post" element={<CreateBlogPost />} />
-          <Route path="/blog" element={<BlogPosts />} />
-          <Route path="/blog/edit/:id" element={<EditBlogPost />} />
-          <Route path="/event" element={<Events />} />
-          <Route path="/upload" element={<UploadMedia />} />
-          <Route path="/Cmanager" element={<ContentMediaDashboard />} />
+          <Route path='/media/:id' element={<ViewMedia />} />
+          <Route path='/media/edit/:id' element={<EditMedia />} />
+          <Route path='/media' element={<ViewAllMedia />} />
+          <Route element={<PublicLayout />}>
+            <Route path='/' element={<Home />} />
+            <Route path='/contactUs' element={<Contactus />} />
+            <Route path='/organizer-profile' element={<OrganizerProfile />} />
+            <Route path='/login' element={<Login />} />
+            <Route path='/apply-now' element={<MemberApplication />} />
+            <Route path='/register/member/createAccount' element={<CreateMemberAccount />} />
+            <Route path='/application-submitted' element={<ApplicationSubmitted />} />
+            <Route path='/events' element={<EventRequestForm />} />
+            <Route path='/event-requests' element={<OrganizerEventRequests />} />
+          </Route>
+          <Route path='/member-dashboard' element={<MemberDashboardLayout />}>
+            <Route index element={<MemberDashboardHome />} />
+            <Route path='dashboard' element={<Dashboard />} />
+            <Route path='expense' element={<Expense />} />
+            <Route path='income' element={<Income />} />
+            <Route path='transactions' element={<RecentTransactionPage />} />
+            <Route path='profile' element={<MemberDashboardProfile />} />
+            <Route path='edit-member-profile' element={<EditMemberProfile />} />
+            <Route path='calender' element={<MemberDashboardCalender />} />
+            <Route path='inbox' element={<MemberDashboardInbox />} />
+            <Route path='messaging/chat/:groupId' element={<ChatRoom />} />
+            <Route path='new-request' element={<MemberDashboardNewRequest />} />
+            <Route path='upcoming-events' element={<MemberDashboardUpcomingEvents />} />
+            <Route path='calendar-events' element={<CalendarEvents />} />
+          </Route>
+          <Route path='/admin' element={<AdminLayout />}>
+            <Route path='messaging/create-group' element={<GroupCreation />} />
+            <Route path='inbox' element={<AdminInbox />} />
+            <Route path='profile' element={<AdminProfile />} />
+            <Route path='chat/:groupId' element={<HeadmanChatRoom />} />
+            <Route path='groups/:groupId/members' element={<GroupMembers />} />
+            <Route path='organizers' element={<AdminOrganizersList />} />
+            <Route path='services' element={<ServicesList />} />
+            <Route path='organizers/:id' element={<ViewOrganizerDetails />} />
+            <Route path='applications/:id/invite' element={<AdminInviteApplicant />} />
+            <Route path='applications/:id' element={<AdminApplicationDetails />} />
+            <Route path='members' element={<AdminMembersList />} />
+            <Route path='packages' element={<PackageList />} />
+            <Route path='financial' element={<FinancialDashboard />} />
+            <Route path='applications/combined' element={<AdminApplicationsCombinedList />} />
+            <Route path='finalized/:id' element={<FinalizedDetails />} />
+          </Route>
+          <Route path='/admin/dashboard' element={<AdminDashboard />} />
         </Routes>
-
-
-        
-        {/* Notifications */}
-        <Toaster
-          toastOptions={{
-            className: '',
-            style: {
-              fontSize: '13px',
-            },
-          }}
-        />
+        <Toaster toastOptions={{ className: '', style: { fontSize: '13px' } }} />
       </UserProvider>
     </div>
   );

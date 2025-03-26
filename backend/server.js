@@ -21,6 +21,7 @@ import memberApplicationRoutes from './routes/memberApplicationRoutes.js';
 import adminApplicationRoutes from './routes/adminApplicationRoutes.js';
 import chatGroupRoutes from './routes/chatGroupRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 import path from "path";
 import { fileURLToPath } from "url";
@@ -56,7 +57,6 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/packages', packageRoutes);
 app.use('/api/services', additionalServiceRoutes);
 app.use('/api/event-requests', eventRequestRoutes);
-
 app.use("/api/finance", financialRoutes);
 app.use("/api/member-applications", memberApplicationRoutes);
 app.use("/api/admin/applications", adminApplicationRoutes);
@@ -66,6 +66,7 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/organizers", organizerRoutes);
 app.use("/api/blogposts", blogPostRoutes);
 app.use("/api/media", managePostRoutes);
+app.use("/api/admin", adminRoutes);
 
 // API Endpoints
 app.get('/register/member/application', (req, res) => {
