@@ -1,36 +1,68 @@
+// 1. Backend Model: models/package.js
 import mongoose from 'mongoose';
 
+const DEFAULT_IMAGE_URL = "https://res.cloudinary.com/du5c9fw6s/image/upload/v1742922785/default_zojwtj.avif"
+
 const PackageSchema = new mongoose.Schema({
-    packageID: { type: String, required: true, unique: true, trim: true },
-    packageName: { type: String, required: true, trim: true, minlength: 3, maxlength: 100 },
-    description: { type: String, required: true, minlength: 10, maxlength: 500 },
+    packageID: { 
+        type: String, 
+        required: true, 
+        unique: true, 
+        trim: true,
+        default: function () {
+            const prefix = this.type === 'custom' ? 'CUS' : 'PKG';
+            return `${prefix}-${Date.now().toString(36)}`;
+        }
+    },
+    packageName: { 
+        type: String, 
+        required: true, 
+        trim: true, 
+        minlength: 3, 
+        maxlength: 100 
+    },
+    description: { 
+        type: String, 
+        required: true, 
+        minlength: 10, 
+        maxlength: 500 
+    },
     performances: [
         {
             type: { type: String, required: true, trim: true },
-            duration: { type: String, required: true, match: /^[1-9][0-9]*\s?(minutes|minute|hours|hour)$/ }
+            duration: { 
+                type: String, 
+                required: true, 
+                match: /^[1-9][0-9]*\s?(minutes|minute|hours|hour)$/ 
+            }
         }
     ],
-    danceStyle: { type: [String], required: true },
-    customizationOptions: { type: [String], default: [] },
+    danceStyles: { type: [String], required: true },
     teamInvolvement: {
-        dancers: { type: Number, required: true, min: 1 },
-        choreographer: { type: Number, required: true, min: 1 },
-        MC: { type: Number, min: 0 }
+        maleDancers: { type: Number, required: true, min: 0 }, 
+        femaleDancers: { type: Number, required: true, min: 0 },
+        choreographers: { type: Number, required: true, min: 1 },
+        MC: { type: Number, min: 0, default: 0 }
     },
-    additionalServices: [
-        {
-            service: { type: String, required: true, trim: true },
-            price: { type: Number, required: true, min: 0 }
-        }
-    ],
     travelFees: { type: Number, default: 0, min: 0 },
     bookingTerms: { type: String, required: true, minlength: 10 },
     price: { type: Number, default: null, min: 0 },
-    image: { type: String, default: 'https://i.pinimg.com/736x/b8/32/ff/b832ff90757e0cc6075e752976bdfe3c.jpg' },
-    type: { type: String, enum: ["system", "custom"], required: true },
-    status: { type: String, enum: ["approved", "pending"], default: "pending" },
-    createdBy: { type: String, default: null }  // Null for system packages, user ID for custom packages
+    image: { 
+        type: String, 
+        default: DEFAULT_IMAGE_URL
+    },
+    type: { 
+        type: String, 
+        enum: ["system", "custom"], 
+        required: true,
+        default: "system"
+    },
+    status: { 
+        type: String, 
+        enum: ["approved", "pending"], 
+        default: "pending" 
+    },
+    createdBy: { type: String, default: null }
 }, { timestamps: true });
 
-const Package = mongoose.model('Package', PackageSchema);
-export default Package;
+export default mongoose.model('Package', PackageSchema);

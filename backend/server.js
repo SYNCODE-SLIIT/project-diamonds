@@ -19,6 +19,8 @@ import calendarRoutes from './routes/calendarRoutes.js';
 
 import path from "path";
 import { fileURLToPath } from "url";
+import additionalServiceRoutes from './routes/additionalServiceRoutes.js';
+import eventRequestRoutes from './routes/eventRequestRoutes.js';
 
 
 
@@ -60,6 +62,9 @@ app.use('/api/messages', messageRoutes);
 
 // Organizer Routes
 
+import organizerRoutes from './routes/organizerRoutes.js';
+
+
 app.use('/api/organizers', organizerRoutes);
 
 // Import Routes
@@ -84,6 +89,8 @@ app.use('/api/calendar', calendarRoutes);
 
 // Package Routes from the 'dev' branch
 app.use('/api/packages', packageRoutes);
+app.use('/api/services', additionalServiceRoutes);
+app.use('/api/event-requests', eventRequestRoutes);
 
 app.use("/api/finance", financialRoutes);
 app.use("/api/member-applications", memberApplicationRoutes);
