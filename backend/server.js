@@ -60,9 +60,7 @@ import messageRoutes from './routes/messageRoutes.js';
 app.use('/api/chat-groups', chatGroupRoutes);
 app.use('/api/messages', messageRoutes);
 
-// Organizer Routes
 
-import organizerRoutes from './routes/organizerRoutes.js';
 
 
 app.use('/api/organizers', organizerRoutes);

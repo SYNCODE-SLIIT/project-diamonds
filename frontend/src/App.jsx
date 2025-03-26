@@ -61,7 +61,6 @@ import Contactus from './pages/Contactus';
 
 import OrganizerProfile from './pages/EventOrganizerProfile';
 
-import { Toaster } from 'react-hot-toast';
 import EventRequestForm from './components/event/EventRequestForm';
 import OrganizerEventRequests from './components/event/OrganizerEventRequests';
 
@@ -71,8 +70,7 @@ import MemberDashboardLayout from './components/layout/MemberDashboardLayout';
 
 import AdminLayout from './components/layout/AdminLayout';
 import UserProvider from './context/userContext';
-import PackageList from './components/PackageList';
-
+import CalendarEvents from './pages/CalendarEvents';
 
 const App = () => {
   return (
