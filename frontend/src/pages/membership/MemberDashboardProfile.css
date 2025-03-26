@@ -1,0 +1,145 @@
+/* MemberDashboardProfile.css */
+
+.profile-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff;
+    transition: all 0.3s ease;
+  }
+  
+  .profile-header {
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+  
+  .profile-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #2a2a5a;
+    margin-bottom: 1.5rem;
+  }
+  
+  .profile-picture-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+  
+  .profile-picture {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border: 3px solid #4a7bfc;
+  }
+  
+  .profile-icon {
+    font-size: 120px;
+    color: #2a2a5a;
+  }
+  
+  .profile-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .profile-table th {
+    background-color: #f3f4f6;
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+    width: 30%;
+  }
+  
+  .profile-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    color: #4b5563;
+  }
+  
+  .profile-table tr:last-child th,
+  .profile-table tr:last-child td {
+    border-bottom: none;
+  }
+  
+  .profile-table tr:hover {
+    background-color: #f9fafb;
+  }
+  
+  .availability-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .availability-item {
+    padding: 4px 0;
+    display: flex;
+    align-items: center;
+  }
+  
+  .availability-item:before {
+    content: "•";
+    color: #4a7bfc;
+    font-weight: bold;
+    display: inline-block;
+    width: 1em;
+    margin-right: 0.5em;
+  }
+  
+  .edit-button {
+    display: block;
+    width: 100%;
+    max-width: 200px;
+    margin: 1.5rem auto 0;
+    padding: 10px 16px;
+    background-color: #4a7bfc;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+  }
+  
+  .edit-button:hover {
+    background-color: #3a63d2;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .edit-button:active {
+    transform: translateY(1px);
+  }
+  
+  .loading-state, .error-state {
+    text-align: center;
+    padding: 2rem;
+    border-radius: 8px;
+    background-color: #f9fafb;
+    margin: 2rem auto;
+    max-width: 800px;
+  }
+  
+  .error-state {
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    background-color: #fee2e2;
+  }
+  
+  .no-data {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #555;
+  }

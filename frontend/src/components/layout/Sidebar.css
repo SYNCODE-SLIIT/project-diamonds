@@ -1,0 +1,165 @@
+/* Sidebar.css */
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100%;
+    background-color: #1e1e2f;
+    color: #fff;
+    padding: 6px 14px;
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
+  }
+  
+  /* Collapsed state */
+  .sidebar.collapsed {
+    width: 80px;
+  }
+  
+  /* Logo and content adjustments */
+  .logo_content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 30px;
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+  }
+  
+  .logo_name {
+    font-size: 22px;
+    font-weight: bold;
+    margin-left: 10px;
+    transition: opacity 0.3s ease;
+  }
+  
+  /* Hide text when collapsed */
+  .sidebar.collapsed .logo_name,
+  .sidebar.collapsed .Links_name {
+    opacity: 0;
+    pointer-events: none;
+  }
+  
+  /* Navigation list styling */
+  .nav_list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .nav_list li {
+    margin-bottom: 15px;
+  }
+  
+  /* For non-toggle links, use gap to space icon and text */
+  .nav_link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 16px;
+    padding: 10px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .nav_link:hover {
+    background-color: rgba(79, 70, 229, 0.15);
+  }
+  
+  /* Toggle items: maintain space between left and arrow */
+  .toggle_item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+  }
+  
+  /* Active link styling */
+.nav_link.active, .sub_link.active {
+  background-color: rgba(79, 70, 229, 0.25); /* Similar to hover effect */
+  font-weight: bold;
+}
+
+  .toggle_item:hover {
+    background-color: rgba(79, 70, 229, 0.15);
+  }
+  
+  .left_content {
+    display: flex;
+    align-items: center;
+  }
+  
+  .Links_name {
+    margin-left: 10px;
+    transition: opacity 0.3s ease;
+  }
+  
+  .right_arrow {
+    margin-left: 10px;
+  }
+  
+  /* Submenu styling */
+  .sub_menu {
+    list-style: none;
+    padding-left: 20px;
+    transition: all 0.3s ease;
+  }
+  
+  .sub_link {
+    display: block;
+    color: #fff;
+    text-decoration: none;
+    font-size: 15px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .sub_link:hover {
+    background-color: rgba(79, 70, 229, 0.15);
+  }
+  /* Add a divider line */
+.divider {
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  margin: 10px 0;
+}
+
+/* Container for profile and logout */
+.profile_logout_container {
+  margin-top: auto;  /* Pushes this container to the bottom of the sidebar */
+}
+
+/* Optional: adjust spacing for the profile item */
+.profile_item {
+  margin-bottom: 0px;
+}
+ /* Remove border-top from .log_out */
+.log_out {
+  margin-top: auto;
+  margin-bottom: 20px;
+  padding-top: 20px;
+  /* Remove this line: border-top: 1px solid rgba(255, 255, 255, 0.2); */
+}
+
+.log_out .nav_link {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+}
+
+.log_out .Links_name {
+  margin-left: 10px;
+}
