@@ -101,8 +101,8 @@ const ChatRoom = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      {/* Increased container size: max-w-xl instead of md */}
-      <div className="w-full max-w-xl bg-white shadow-xl rounded-xl overflow-hidden">
+      {/* Increased container size: max-w-4xl instead of max-w-xl */}
+      <div className="w-full max-w-4xl bg-white shadow-xl rounded-xl overflow-hidden">
         <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4">
           {/* Display groupName instead of static text */}
           <h1 className="text-2xl font-bold text-white text-center">{groupName}</h1>
@@ -119,7 +119,8 @@ const ChatRoom = () => {
           </div>
         )}
         
-        <div className="h-96 overflow-y-auto p-4 space-y-4 bg-gray-50">
+        {/* Increased height of chat messages container */}
+        <div className="h-[600px] overflow-y-auto p-4 space-y-4 bg-gray-50">
           {messages.length === 0 ? (
             <p className="text-center text-gray-500">No messages yet.</p>
           ) : (
