@@ -28,6 +28,7 @@ import EditMemberProfile from './pages/membership/EditMemberProfile';
 import AdminMembersList from './pages/authentication/AdminMembersList';
 import AdminOrganizersList from './pages/authentication/AdminOrganizersList';
 import ViewOrganizerDetails from './pages/authentication/ViewOrganizerDetails';
+import AdminInbox from './pages/admin/AdminInbox';
 
 import ChatRoom from './pages/membership/ChatRoom';
 import GroupCreation from './pages/admin/GroupCreation';
@@ -103,6 +104,7 @@ const App = () => {
 
           <Route element={<AdminLayout />}>
             <Route path="/messaging/create-group" element={<GroupCreation />} />
+            <Route path="/admin/inbox" element={<AdminInbox />} />
             {/* <Route path="/admin/invited-applications" element={<AdminInvitedApplicationsList />} /> */}
             {/* <Route path='/admin/pending-applicationsList' element={<AdminApplicationsList />} /> */}
             <Route path="/admin/organizers" element={<AdminOrganizersList />} />
