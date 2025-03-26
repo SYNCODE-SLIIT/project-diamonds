@@ -50,7 +50,6 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import Expense from './pages/Dashboard/Expense';
 import RecentTransactionPage from './pages/Dashboard/RecentTransaction';
 
-
 import FinancialReport from './components/Financial/FinancialReport';
 import BudgetForm from './components/Financial/BudgetForm';
 import RefundForm from './components/Financial/RefundForm';
@@ -62,16 +61,19 @@ import Contactus from './pages/Contactus';
 
 import OrganizerProfile from './pages/EventOrganizerProfile';
 
+import EventBookingPage from './pages/EventBookingPage';
+
 import EventRequestForm from './components/event/EventRequestForm';
+
 import OrganizerEventRequests from './components/event/OrganizerEventRequests';
 
-
-
 import MemberDashboardLayout from './components/layout/MemberDashboardLayout';
-
+import CalendarEvents from './pages/CalendarEvents';
 import AdminLayout from './components/layout/AdminLayout';
 import UserProvider from './context/userContext';
+
 import CalendarEvents from './pages/CalendarEvents';
+
 
 const App = () => {
   return (
@@ -83,11 +85,16 @@ const App = () => {
               <Route path='/contactUs' element={<Contactus />} />
               <Route path='/organizer-profile' element={<OrganizerProfile />} />
               <Route path='/login' element={<Login />} />
+
+              {/* <Route path='/event-request' element={<EventRequestForm />} /> */}
+              <Route path='/register/member/application' element={<MemberApplication />} />
+
               <Route path='/apply-now' element={<MemberApplication />} />
+
               <Route path='/register/member/createAccount' element={<CreateMemberAccount />} />
               <Route path="/application-submitted" element={<ApplicationSubmitted />} />
 
-              <Route path='/events' element={<EventRequestForm />} />
+              <Route path='/events' element={<EventBookingPage />} />
               <Route path="/event-requests" element={<OrganizerEventRequests />} />
 
               {/* <Route path='/organizer/new-event' element={<OrganizerNewEvent />} />
@@ -131,7 +138,6 @@ const App = () => {
             <Route path="applications/combined" element={<AdminApplicationsCombinedList />} />
             <Route path="finalized/:id" element={<FinalizedDetails />} />
           </Route>
-
 
           {/* Financial Routes */}
 

@@ -12,7 +12,7 @@ import transactionRoutes from "./routes/transactionRoutes.js";
 import packageRoutes from './routes/packageRoutes.js';
 
 import userRoutes from "./routes/userRoutes.js";
-import organizerRoutes from "./routes/organizerRoutes.js";
+
 import blogPostRoutes from "./routes/blogPostRoutes.js";
 import managePostRoutes from "./routes/managePostRoutes.js";
 import calendarRoutes from './routes/calendarRoutes.js'; 
