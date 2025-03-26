@@ -19,7 +19,7 @@
   }
   
   .add-btn-fill{
-    @apply text-white bg-purple-500
+    @apply text-white bg-blue-400
   }
 
 @import '@fortawesome/fontawesome-free/css/all.min.css';
