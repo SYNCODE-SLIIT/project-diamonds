@@ -123,7 +123,7 @@ const BudgetForm = ({ onClose }) => {
               Allocated Budget
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">RS.</span>
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center justify-between text-black">RS. </span>
               <input
                 type="number"
                 id="allocatedBudget"
@@ -135,7 +135,7 @@ const BudgetForm = ({ onClose }) => {
                 min="0.01"
                 step="0.01"
                 required
-                placeholder="Enter allocated budget"
+                placeholder="   Enter allocated budget"
               />
             </div>
           </div>
@@ -145,7 +145,7 @@ const BudgetForm = ({ onClose }) => {
               Remaining Budget
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">RS.</span>
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">RS. </span>
               <input
                 type="number"
                 id="remainingBudget"
@@ -157,7 +157,7 @@ const BudgetForm = ({ onClose }) => {
                 min="0"
                 step="0.01"
                 required
-                placeholder="Enter remaining budget"
+                placeholder="   Enter remaining budget"
               />
             </div>
           </div>
