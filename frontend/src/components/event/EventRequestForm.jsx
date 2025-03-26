@@ -206,7 +206,7 @@ const [showCustomModal, setShowCustomModal] = useState(false);
     };
 
     return (
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-xl mt-20 ">
+      <div className="bg-gradient-to-r from-red-900 to-red-700 text-white rounded-t-xl mt-20 ">
         <div className="flex justify-between items-center p-4">
           <div>
             <h2 className="text-2xl font-bold">Book a Dance Team</h2>
@@ -249,10 +249,23 @@ const [showCustomModal, setShowCustomModal] = useState(false);
   };
 
   return (
-    <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-xl">
+    <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl">
       <ProgressIndicator />
 
-      <div className="p-6">
+      <div className="p-8">
+      {step === 1 && (
+          <h3 className="text-2xl font-semibold text-red-900 mb-6">Enter Event Details</h3>
+        )}
+        {step === 2 && (
+          <h3 className="text-2xl font-semibold text-red-900 mb-6">Select Your Dance Package</h3>
+        )}
+        {step === 3 && (
+          <h3 className="text-2xl font-semibold text-red-900 mb-6">Add Additional Services</h3>
+        )}
+        {step === 4 && (
+          <h3 className="text-2xl font-semibold text-red-900 mb-6">Review Your Booking</h3>
+        )}
+
         {message && (
           <div className={`mb-4 p-3 rounded ${
             message.includes('successfully') 
@@ -343,85 +356,113 @@ const [showCustomModal, setShowCustomModal] = useState(false);
 
         {/* Rest of the code remains the same as before */}
         {step === 2 && (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold text-gray-700 mb-2">Choose Package</h3>
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold text-gray-700 mb-2">Choose Package</h3>
 
-    {/* Package List */}
-    <div className="grid md:grid-cols-2 gap-4">
-      {systemPackages.map(pkg => (
-        <div
-          key={pkg._id}
-          className={`border rounded-lg p-4 relative group cursor-pointer ${
-            formData.selectedPackageID === pkg._id
-              ? 'border-blue-500 bg-blue-50'
-              : 'border-gray-200'
-          }`}
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <h4 className="font-bold text-gray-800">{pkg.packageName}</h4>
-              <p className="text-sm text-gray-600 mt-1">
-                {pkg.description.length > 80 ? pkg.description.slice(0, 80) + '...' : pkg.description}
-              </p>
+      {/* Scrollable Package Container */}
+      <div className="max-h-[500px] overflow-y-auto pr-2">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {systemPackages.map(pkg => (
+            <div
+              key={pkg._id}
+              className={`border rounded-lg overflow-hidden shadow-md group cursor-pointer relative
+                ${formData.selectedPackageID === pkg._id
+                  ? 'border-blue-500 ring-2 ring-blue-500'
+                  : 'border-gray-200 hover:border-blue-300'
+                }`}
+            >
+              {/* Package Image */}
+              <div className="relative">
+                <img 
+                  src={pkg.image || '/api/placeholder/400/250'} 
+                  alt={pkg.packageName} 
+                  className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                  onError={(e) => {
+                    e.target.src = '/api/placeholder/400/250';
+                    e.target.onerror = null;
+                  }}
+                />
+                
+                {/* Eye Icon for Details */}
+                <button 
+                  onClick={() => setViewingPackage(pkg)}
+                  className="absolute top-2 right-2 bg-white/80 p-2 rounded-full hover:bg-white"
+                >
+                  <EyeIcon className="w-5 h-5 text-gray-700" />
+                </button>
+              </div>
+
+              {/* Package Details */}
+              <div className="p-4">
+                <div className="flex justify-between items-start">
+                  <h4 className="font-bold text-gray-800 text-lg">{pkg.packageName}</h4>
+                  
+                  {/* Radio Button */}
+                  <input
+                    type="radio"
+                    name="selectedPackageID"
+                    value={pkg._id}
+                    onChange={(e) => {
+                      handleChange(e);
+                      // Clear any previous errors
+                      setErrors(prev => ({ ...prev, selectedPackageID: undefined }));
+                    }}
+                    checked={formData.selectedPackageID === pkg._id}
+                    className="mt-1"
+                  />
+                </div>
+
+                {/* Description */}
+                <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                  {pkg.description}
+                </p>
+
+                {/* Dance Styles */}
+                <div className="mt-2">
+                  <p className="text-sm font-medium text-gray-700">Dance Styles:</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {pkg.danceStyles && pkg.danceStyles.slice(0, 3).map((style, idx) => (
+                      <span 
+                        key={idx} 
+                        className="bg-gray-100 px-2 py-1 rounded text-xs"
+                      >
+                        {style}
+                      </span>
+                    ))}
+                    {pkg.danceStyles && pkg.danceStyles.length > 3 && (
+                      <span className="text-xs text-gray-500 ml-1">
+                        +{pkg.danceStyles.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
-            <button onClick={() => setViewingPackage(pkg)} className="text-gray-500 hover:text-blue-600">
-              <EyeIcon className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Performances */}
-          <div className="mt-2">
-            <p className="text-sm font-medium text-gray-700">Performances:</p>
-            <ul className="list-disc list-inside text-sm text-gray-600">
-              {pkg.performances.map((perf, index) => (
-                <li key={index}>{perf.type} – {perf.duration}</li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Dance Styles */}
-          <div className="mt-2">
-            <p className="text-sm font-medium text-gray-700">Dance Styles:</p>
-            <p className="text-sm text-gray-600">{pkg.danceStyles.join(', ')}</p>
-          </div>
-
-          {/* Radio Button */}
-          <div className="mt-4">
-            <input
-              type="radio"
-              name="selectedPackageID"
-              value={pkg._id}
-              onChange={handleChange}
-              checked={formData.selectedPackageID === pkg._id}
-              className="mr-2"
-            />
-            <label>Select this package</label>
-          </div>
+          ))}
         </div>
-      ))}
-    </div>
+      </div>
 
-    {errors.selectedPackageID && (
-      <p className="text-red-500 text-sm mt-1">{errors.selectedPackageID}</p>
-    )}
+      {errors.selectedPackageID && (
+        <p className="text-red-500 text-sm mt-1">{errors.selectedPackageID}</p>
+      )}
 
-    {/* Custom Package Button */}
-    <div className="mt-6">
-      <button
-        onClick={() => setShowCustomModal(true)}
-        className="flex items-center gap-2 bg-white text-blue-600 px-4 py-2 border border-blue-500 rounded hover:bg-blue-50"
-      >
-        <PlusIcon className="w-4 h-4" />
-        Create Custom Package
-      </button>
-    </div>
+      {/* Custom Package Button */}
+      <div className="mt-6">
+        <button
+          onClick={() => setShowCustomModal(true)}
+          className="flex items-center gap-2 bg-white text-blue-600 px-4 py-2 border border-blue-500 rounded hover:bg-blue-50"
+        >
+          <PlusIcon className="w-4 h-4" />
+          Create Custom Package
+        </button>
+      </div>
 
-    <div className="flex justify-between mt-6">
-      <button onClick={prevStep} className="btn-secondary border p-2 rounded">Previous Step</button>
-      <button onClick={nextStep} className="btn bg-blue-600 text-white px-4 py-2 rounded">Next Step</button>
+      <div className="flex justify-between mt-6">
+        <button onClick={prevStep} className="btn-secondary border p-2 rounded">Previous Step</button>
+        <button onClick={nextStep} className="btn bg-blue-600 text-white px-4 py-2 rounded">Next Step</button>
+      </div>
     </div>
-  </div>
-)}
+  )}
 
         {/* Additional Services and Review & Submit steps remain the same */}
         {step === 3 && (
