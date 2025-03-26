@@ -332,7 +332,7 @@ const MemberApplication = () => {
             </div>
             {submitError && <div className="text-red-500 text-sm">{submitError}</div>}
             <button type="submit" className="w-full py-2 bg-blue-900 text-white font-bold uppercase rounded-full hover:bg-blue-700 transition">
-              Sign Up
+              Submit
             </button>
           </form>
         )}
