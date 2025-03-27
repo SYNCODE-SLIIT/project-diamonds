@@ -8,7 +8,7 @@ const Modal = ({ children, isOpen, onClose, title }) => {
       <div className="relative p-4 w-full max-w-2xl max-h-full">
         <div className="relative bg-white rounded-lg shadow-sm dark:bg-blue-950">
           <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
-            <h3 className="text-lg font-medium text-white dark:text-white">
+            <h3 className="text-lg font-medium text-black dark:text-white">
               {title}
             </h3>
             <button

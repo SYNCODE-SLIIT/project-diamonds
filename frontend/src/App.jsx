@@ -44,7 +44,7 @@ import FinalizedDetails from './pages/authentication/FinalizedDetails';
 
 import PackageList from './components/event/PackageList';
 import ServicesList from './components/event/AdditionalServicesList';
-
+import EventCalendar from './pages/admin/EventCalender';
 
 // Financial Management Imports
 import FinancialDashboard from './components/Financial/FinancialDashboard';
@@ -110,11 +110,10 @@ const App = () => {
 
             <Route path="/media/:id" component={<ViewMedia/>} />
             <Route path="/media/edit/:id" element={<EditMedia />} />
+{/* 
+            <Route path="/media" element={<ViewAllMedia />} /> */}
 
-            <Route path="/media" element={<ViewAllMedia />} 
-            />
-
-          <Route path="/content-creators" element={<ContentCreatorList />} />
+          {/* <Route path="/content-creators" element={<ContentCreatorList />} /> */}
           <Route path="/content-creators/new" element={<ContentCreatorForm />} />
           <Route path="/content-creators/edit/:id" element={<EditContentCreator />} />
           <Route path="/content-creators/view/:id" element={<ContentCreatorView />} />
@@ -162,9 +161,12 @@ const App = () => {
           </Route>
 
 
-
-
           <Route path="/admin" element={<AdminLayout />}>
+            <Route path="blog" element={<BlogPosts />} />
+            <Route path="content-creators" element={<ContentCreatorList />} />
+            <Route path="media" element={<ViewAllMedia />} />
+            <Route path="event-calendar" element={<EventCalendar />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
             {/* All admin routes are now relative to /admin */}
             <Route path="messaging/create-group" element={<GroupCreation />} />
             <Route path="inbox" element={<AdminInbox />} />
@@ -185,7 +187,7 @@ const App = () => {
           </Route>
        
 
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          {/* <Route path="/admin/dashboard" element={<AdminDashboard />} /> */}
           {/* Financial Routes */}
 
 
@@ -196,9 +198,12 @@ const App = () => {
 
           {/* Content Management Routes */}
           <Route path="/create-blog-post" element={<CreateBlogPost />} />
-          <Route path="/blog" element={<BlogPosts />} />
+
+          {/* <Route path="/blog" element={<BlogPosts />} /> */}
+
           <Route path="/blog/edit/:id" element={<EditBlogPost />} />
           <Route path="/event" element={<Events />} />
+
           <Route path="/upload" element={<UploadMedia />} />
           <Route path="/Cmanager" element={<ContentMediaDashboard />} />
           <Route path="/merc" element={<Merchandise />} />

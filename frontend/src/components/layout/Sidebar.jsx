@@ -36,7 +36,7 @@ const Sidebar = () => {
       className={`
         fixed top-0 left-0 
         ${collapsed ? 'w-[80px]' : 'w-[250px]'} 
-        h-full bg-[#1e1e2f] text-white 
+        h-full overflow-y-auto bg-[#1e1e2f] text-white 
         pt-[6px] pb-[6px] pl-[14px] pr-[14px] 
         shadow-[2px_0_12px_rgba(0,0,0,0.2)] 
         flex flex-col 
@@ -240,7 +240,6 @@ const Sidebar = () => {
       {/* Profile and Logout */}
       <div className="mt-auto">
         <hr className="border-0 border-t border-t-[rgba(255,255,255,0.2)] my-[10px]" />
-        {/* Profile Item */}
         <div>
           <NavLink
             to="/member-dashboard/profile"
@@ -266,7 +265,6 @@ const Sidebar = () => {
             )}
           </NavLink>
         </div>
-        {/* Logout */}
         <div className="mt-auto mb-[20px] pt-[20px]">
           <button 
             className="flex items-center w-full text-left p-[10px] bg-transparent border-0 text-white cursor-pointer transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]"
