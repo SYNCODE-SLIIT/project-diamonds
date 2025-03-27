@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+// import axios from 'axios';
 import { EyeIcon } from 'lucide-react';
+import { fetchAllEvents } from '../../services/eventService'; // update import
 
 const EventsDashboard = () => {
   const [events, setEvents] = useState([]);
@@ -13,8 +14,9 @@ const EventsDashboard = () => {
 
   const fetchEvents = async () => {
     try {
-      const res = await axios.get('/api/events');
-      setEvents(res.data);
+      const res = await fetchAllEvents();
+      console.log('Fetched Events:', res);
+      setEvents(res);
     } catch (err) {
       console.error('Error fetching events:', err);
     }

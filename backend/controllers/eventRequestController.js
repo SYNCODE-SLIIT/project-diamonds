@@ -1,4 +1,6 @@
 import EventRequest from '../models/EventRequest.js';
+// Admin approval/rejection
+import Event from '../models/Event.js';
 
 export const createEventRequest = async (req, res) => {
   try {
@@ -97,8 +99,6 @@ export const deleteEventRequest = async (req, res) => {
   }
 };
 
-// Admin approval/rejection
-import Event from '../models/Event.js';
 
 export const updateRequestStatus = async (req, res) => {
   try {
@@ -111,8 +111,10 @@ export const updateRequestStatus = async (req, res) => {
     request.status = status;
     request.reviewedBy = reviewedBy;
     request.approvalDate = new Date();
+
     await request.save();
 
+    // If approved, create new Event
     if (status === 'approved') {
       const newEvent = new Event({
         organizerID: request.organizerID,
@@ -122,13 +124,18 @@ export const updateRequestStatus = async (req, res) => {
         eventDate: request.eventDate,
         eventLocation: request.eventLocation,
         guestCount: request.guestCount,
-        approvedBy: reviewedBy
+        status: 'confirmed',
+        approvedBy: reviewedBy,
+        // Default: approvedAt will auto-fill
+        additionalRequests: request.remarks || ""
       });
+
       await newEvent.save();
     }
 
     res.json({ message: 'Request updated successfully' });
   } catch (err) {
+    console.error('Approval error:', err);
     res.status(500).json({ message: 'Failed to update request', error: err.message });
   }
 };

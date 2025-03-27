@@ -1,3 +1,4 @@
+//routes/adminRoutes.js
 import express from 'express';
 import { assignMemberToEvent } from '../controllers/eventController.js';
 import { createPracticeSession, assignMemberToPracticeSession } from '../controllers/practiceSessionController.js';
@@ -16,7 +17,12 @@ router.post('/practice-sessions/assign', assignMemberToPracticeSession);
 // Additional routes (e.g., fetching events & sessions for calendar view) can be added:
 router.get('/events', async (req, res) => {
   try {
-    const events = await (await import('../models/Event.js')).default.find({});
+    const Event = (await import('../models/Event.js')).default;
+    const events = await Event.find({})
+      .populate('packageID', 'packageName price')
+      .populate('additionalServices.serviceID', 'serviceName price')
+      .sort({ eventDate: -1 });
+
     res.json(events);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching events', error });
@@ -32,4 +38,15 @@ router.get('/practice-sessions', async (req, res) => {
   }
 });
 
+router.get('/events/organizer/:id', async (req, res) => {
+  try {
+    const Event = (await import('../models/Event.js')).default;
+    const events = await Event.find({ organizerID: req.params.id })
+      .populate('packageID', 'packageName')
+      .sort({ eventDate: -1 });
+    res.json(events);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch organizer events', error });
+  }
+});
 export default router;

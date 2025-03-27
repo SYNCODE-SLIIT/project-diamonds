@@ -516,7 +516,7 @@ export const paySalary = async (req, res) => {
     // Create an Income record with the specified icon and source
     const incomeRecord = await Income.create({
       userId: member._id,
-      icon: " ",
+      icon: "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f483.png",
       source: "Team Diamond Salary",
       amount: salaryAmount,
     });

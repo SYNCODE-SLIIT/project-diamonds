@@ -96,8 +96,7 @@ import EditContentCreator from './pages/content/EditContentCreator';
 import CalendarEvents from './pages/CalendarEvents';
 
 import AdminDashboard from './components/team/AdminDashboard';
-
-
+import MyEvents  from './components/event/MyEvents';
 
 const App = () => {
   return (
@@ -142,7 +141,7 @@ const App = () => {
 
               <Route path='/events' element={<EventBookingPage />} />
               <Route path="/event-requests" element={<OrganizerEventRequests />} />
-
+              <Route path="/event-dashboard" element={<MyEvents />} />
               {/* <Route path='/organizer/new-event' element={<OrganizerNewEvent />} />
               <Route path='/organizer/manage-events' element={<OrganizerManageEvents />} /> */}
 
