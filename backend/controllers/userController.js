@@ -1,4 +1,5 @@
 import MemberApplication from '../models/MemberApplication.js';
+import Organizer from '../models/Organizer.js';
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 
@@ -186,5 +187,70 @@ export const checkEmail = async (req, res) => {
     res.status(200).json({ exists: !!user });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const getAllMembers = async (req, res) => {
+  try {
+    // Find only users whose role is 'member'
+    const members = await User.find({ role: 'member' });
+    return res.status(200).json(members);
+  } catch (error) {
+    return res.status(500).json({ message: "Error fetching members", error: error.message });
+  }
+};
+
+export const deleteMember = async (req, res) => {
+  try {
+    const memberId = req.params.id; // ID of the user to delete
+    const user = await User.findById(memberId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    if (user.role !== 'member') {
+      return res.status(400).json({ message: "Only members can be deleted from membership management." });
+    }
+    // Delete the user
+    await User.findByIdAndDelete(memberId);
+    // Also delete the corresponding member application if a reference exists
+    if (user.profileId) {
+      await MemberApplication.findByIdAndDelete(user.profileId);
+    }
+    return res.status(200).json({ message: "Member and associated application deleted successfully." });
+  } catch (error) {
+    return res.status(500).json({ message: "Error deleting member", error: error.message });
+  }
+};
+
+// Get all organizers from the User collection
+export const getAllOrganizers = async (req, res) => {
+  try {
+    const organizers = await User.find({ role: 'organizer' });
+    return res.status(200).json(organizers);
+  } catch (error) {
+    return res.status(500).json({ message: "Error fetching organizers", error: error.message });
+  }
+};
+
+// Delete an organizer (and associated profile if exists)
+export const deleteOrganizer = async (req, res) => {
+  try {
+    const organizerId = req.params.id; // ID of the organizer user document
+    const user = await User.findById(organizerId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    if (user.role !== 'organizer') {
+      return res.status(400).json({ message: "Only organizers can be deleted from organizer management." });
+    }
+    // Delete the corresponding organizer profile from the Organizer collection if it exists
+    if (user.profileId) {
+      await Organizer.findByIdAndDelete(user.profileId);
+    }
+    // Delete the organizer user from the User collection
+    await User.findByIdAndDelete(organizerId);
+    return res.status(200).json({ message: "Organizer and associated profile deleted successfully." });
+  } catch (error) {
+    return res.status(500).json({ message: "Error deleting organizer", error: error.message });
   }
 };

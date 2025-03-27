@@ -79,7 +79,7 @@ const AuthPage = () => {
         } else if (data.user.role === 'organizer') {
           navigate('/');
         } else if (data.user.role === 'teamManager') {
-          navigate('/messaging/create-group');
+          navigate('/admin/profile');
         } else if (data.user.role === 'contentManager') {
           navigate('/content-dashboard');
         } else {
@@ -414,13 +414,13 @@ const AuthPage = () => {
         <div className="absolute top-0 left-1/2 w-1/2 h-full">
           <div className="flex flex-col items-center justify-center h-full bg-gradient-to-r from-blue-900 to-blue-700 text-white px-4">
             <h1 className="text-2xl font-bold mb-4">
-              {isLogin ? "Welcome Back!" : (signupStep === 1 ? "Join Us Today!" : "Almost Done!")}
+              {isLogin ? "Join Us Today!" : (signupStep === 1 ? "Already Have An Account" : "Almost Done!")}
             </h1>
             <p className="text-sm mb-6 text-center">
               {isLogin 
-                ? "To keep connected, please login with your personal info." 
+                ? "Create an account to start organizing events." 
                 : (signupStep === 1 
-                    ? "Create an account to start organizing events." 
+                    ? "To keep connected, please login with your personal info." 
                     : "Complete your organizer registration by providing additional details.")}
             </p>
             <button 

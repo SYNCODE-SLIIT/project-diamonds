@@ -29,8 +29,9 @@ const MemberApplication = () => {
     achievements: ''
   });
   
+  // Changed from date to day
   const [availabilityEntry, setAvailabilityEntry] = useState({
-    date: '',
+    day: '',
     start: '08:00',
     end: '22:00'
   });
@@ -42,10 +43,24 @@ const MemberApplication = () => {
   // Validate individual fields
   const validateField = (name, value) => {
     let errMsg = '';
+    if (name === 'fullName') {
+      if (!value.trim()) {
+        errMsg = 'Name is required.';
+      } else if (!/^[A-Za-z\s]+$/.test(value)) {
+        errMsg = 'Name can only contain letters and spaces.';
+      }
+    }
     if (name === 'email') {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (value && !emailRegex.test(value)) {
         errMsg = 'Invalid email format.';
+      }
+    }
+    if (name === 'contactNumber') {
+      if (value && !/^\d+$/.test(value)) {
+        errMsg = 'Contact number must contain only digits.';
+      } else if (value && (value.length < 10 || value.length > 15)) {
+        errMsg = 'Contact number should be between 10 and 15 digits.';
       }
     }
     if (name === 'birthDate') {
@@ -53,6 +68,22 @@ const MemberApplication = () => {
         const age = calculateAge(value);
         if (age < 18) {
           errMsg = 'You must be at least 18 years old.';
+        } else if (age > 50) {
+          errMsg = 'You must be below 50 years old.';
+        }
+      }
+    }
+    if (name === 'yearsOfExperience') {
+      if (value && Number(value) < 0) {
+        errMsg = 'Years of experience cannot be negative.';
+      }
+    }
+    if (name === 'biography') {
+      if (value) {
+        if (value.length < 10) {
+          errMsg = 'Biography must be at least 10 characters.';
+        } else if (value.length > 500) {
+          errMsg = 'Biography must be at most 500 characters.';
         }
       }
     }
@@ -60,7 +91,11 @@ const MemberApplication = () => {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    // For email, convert any upper case letters to lower case
+    if (name === 'email') {
+      value = value.toLowerCase();
+    }
     setFormData(prev => ({ ...prev, [name]: value }));
     validateField(name, value);
   };
@@ -71,9 +106,9 @@ const MemberApplication = () => {
   };
 
   const addAvailability = () => {
-    if (availabilityEntry.date && availabilityEntry.start && availabilityEntry.end) {
+    if (availabilityEntry.day && availabilityEntry.start && availabilityEntry.end) {
       setAvailabilities(prev => [...prev, availabilityEntry]);
-      setAvailabilityEntry({ date: '', start: '08:00', end: '22:00' });
+      setAvailabilityEntry({ day: '', start: '08:00', end: '22:00' });
     }
   };
 
@@ -86,7 +121,7 @@ const MemberApplication = () => {
       setSubmitError('Please fill in all required fields.');
       return;
     }
-    if (errors.email || errors.birthDate) {
+    if (errors.fullName || errors.email || errors.contactNumber || errors.birthDate) {
       setSubmitError('Please fix the errors before continuing.');
       return;
     }
@@ -227,17 +262,26 @@ const MemberApplication = () => {
                 onChange={handleChange} 
                 className="w-full p-2 bg-gray-100 border-none rounded focus:ring-2 focus:ring-blue-900"
               />
+              {errors.yearsOfExperience && <p className="text-red-500 text-sm">{errors.yearsOfExperience}</p>}
             </div>
             <div className="availability-section">
               <h3 className="text-lg font-semibold mb-2">Availabilities</h3>
               <div className="flex space-x-2 mb-2">
-                <input 
-                  type="date" 
-                  name="date" 
-                  value={availabilityEntry.date} 
+                <select 
+                  name="day" 
+                  value={availabilityEntry.day} 
                   onChange={handleAvailabilityChange} 
                   className="p-2 bg-gray-100 border-none rounded focus:ring-2 focus:ring-blue-900"
-                />
+                >
+                  <option value="">Select a day</option>
+                  <option value="Monday">Monday</option>
+                  <option value="Tuesday">Tuesday</option>
+                  <option value="Wednesday">Wednesday</option>
+                  <option value="Thursday">Thursday</option>
+                  <option value="Friday">Friday</option>
+                  <option value="Saturday">Saturday</option>
+                  <option value="Sunday">Sunday</option>
+                </select>
                 <input 
                   type="time" 
                   name="start" 
@@ -259,7 +303,7 @@ const MemberApplication = () => {
               {availabilities.length > 0 && (
                 <ul className="list-disc pl-5">
                   {availabilities.map((avail, index) => (
-                    <li key={index}>{avail.date} – {avail.start} to {avail.end}</li>
+                    <li key={index}>{avail.day} – {avail.start} to {avail.end}</li>
                   ))}
                 </ul>
               )}
@@ -273,6 +317,7 @@ const MemberApplication = () => {
                 rows="4" 
                 className="w-full p-2 bg-gray-100 border-none rounded focus:ring-2 focus:ring-blue-900"
               ></textarea>
+              {errors.biography && <p className="text-red-500 text-sm">{errors.biography}</p>}
             </div>
             <div>
               <label className="block mb-1">Achievements (Comma-separated):</label>
@@ -287,7 +332,7 @@ const MemberApplication = () => {
             </div>
             {submitError && <div className="text-red-500 text-sm">{submitError}</div>}
             <button type="submit" className="w-full py-2 bg-blue-900 text-white font-bold uppercase rounded-full hover:bg-blue-700 transition">
-              Sign Up
+              Submit
             </button>
           </form>
         )}

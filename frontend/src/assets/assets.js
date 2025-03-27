@@ -28,6 +28,7 @@ import defaultProfile from './event/default_profile.jpg';
 import profileCover from './event/profileCover.png';
 import navbar_myevents from './navbar-backgrounds/myevents-background.png';
 import loginCover from './home/loginCover.jpg';
+import event_booking from './home/eventbooking.jpg';
 
 export const assets = {
   logo1,
@@ -59,6 +60,7 @@ export const assets = {
   profileCover,
   navbar_myevents,
   loginCover,
+  event_booking,
 };
 
 export default assets;

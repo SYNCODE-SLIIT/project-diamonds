@@ -3,10 +3,9 @@ import { jsPDF } from "jspdf";
 import axiosInstance from '../../utils/axiosInstance';
 
 const ViewModal = ({ item, onClose, activeTab }) => {
-  // For non-transaction records, allow status updates
   const [status, setStatus] = useState(item.status || '');
   const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState('success'); // 'success' or 'error'
+  const [messageType, setMessageType] = useState('success'); 
 
   // Function to format data keys for display
   const formatKey = (key) => {
@@ -18,7 +17,6 @@ const ViewModal = ({ item, onClose, activeTab }) => {
       .join(' ');
   };
 
-  // Determine if a field should be displayed
   const shouldDisplayField = (key, value) => {
     // Skip internal fields and null/undefined values
     const skipFields = ['__v', '_id', 'createdAt', 'updatedAt'];
@@ -26,7 +24,7 @@ const ViewModal = ({ item, onClose, activeTab }) => {
       !skipFields.includes(key) && 
       value !== null && 
       value !== undefined &&
-      // Don't show nested objects with user info twice
+     
       !(typeof value === 'object' && key === 'user' && item.userEmail)
     );
   };
@@ -35,13 +33,13 @@ const ViewModal = ({ item, onClose, activeTab }) => {
   const formatValue = (key, value) => {
     if (value === null || value === undefined) return "—";
     
-    // Format currency
+ 
     if (
       ['amount', 'totalAmount', 'allocatedBudget', 'refundAmount', 'price', 'cost'].some(k => 
         key.toLowerCase().includes(k.toLowerCase())
       )
     ) {
-      // For numeric values that represent currency
+   
       return typeof value === 'number' ? `RS. ${value.toLocaleString()}` : value;
     }
     
@@ -78,12 +76,11 @@ const ViewModal = ({ item, onClose, activeTab }) => {
       );
     }
     
-    // Format objects
     if (typeof value === 'object' && value !== null) {
       if (Array.isArray(value)) {
         return value.length > 0 ? JSON.stringify(value) : "—";
       } else {
-        // Special handling for user object
+   
         if (key === 'user' && value.email) {
           return (
             <div className="flex flex-col space-y-1">
@@ -116,7 +113,6 @@ const ViewModal = ({ item, onClose, activeTab }) => {
     const result = {};
     const processedKeys = new Set();
     
-    // Assign keys to appropriate groups
     Object.keys(item).forEach(key => {
       if (shouldDisplayField(key, item[key])) {
         let assigned = false;
@@ -218,9 +214,8 @@ const ViewModal = ({ item, onClose, activeTab }) => {
   const generatePDF = () => {
     const doc = new jsPDF();
   
-    // --- Header Section ---
     // Draw a colored background for the title
-    doc.setFillColor(0, 102, 204); // blue background
+    doc.setFillColor(0, 102, 204); 
     doc.rect(10, 10, 190, 20, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(20);
@@ -232,15 +227,13 @@ const ViewModal = ({ item, onClose, activeTab }) => {
     doc.text(`Record Type: ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}`, 105, 37, { align: "center" });
     doc.text(`Generated: ${new Date().toLocaleString()}`, 105, 44, { align: "center" });
   
-    // Draw a horizontal line to separate header from content
+    // Draw a horizontal line 
     doc.setLineWidth(0.5);
     doc.line(10, 45, 200, 45);
   
-    // Increase the starting y position to add more margin below the header
+
     let y = 60;
   
-    // --- Content Section ---
-    // Group details using the same grouping method as your modal
     const groups = getGroupedFields();
     const groupOrder = ['basic', 'financial', 'status', 'user', 'dates', 'identifiers', 'other'];
     const groupTitles = {
@@ -263,18 +256,17 @@ const ViewModal = ({ item, onClose, activeTab }) => {
         y = 20;
       }
   
-      // Draw group header with a light gray background
       doc.setFillColor(230, 230, 230);
       doc.rect(10, y, 190, 10, 'F');
       doc.setFontSize(14);
       doc.text(groupTitles[groupName], 12, y + 7);
-      y += 15; // increased spacing after group header
+      y += 15; 
   
       doc.setFontSize(12);
       groups[groupName].forEach(key => {
         let value = item[key];
   
-        // Format value similar to the modal
+
         if (value === null || value === undefined) {
           value = "—";
         } else if (typeof value === 'object') {
@@ -286,7 +278,7 @@ const ViewModal = ({ item, onClose, activeTab }) => {
         }
   
         const text = `${formatKey(key)}: ${value}`;
-        // Wrap text if too long
+    
         const textLines = doc.splitTextToSize(text, 190);
         
         // Check for page overflow and add a new page if needed
@@ -296,7 +288,7 @@ const ViewModal = ({ item, onClose, activeTab }) => {
         }
   
         doc.text(textLines, 12, y);
-        y += textLines.length * 7 + 5; // increased spacing after each field
+        y += textLines.length * 7 + 5; 
       });
   
       y += 5; // extra spacing between groups
@@ -312,19 +304,17 @@ const ViewModal = ({ item, onClose, activeTab }) => {
 
   const handleSendEmail = async () => {
     try {
-      // Generate the PDF document
       const doc = generatePDF();
       const pdfData = doc.output('datauristring');
       
       // Make a POST request to your API to send the email.
       await axiosInstance.post('/api/finance/send-email', { 
-        recordId: item._id, // used by the server to retrieve email from the database
+        recordId: item._id,
         pdfData,
-        // The email field can be optional if the server already retrieves it by recordId.
+
         email: item.user && item.user.email,
       });
-      
-      // Update UI on success
+    
       setMessage('Email sent successfully');
       setMessageType('success');
     } catch (err) {
@@ -337,7 +327,6 @@ const ViewModal = ({ item, onClose, activeTab }) => {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-50 z-50 p-4">
       <div className="bg-white w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 rounded-lg shadow-2xl overflow-hidden">
-        {/* Header */}
         <div className="bg-gray-100 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
           <h3 className="text-xl font-semibold text-gray-800">
             {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Record Details
@@ -352,7 +341,6 @@ const ViewModal = ({ item, onClose, activeTab }) => {
           </button>
         </div>
         
-        {/* Body */}
         <div className="p-6 overflow-y-auto max-h-[calc(100vh-12rem)]">
           {/* Payment Deposit Slip (if available) */}
           {activeTab === 'payments' && item.bankSlipFile && (
@@ -434,8 +422,7 @@ const ViewModal = ({ item, onClose, activeTab }) => {
 
           {/* Record Details */}
           {renderFieldGroups()}
-          
-          {/* Status Change Form */}
+    
           {activeTab !== 'transactions' && (
             <div className="mt-8 bg-white rounded-lg shadow-md overflow-hidden">
               <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
@@ -458,8 +445,6 @@ const ViewModal = ({ item, onClose, activeTab }) => {
             </div>
           )}
         </div>
-        
-        {/* Footer */}
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
           <div className="flex flex-wrap justify-end gap-3">
             <button 
@@ -487,8 +472,6 @@ const ViewModal = ({ item, onClose, activeTab }) => {
               Close
             </button>
           </div>
-          
-          {/* Status message */}
           {message && (
             <div className={`mt-4 p-3 rounded-md ${
               messageType === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
