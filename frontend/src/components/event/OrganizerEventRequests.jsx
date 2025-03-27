@@ -4,28 +4,22 @@ import {
   deleteRequest
 } from '../../services/eventRequestService';
 import { UserContext } from '../../context/userContext';
-import { useNavigate } from 'react-router-dom';
 import assets from '../../assets/assets.js';
+import EditEventRequestModal from './EditEventRequestModal'; // <-- make sure this path is correct
 
 const OrganizerEventRequests = () => {
   const { user } = useContext(UserContext);
-  const navigate = useNavigate();
-
   const [requests, setRequests] = useState([]);
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [requestToEdit, setRequestToEdit] = useState(null);
 
   const organizerID = user?._id;
 
   const fetchData = async () => {
     try {
-      if (!organizerID) {
-        setError('Organizer ID not found');
-        setLoading(false);
-        return;
-      }
-
       const data = await fetchRequestsByOrganizer(organizerID);
       setRequests(data);
     } catch (err) {
@@ -43,7 +37,8 @@ const OrganizerEventRequests = () => {
   }, [organizerID]);
 
   const handleEdit = (request) => {
-    navigate(`/event-request/edit/${request._id}`, { state: { request } });
+    setRequestToEdit(request);
+    setEditModalOpen(true);
   };
 
   const handleDelete = async (id) => {
@@ -66,7 +61,9 @@ const OrganizerEventRequests = () => {
   return (
     <div
       className="flex justify-center items-center min-h-screen bg-cover bg-center bg-no-repeat"
-                    style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${assets.loginCover})` }}
+      style={{
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${assets.loginCover})`
+      }}
     >
       <div className="bg-white bg-opacity-90 rounded-xl shadow-lg p-8 max-w-6xl w-full">
         <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
@@ -159,6 +156,22 @@ const OrganizerEventRequests = () => {
           </div>
         )}
       </div>
+
+      {/* Edit Modal */}
+      {editModalOpen && requestToEdit && (
+        <EditEventRequestModal
+          request={requestToEdit}
+          onClose={() => {
+            setEditModalOpen(false);
+            setRequestToEdit(null);
+          }}
+          onSuccess={() => {
+            fetchData();
+            setEditModalOpen(false);
+            setRequestToEdit(null);
+          }}
+        />
+      )}
     </div>
   );
 };
