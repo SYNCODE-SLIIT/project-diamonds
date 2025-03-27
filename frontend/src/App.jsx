@@ -89,6 +89,10 @@ import EditContentCreator from './pages/content/EditContentCreator';
 import CalendarEvents from './pages/CalendarEvents';
 
 
+import AdminDashboard from './components/team/AdminDashboard';
+
+
+
 const App = () => {
   return (
     <div className="">
@@ -156,6 +160,7 @@ const App = () => {
 
 
 
+
           <Route path="/admin" element={<AdminLayout />}>
             {/* All admin routes are now relative to /admin */}
             <Route path="messaging/create-group" element={<GroupCreation />} />
@@ -175,6 +180,10 @@ const App = () => {
             <Route path="applications/combined" element={<AdminApplicationsCombinedList />} />
             <Route path="finalized/:id" element={<FinalizedDetails />} />
           </Route>
+       
+
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          {/* Financial Routes */}
 
 
           <Route path='/bform' element={<BudgetForm/>} />

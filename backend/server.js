@@ -18,12 +18,16 @@ import calendarRoutes from './routes/calendarRoutes.js';
 import additionalServiceRoutes from './routes/additionalServiceRoutes.js';
 import eventRequestRoutes from './routes/eventRequestRoutes.js';
 
+
 import organizerRoutes from './routes/organizerRoutes.js'
 
 import memberApplicationRoutes from './routes/memberApplicationRoutes.js';
 import adminApplicationRoutes from './routes/adminApplicationRoutes.js';
 import chatGroupRoutes from './routes/chatGroupRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
+
+
+import adminRoutes from './routes/adminRoutes.js';
 
 
 import path from "path";
@@ -47,6 +51,36 @@ app.use('/uploads', express.static('uploads'));
 
 // Connect to MongoDB
 connectDB();
+
+// Memebr Application Routes
+import memberApplicationRoutes from '../backend/routes/memberApplicationRoutes.js';
+app.use('/api/member-applications', memberApplicationRoutes);
+
+// Admin Application Routes
+import adminApplicationRoutes from './routes/adminApplicationRoutes.js';
+app.use('/api/admin/applications', adminApplicationRoutes);
+
+// User Routes
+
+app.use('/api/users', userRoutes);
+// chatGroupRoutes
+import chatGroupRoutes from './routes/chatGroupRoutes.js';
+import messageRoutes from './routes/messageRoutes.js';
+app.use('/api/chat-groups', chatGroupRoutes);
+app.use('/api/messages', messageRoutes);
+
+app.use('/api/admin', adminRoutes);
+
+
+
+app.use('/api/organizers', organizerRoutes);
+
+// Import Routes
+
+// Financial Management Routes
+app.use('/api/finance', financialRoutes);
+
+
 
 // Mount Routes
 app.use("/api/v1/auth", authRoutes);
