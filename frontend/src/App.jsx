@@ -40,10 +40,14 @@ import AdminProfile from './pages/authentication/AdminProfile';
 import GroupMembers from './pages/admin/GroupMembers';
 // import AdminInvitedApplicationsList from './pages/authentication/AdminInvitedApplicationsList';
 import FinalizedDetails from './pages/authentication/FinalizedDetails';
-
+ 
 
 import PackageList from './components/event/PackageList';
 import ServicesList from './components/event/AdditionalServicesList';
+
+import EventRequestDashboard from './components/event/EventRequestDashboard';
+import EventsDashboard from './components/event/EventsDashboard';
+
 import EventCalendar from './pages/admin/EventCalender';
 
 // Financial Management Imports
@@ -76,6 +80,7 @@ import MemberDashboardLayout from './components/layout/MemberDashboardLayout';
 
 import AdminLayout from './components/layout/AdminLayout';
 import UserProvider from './context/userContext';
+
 
 
 import ViewMedia from './pages/content/ViewMedia';
@@ -180,7 +185,8 @@ const App = () => {
             <Route path="applications/:id" element={<AdminApplicationDetails />} />
             <Route path="members" element={<AdminMembersList />} />
             <Route path="packages" element={<PackageList />} />
-            {/* If FinancialDashboard is admin-specific, consider nesting it as well */}
+            <Route path="events" element={<EventsDashboard />} />
+            <Route path="event-requests" element={<EventRequestDashboard />} />
             <Route path="financial" element={<FinancialDashboard />} />
             <Route path="applications/combined" element={<AdminApplicationsCombinedList />} />
             <Route path="finalized/:id" element={<FinalizedDetails />} />
