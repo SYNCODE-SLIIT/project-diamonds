@@ -39,6 +39,7 @@ import messageRoutes from './routes/messageRoutes.js';
 import organizerRoutes from './routes/organizerRoutes.js';
 import blogPostRoutes from "./routes/blogPostRoutes.js";
 import managePostRoutes from "./routes/managePostRoutes.js";
+import ContentcreatorRoutes from "./routes/ContentcreatorRoutes.js"
 
 // Mount Routes
 app.use("/api/v1/auth", authRoutes);
@@ -56,6 +57,7 @@ app.use("/api/organizers", organizerRoutes);
 app.use("/api/packages", packageRoutes);
 app.use("/api/blogposts", blogPostRoutes);
 app.use("/api/media", managePostRoutes);
+app.use("/api/content-creators", ContentcreatorRoutes);
 // API Endpoints
 app.get('/register/member/application', (req, res) => {
     res.send('API Working');

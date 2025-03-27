@@ -57,6 +57,10 @@ import ViewAllMedia from './pages/content/ViewAllMedia';
 import BudgetForm from './components/Financial/BudgetForm';
 import RefundForm from './components/Financial/RefundForm';
 import PaymentOptions from './components/Financial/PaymentOptions';
+import ContentCreatorList from './pages/content/ContentCreatorList';
+import ContentCreatorForm from './pages/content/ContentCreatorForm';
+import ContentCreatorView from './pages/content/ContentCreatorView';
+import EditContentCreator from './pages/content/EditContentCreator';
 
 const App = () => {
   return (
@@ -76,6 +80,12 @@ const App = () => {
 
             <Route path="/media" element={<ViewAllMedia />} 
             />
+
+          <Route path="/content-creators" element={<ContentCreatorList />} />
+          <Route path="/content-creators/new" element={<ContentCreatorForm />} />
+          <Route path="/content-creators/edit/:id" element={<EditContentCreator />} />
+          <Route path="/content-creators/view/:id" element={<ContentCreatorView />} />
+          
 
           <Route element={<PublicLayout />}>
               <Route path='/' element={<Home />} />
