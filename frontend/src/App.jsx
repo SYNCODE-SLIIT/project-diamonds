@@ -11,6 +11,8 @@ import BlogPosts from './pages/content/BlogpostView';
 import EditBlogPost from './pages/content/EditBlogPost';
 import Events from './pages/content/Events';
 import UploadMedia from './pages/content/UploadMedia';
+import Merchandise from './pages/content/Merchandise';
+
 
 // User Management Imports
 import MemberApplication from './pages/authentication/MemberApplication';
@@ -38,11 +40,15 @@ import AdminProfile from './pages/authentication/AdminProfile';
 import GroupMembers from './pages/admin/GroupMembers';
 // import AdminInvitedApplicationsList from './pages/authentication/AdminInvitedApplicationsList';
 import FinalizedDetails from './pages/authentication/FinalizedDetails';
-
+ 
 
 import PackageList from './components/event/PackageList';
 import ServicesList from './components/event/AdditionalServicesList';
 
+import EventRequestDashboard from './components/event/EventRequestDashboard';
+import EventsDashboard from './components/event/EventsDashboard';
+
+import EventCalendar from './pages/admin/EventCalender';
 
 // Financial Management Imports
 import FinancialDashboard from './components/Financial/FinancialDashboard';
@@ -76,12 +82,23 @@ import AdminLayout from './components/layout/AdminLayout';
 import UserProvider from './context/userContext';
 
 
+
 import ViewMedia from './pages/content/ViewMedia';
 import EditMedia from './pages/content/EditMedia';
 import ViewAllMedia from './pages/content/ViewAllMedia';
 
 
+
+import ContentCreatorList from './pages/content/ContentCreatorList';
+import ContentCreatorForm from './pages/content/ContentCreatorForm';
+import ContentCreatorView from './pages/content/ContentCreatorView';
+import EditContentCreator from './pages/content/EditContentCreator';
+
+
 import CalendarEvents from './pages/CalendarEvents';
+
+import AdminDashboard from './components/team/AdminDashboard';
+
 
 
 const App = () => {
@@ -100,9 +117,16 @@ const App = () => {
 
             <Route path="/media/:id" component={<ViewMedia/>} />
             <Route path="/media/edit/:id" element={<EditMedia />} />
+{/* 
+            <Route path="/media" element={<ViewAllMedia />} /> */}
 
-            <Route path="/media" element={<ViewAllMedia />} 
-            />
+          {/* <Route path="/content-creators" element={<ContentCreatorList />} /> */}
+          <Route path="/content-creators/new" element={<ContentCreatorForm />} />
+          <Route path="/content-creators/edit/:id" element={<EditContentCreator />} />
+          <Route path="/content-creators/view/:id" element={<ContentCreatorView />} />
+
+          
+          
 
           <Route element={<PublicLayout />}>
               <Route path='/' element={<Home />} />
@@ -144,8 +168,12 @@ const App = () => {
           </Route>
 
 
-
           <Route path="/admin" element={<AdminLayout />}>
+            <Route path="blog" element={<BlogPosts />} />
+            <Route path="content-creators" element={<ContentCreatorList />} />
+            <Route path="media" element={<ViewAllMedia />} />
+            <Route path="event-calendar" element={<EventCalendar />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
             {/* All admin routes are now relative to /admin */}
             <Route path="messaging/create-group" element={<GroupCreation />} />
             <Route path="inbox" element={<AdminInbox />} />
@@ -159,11 +187,16 @@ const App = () => {
             <Route path="applications/:id" element={<AdminApplicationDetails />} />
             <Route path="members" element={<AdminMembersList />} />
             <Route path="packages" element={<PackageList />} />
-            {/* If FinancialDashboard is admin-specific, consider nesting it as well */}
+            <Route path="events" element={<EventsDashboard />} />
+            <Route path="event-requests" element={<EventRequestDashboard />} />
             <Route path="financial" element={<FinancialDashboard />} />
             <Route path="applications/combined" element={<AdminApplicationsCombinedList />} />
             <Route path="finalized/:id" element={<FinalizedDetails />} />
           </Route>
+       
+
+          {/* <Route path="/admin/dashboard" element={<AdminDashboard />} /> */}
+          {/* Financial Routes */}
 
 
           <Route path='/bform' element={<BudgetForm/>} />
@@ -173,14 +206,18 @@ const App = () => {
 
           {/* Content Management Routes */}
           <Route path="/create-blog-post" element={<CreateBlogPost />} />
-          <Route path="/blog" element={<BlogPosts />} />
+
+          {/* <Route path="/blog" element={<BlogPosts />} /> */}
+
           <Route path="/blog/edit/:id" element={<EditBlogPost />} />
           <Route path="/event" element={<Events />} />
+
           <Route path="/upload" element={<UploadMedia />} />
           <Route path="/Cmanager" element={<ContentMediaDashboard />} />
+          <Route path="/merchandise" element={<Merchandise />} />
         </Routes>
 
-
+        
         
         {/* Notifications */}
         <Toaster

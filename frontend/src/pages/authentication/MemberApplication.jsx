@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import assets from '../../assets/assets.js';
 // Helper function to calculate age from a birth date string (YYYY-MM-DD)
 const calculateAge = (birthDateStr) => {
   const birthDateObj = new Date(birthDateStr);
@@ -181,8 +181,9 @@ const MemberApplication = () => {
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-cover bg-center" style={{ backgroundImage: "url('/images/background.jpeg')" }}>
-      <div className="w-[600px] h-[700px] bg-white rounded-xl shadow-2xl p-8">
+    <div className="flex justify-center items-center min-h-screen bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${assets.loginCover})` }}>
+      <div className="w-[600px] h-[700px] bg-white rounded-xl shadow-2xl p-8 mt-40 mb-20">
         {step === 1 && (
           <form onSubmit={handleStep1Next} className="flex flex-col space-y-4">
             <h1 className="text-2xl font-bold text-gray-800">Member Application</h1>

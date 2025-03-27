@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-
+import assets from '../../assets/assets.js';
 const CreateMemberAccount = () => {
   // Get applicationId from the query parameters
   const location = useLocation();
@@ -128,9 +128,10 @@ const CreateMemberAccount = () => {
   }
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-gray-100">
+    <div className="flex justify-center items-center min-h-screen bg-cover bg-center bg-no-repeat"
+              style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${assets.loginCover})` }}>
       {/* Container styled similar to the organizer page form */}
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 mt-40 mb-20">
         <h2 className="text-2xl font-bold text-center mb-6">Create Your Account</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
