@@ -42,7 +42,7 @@ const AdminDashboard = () => {
       label: 'Refund Request', 
       icon: Clock,  
       component: (
-        <Link to="rform">
+        <Link to="/rform">
           <button 
             className="flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white shadow-lg transition-all duration-300 font-semibold"
           >
