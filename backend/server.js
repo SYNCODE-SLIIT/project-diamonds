@@ -21,7 +21,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import additionalServiceRoutes from './routes/additionalServiceRoutes.js';
 import eventRequestRoutes from './routes/eventRequestRoutes.js';
-
+import organizerRoutes from './routes/organizerRoutes.js';
 
 
 // Load environment variables
@@ -61,9 +61,6 @@ app.use('/api/chat-groups', chatGroupRoutes);
 app.use('/api/messages', messageRoutes);
 
 
-
-
-app.use('/api/organizers', organizerRoutes);
 
 // Import Routes
 
