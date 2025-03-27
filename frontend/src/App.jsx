@@ -170,6 +170,7 @@ const App = () => {
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="blog" element={<BlogPosts />} />
             <Route path="content-creators" element={<ContentCreatorList />} />
+            <Route path="create-blog-post" element={<CreateBlogPost />} />
             <Route path="media" element={<ViewAllMedia />} />
             <Route path="event-calendar" element={<EventCalendar />} />
             <Route path="dashboard" element={<AdminDashboard />} />
@@ -204,7 +205,7 @@ const App = () => {
           <Route path='/report' element={<FinancialReport />} />
 
           {/* Content Management Routes */}
-          <Route path="/create-blog-post" element={<CreateBlogPost />} />
+          {/* <Route path="/create-blog-post" element={<CreateBlogPost />} /> */}
 
           {/* <Route path="/blog" element={<BlogPosts />} /> */}
 

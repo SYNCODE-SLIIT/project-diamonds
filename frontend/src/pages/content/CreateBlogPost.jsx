@@ -84,7 +84,7 @@ const BlogForm = ({ onSubmit }) => {
             }
 
             // Navigate to the blog post view page
-            navigate('/blog');
+            navigate('/admin/blog');
         } catch (error) {
             console.error("Error creating blog post:", error.response ? error.response.data : error.message);
         }

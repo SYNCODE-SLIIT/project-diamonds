@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const BlogPosts = () => {
   const navigate = useNavigate();
@@ -57,6 +57,11 @@ const BlogPosts = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="flex justify-end mb-4">
+        <Link to="/admin/create-blog-post" className="bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700">
+          Create Blog Post
+        </Link>
+      </div>
       <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">Latest Blog Posts</h2>
       {posts.length === 0 ? (
         <p className="text-center text-gray-600 text-lg">No blog posts available.</p>
