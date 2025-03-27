@@ -11,7 +11,7 @@ const MyEvents = () => {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const res = await axios.get(`/api/events/organizer/${user._id}`);
+        const res = await axios.get(`api/admin/events/organizer/${user._id}`);
         setEvents(res.data);
       } catch (err) {
         console.error('Failed to load events:', err);
