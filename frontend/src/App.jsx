@@ -87,6 +87,7 @@ import ContentCreatorView from './pages/content/ContentCreatorView';
 import EditContentCreator from './pages/content/EditContentCreator';
 
 import CalendarEvents from './pages/CalendarEvents';
+import Merchandise from './pages/content/Merchandise';
 
 
 const App = () => {
@@ -107,7 +108,11 @@ const App = () => {
             <Route path="/media/edit/:id" element={<EditMedia />} />
 
             <Route path="/media" element={<ViewAllMedia />} 
+           
             />
+
+          <Route path="/merc" element={<Merchandise />} />
+
 
           <Route path="/content-creators" element={<ContentCreatorList />} />
           <Route path="/content-creators/new" element={<ContentCreatorForm />} />
