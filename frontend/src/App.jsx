@@ -62,7 +62,9 @@ import Contactus from './pages/Contactus';
 
 import OrganizerProfile from './pages/EventOrganizerProfile';
 
+
 import EventBookingPage from './pages/EventBookingPage';
+
 
 import EventRequestForm from './components/event/EventRequestForm';
 
@@ -73,6 +75,15 @@ import MemberDashboardLayout from './components/layout/MemberDashboardLayout';
 import AdminLayout from './components/layout/AdminLayout';
 import UserProvider from './context/userContext';
 
+
+import ViewMedia from './pages/content/ViewMedia';
+import EditMedia from './pages/content/EditMedia';
+import ViewAllMedia from './pages/content/ViewAllMedia';
+
+import BudgetForm from './components/Financial/BudgetForm';
+import RefundForm from './components/Financial/RefundForm';
+import PaymentOptions from './components/Financial/PaymentOptions';
+
 import CalendarEvents from './pages/CalendarEvents';
 
 
@@ -80,7 +91,22 @@ const App = () => {
   return (
     <div className="">
       <UserProvider>
-        <Routes>
+
+        
+          
+          <Routes>
+          
+            <Route path='/financial' element={<FinancialDashboard />} />
+            <Route path='/bform' exact element={<BudgetForm/>} />
+            <Route path='/rform' exact element={<RefundForm/>} />
+            <Route path='/pform' exact element={<PaymentOptions />} />
+
+            <Route path="/media/:id" component={<ViewMedia/>} />
+            <Route path="/media/edit/:id" element={<EditMedia />} />
+
+            <Route path="/media" element={<ViewAllMedia />} 
+            />
+
           <Route element={<PublicLayout />}>
               <Route path='/' element={<Home />} />
               <Route path='/contactUs' element={<Contactus />} />
@@ -100,6 +126,7 @@ const App = () => {
 
               {/* <Route path='/organizer/new-event' element={<OrganizerNewEvent />} />
               <Route path='/organizer/manage-events' element={<OrganizerManageEvents />} /> */}
+
             </Route>
 
 
@@ -141,7 +168,6 @@ const App = () => {
             <Route path="finalized/:id" element={<FinalizedDetails />} />
           </Route>
 
-          {/* Financial Routes */}
 
           <Route path='/bform' element={<BudgetForm/>} />
           <Route path='/rform' element={<RefundForm/>} />
