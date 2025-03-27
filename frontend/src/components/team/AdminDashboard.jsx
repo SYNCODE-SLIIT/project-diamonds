@@ -5,6 +5,7 @@ import {
   Clock, 
   ChevronRight 
 } from 'lucide-react';
+import { Link } from 'react-router-dom';  // For navigation
 
 import EventAssignment from './EventAssignment';
 import PracticeSessionManagement from './PracticeSessionManagement';
@@ -32,6 +33,20 @@ const AdminDashboard = () => {
       label: 'Calendar', 
       icon: CalendarIcon,
       component: <CalendarView />
+    },
+    { 
+      key: 'budget', 
+      label: 'Budget Request', 
+      icon: Clock,  
+      component: (
+        <Link to="/bform">
+          <button 
+            className="flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white shadow-lg transition-all duration-300 font-semibold"
+          >
+            Request Budget
+          </button>
+        </Link>
+      )
     }
   ];
 
