@@ -126,13 +126,48 @@ const [showCustomModal, setShowCustomModal] = useState(false);
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-
-    // Clear specific error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }));
+  
+    const updatedErrors = { ...errors };
+  
+    // Live validation logic
+    if (name === 'eventName') {
+      if (!value.trim()) updatedErrors.eventName = 'Event name is required';
+      else if (value.trim().length < 3) updatedErrors.eventName = 'At least 3 characters required';
+      else delete updatedErrors.eventName;
     }
+  
+    if (name === 'eventLocation') {
+      if (!value.trim()) updatedErrors.eventLocation = 'Event location is required';
+      else delete updatedErrors.eventLocation;
+    }
+  
+    if (name === 'guestCount') {
+      const count = Number(value);
+      if (!value.trim()) updatedErrors.guestCount = 'Guest count is required';
+      else if (isNaN(count) || count <= 0) updatedErrors.guestCount = 'Enter a valid positive number';
+      else delete updatedErrors.guestCount;
+    }
+  
+    if (name === 'eventDate') {
+      const selectedDate = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const fiveDaysFromNow = new Date(today);
+      fiveDaysFromNow.setDate(today.getDate() + 5);
+  
+      if (!value) {
+        updatedErrors.eventDate = 'Event date is required';
+      } else if (selectedDate < today) {
+        updatedErrors.eventDate = 'Event date must be today or in the future';
+      } else if (selectedDate < fiveDaysFromNow) {
+        updatedErrors.eventDate = 'Please book at least 5 days in advance';
+      } else {
+        delete updatedErrors.eventDate;
+      }
+    }
+  
+    setErrors(updatedErrors);
   };
-
   const toggleService = (id) => {
     setFormData(prev => ({
       ...prev,
@@ -324,18 +359,19 @@ const [showCustomModal, setShowCustomModal] = useState(false);
                 )}
               </div>
               <div className="col-span-1">
-                <input 
-                  name="eventDate" 
-                  type="date" 
-                  value={formData.eventDate} 
-                  onChange={handleChange} 
-                  className={`input border p-2 rounded w-full ${
-                    errors.eventDate ? 'border-red-500' : ''
-                  }`} 
-                />
-                {errors.eventDate && (
-                  <p className="text-red-500 text-sm mt-1">{errors.eventDate}</p>
-                )}
+              <input 
+  name="eventDate" 
+  type="date" 
+  value={formData.eventDate} 
+  onChange={handleChange} 
+  min={new Date().toISOString().split('T')[0]} 
+  className={`input border p-2 rounded w-full ${
+    errors.eventDate ? 'border-red-500' : ''
+  }`} 
+/>
+{errors.eventDate && (
+  <p className="text-red-500 text-sm mt-1">{errors.eventDate}</p>
+)}
               </div>
               <div className="col-span-2">
                 <textarea 

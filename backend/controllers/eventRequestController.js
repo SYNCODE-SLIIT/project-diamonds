@@ -98,22 +98,37 @@ export const deleteEventRequest = async (req, res) => {
 };
 
 // Admin approval/rejection
+import Event from '../models/event.js';
+
 export const updateRequestStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, reviewedBy } = req.body;
-    if (!['approved', 'rejected'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status' });
+    const { status, reviewedBy, rejectionReason } = req.body;
+
+    const request = await EventRequest.findById(id);
+    if (!request) return res.status(404).json({ message: 'Request not found' });
+
+    request.status = status;
+    request.reviewedBy = reviewedBy;
+    request.approvalDate = new Date();
+    await request.save();
+
+    if (status === 'approved') {
+      const newEvent = new Event({
+        organizerID: request.organizerID,
+        packageID: request.packageID,
+        additionalServices: request.additionalServices,
+        eventName: request.eventName,
+        eventDate: request.eventDate,
+        eventLocation: request.eventLocation,
+        guestCount: request.guestCount,
+        approvedBy: reviewedBy
+      });
+      await newEvent.save();
     }
 
-    const updated = await EventRequest.findByIdAndUpdate(
-      id,
-      { status, reviewedBy, approvalDate: new Date() },
-      { new: true }
-    );
-
-    res.status(200).json(updated);
-  } catch (error) {
-    res.status(500).json({ message: 'Error updating status', error });
+    res.json({ message: 'Request updated successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to update request', error: err.message });
   }
 };
