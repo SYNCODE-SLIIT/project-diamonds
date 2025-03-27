@@ -212,7 +212,7 @@ const App = () => {
 
           <Route path="/upload" element={<UploadMedia />} />
           <Route path="/Cmanager" element={<ContentMediaDashboard />} />
-          <Route path="/merc" element={<Merchandise />} />
+          <Route path="/merchandise" element={<Merchandise />} />
         </Routes>
 
         
