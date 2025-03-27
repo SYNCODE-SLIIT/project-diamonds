@@ -88,3 +88,46 @@ export const getOrganizerProfile = async (req, res) => {
     return res.status(500).json({ message: "Error fetching organizer profile", error: error.message });
   }
 };
+
+// Fetch all organizers
+export const getAllOrganizers = async (req, res) => {
+  try {
+    const organizers = await Organizer.find();
+    return res.status(200).json(organizers);
+  } catch (error) {
+    return res.status(500).json({ message: "Error fetching organizers", error: error.message });
+  }
+};
+
+// Delete an organizer (and optionally, the corresponding user)
+export const deleteOrganizer = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const organizer = await Organizer.findById(id);
+    if (!organizer) {
+      return res.status(404).json({ message: "Organizer not found." });
+    }
+    // Delete the organizer document
+    await Organizer.findByIdAndDelete(id);
+
+    // Optionally, delete the corresponding user document if user.profileId references this organizer
+    await User.findOneAndDelete({ profileId: id, role: 'organizer' });
+
+    return res.status(200).json({ message: "Organizer and associated user deleted successfully." });
+  } catch (error) {
+    return res.status(500).json({ message: "Error deleting organizer", error: error.message });
+  }
+};
+
+// NEW: Get a single organizer by ID
+export const getOrganizerById = async (req, res) => {
+  try {
+    const organizer = await Organizer.findById(req.params.id);
+    if (!organizer) {
+      return res.status(404).json({ message: "Organizer not found." });
+    }
+    return res.status(200).json(organizer);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};

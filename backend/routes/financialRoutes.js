@@ -1,31 +1,56 @@
-import express from "express";
-import multer from "multer";
-import { generateExcelReport, getBudget, getDashboardData, getInvoices, getPayments, getRefunds, processFullPayment, updateBudget, updateInvoice, updatePayment, updateRefund } from "../controllers/financialController.js";
-
+import express from 'express';
+import { protect } from '../middleware/authmiddleware.js';
+import {
+  getAllPaymentsWithUserData,
+  getAllBudgetsWithUserData,
+  getAllInvoicesWithUserData,
+  getAllRefundsWithUserData,
+  getAllTransactionsWithUserData,
+  createBudget,
+  requestRefund,
+  makePayment,
+  getDashboardData,
+  generateInvoiceReport,
+  generateExcelReport,
+  sendPdfByEmail,
+  deleteFinancialRecord,
+  updateFinancialRecord,
+  getAllMembers,
+  paySalary,
+  getFinancialReport,
+} from '../controllers/financialController.js';
+import upload from '../middleware/uploadmiddleware.js';
 
 const router = express.Router();
-const upload = multer({ dest: "uploads/" });
 
-router.post("/full-payment", upload.single("bankSlip"), processFullPayment);
+// Protect all endpoints
+router.use(protect);
 
-// New route for Excel report download
-router.get("/report", generateExcelReport);
+// POST endpoints
+router.post('/cb', upload.single('infoFile'), createBudget); // Updated to process file upload for budget
+router.post('/ef', upload.single('receiptFile'), requestRefund);
+router.post('/mp', upload.single('bankSlip'), makePayment);
+router.post('/send-email', sendPdfByEmail);
 
-router.get('/', getDashboardData);
+// GET endpoints
+router.get('/getp', getAllPaymentsWithUserData);
+router.get('/getb', getAllBudgetsWithUserData);
+router.get('/geti', getAllInvoicesWithUserData);
+router.get('/getr', getAllRefundsWithUserData);
+router.get('/gett', getAllTransactionsWithUserData);
+router.get('/dashboard', getDashboardData);
+router.get('/invoice-report', generateInvoiceReport);
+router.get('/excel-report', generateExcelReport);
+router.get('/report', getFinancialReport);
 
-router.get('/b', getBudget);
-router.patch('/b/:id', updateBudget);
+// DELETE
+router.delete('/:recordType/:id', deleteFinancialRecord);
 
-router.get('/i', getInvoices);
-router.patch('/i/:id', updateInvoice);
+// PATCH endpoints for update operations
+router.patch('/:recordType/:id', updateFinancialRecord);
 
-router.get('/p', getPayments);
-router.patch('/p/:id', updatePayment);
-
-router.get('/r/', getRefunds);
-router.patch('/r/:id', updateRefund);
-
-
-
+// Salary endpoints
+router.get('/salary/members', getAllMembers);
+router.post('/salary/pay', paySalary);
 
 export default router;

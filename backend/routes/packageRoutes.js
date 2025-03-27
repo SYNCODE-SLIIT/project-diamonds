@@ -1,5 +1,5 @@
-// routes/packageRoutes.js - API routes for package operations
 import express from 'express';
+import multer from 'multer';
 import {
   getAllPackages,
   getPackageById,
@@ -10,19 +10,14 @@ import {
 
 const router = express.Router();
 
-// GET all packages
+// Define multer storage in the routes file
+const upload = multer({ storage: multer.memoryStorage() });
+
+// Apply multer for POST and PUT routes
 router.get('/', getAllPackages);
-
-// GET single package by ID
 router.get('/:id', getPackageById);
-
-// POST create new package
-router.post('/', createPackage);
-
-// PUT update package
-router.put('/:id', updatePackage);
-
-// DELETE package
+router.post('/', upload.single('image'), createPackage);
+router.put('/:id', upload.single('image'), updatePackage);
 router.delete('/:id', deletePackage);
 
 export default router;

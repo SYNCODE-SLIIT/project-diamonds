@@ -12,6 +12,7 @@ const Navbar = () => {
   const timeoutRef = useRef(null);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Clear timeout on unmount
   useEffect(() => {
@@ -22,10 +23,15 @@ const Navbar = () => {
     };
   }, []);
 
+  useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+  }, []);
+
   // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
-      // Change to black background after scrolling down 100px
       if (window.scrollY > 100) {
         setScrolled(true);
       } else {
@@ -69,7 +75,6 @@ const Navbar = () => {
     const handleMouseMove = (e) => {
       if (dropdownRef.current && isLeaving) {
         const rect = dropdownRef.current.getBoundingClientRect();
-        // If mouse is inside dropdown, cancel the leaving state
         if (
           e.clientX >= rect.left &&
           e.clientX <= rect.right &&
@@ -358,7 +363,53 @@ const Navbar = () => {
       ],
       image: assets.navbar_give,
     },
-  ];
+    isLoggedIn && {
+      title: 'MY EVENTS',
+      submenu: [
+        { 
+          name: 'EVENTS', 
+          description: 'Manage your upcoming and past events.',
+          bulletPoints: [
+            'View and manage upcoming events',
+            'Edit event details and schedule',
+            'Check attendee registrations',
+            'Review and archive past events'
+          ]
+        },
+        { 
+          name: 'EVENT REQUESTS', 
+          description: 'Create and manage event requests.',
+          bulletPoints: [
+            'Submit a new event request',
+            'Track approval status',
+            'Update or cancel pending requests',
+            'View request history'
+          ]
+        },
+        { 
+          name: 'EVENT DASHBOARD', 
+          description: 'Analyze event performance and insights.',
+          bulletPoints: [
+            'View event attendance analytics',
+            'Track ticket sales and revenue',
+            'Monitor marketing effectiveness',
+            'Generate reports on event success'
+          ]
+        },
+        { 
+          name: 'EVENT FEEDBACK & REVIEWS', 
+          description: 'Gather insights to enhance future events.',
+          bulletPoints: [
+            'Collect attendee reviews and ratings',
+            'Analyze feedback trends',
+            'Improve future event planning',
+            'Showcase positive testimonials'
+          ]
+        }
+      ],
+      image: assets.navbar_events,
+    },
+  ].filter(Boolean);
 
   // Animation variants
   const dropdownVariants = {

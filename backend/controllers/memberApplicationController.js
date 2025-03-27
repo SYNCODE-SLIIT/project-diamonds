@@ -184,11 +184,19 @@ export const updateProfilePicture = async (req, res) => {
 // Function to update user profile details
 export const updateMemberProfile = async (req, res) => {
   try {
-    const { userId, email, contactNumber, availability } = req.body;
+    const { userId, email, contactNumber, availability, danceStyle, achievements } = req.body;
 
-    // Ensure email is updated in both collections
+    // Update email in the User collection
     const updatedUser = await User.findOneAndUpdate({ profileId: userId }, { email }, { new: true });
-    await MemberApplication.findByIdAndUpdate(userId, { email, contactNumber, availability });
+
+    // Update the MemberApplication document with additional fields:
+    await MemberApplication.findByIdAndUpdate(userId, { 
+      email, 
+      contactNumber, 
+      availability, 
+      danceStyle, 
+      achievements 
+    });
 
     res.status(200).json({ message: "Profile updated successfully", updatedUser });
   } catch (error) {
@@ -206,5 +214,89 @@ export const checkMemberEmail = async (req, res) => {
     res.status(200).json({ exists: !!existingApplication });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// In MemberApplicationController.js
+// In /backend/controllers/memberApplicationController.js
+
+export const inviteApplication = async (req, res) => {
+  try {
+    const { id } = req.params; // Application ID
+    const { auditionDate, auditionTime, location } = req.body;
+    // Validate that audition details are provided (for the email content)
+    if (!auditionDate || !auditionTime || !location) {
+      return res.status(400).json({ message: "All audition details are required." });
+    }
+    
+    // Update the MemberApplication status to "Invited" only
+    const updatedApplication = await MemberApplication.findByIdAndUpdate(
+      id,
+      { $set: { applicationStatus: 'Invited' } },
+      { new: true, runValidators: true }
+    );
+    if (!updatedApplication) {
+      return res.status(404).json({ message: "Application not found." });
+    }
+    
+    // Construct the account creation link (adjust port/path as needed)
+    const invitationLink = `http://localhost:3000/register/member/createAccount?applicationId=${updatedApplication._id}`;
+    
+    // Send the audition invitation email using the provided audition details (for email content only)
+    await emailService.sendAuditionInvitationEmail(
+      updatedApplication,
+      auditionDate,
+      auditionTime,
+      location,
+      invitationLink
+    );
+    
+    return res.status(200).json({
+      message: "Invitation sent successfully.",
+      application: updatedApplication
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const getInvitedApplications = async (req, res) => {
+  try {
+    // Find applications with status "Invited" (exact case or you can make it case-insensitive)
+    const invitedApplications = await MemberApplication.find({ applicationStatus: 'Invited' });
+    res.status(200).json({ applications: invitedApplications });
+  } catch (error) {
+    console.error("Error fetching invited applications:", error);
+    res.status(500).json({ message: "Error fetching invited applications" });
+  }
+};
+
+export const getFinalizedApplications = async (req, res) => {
+  try {
+    // Find applications with status "Approved" or "Rejected" (exact case)
+    const finalizedApplications = await MemberApplication.find({
+      applicationStatus: { $in: ['Approved', 'Rejected'] }
+    });
+    res.status(200).json({ applications: finalizedApplications });
+  } catch (error) {
+    console.error("Error fetching finalized applications:", error);
+    res.status(500).json({ message: "Error fetching finalized applications" });
+  }
+};
+
+export const deleteApplication = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const application = await MemberApplication.findById(id);
+    if (!application) {
+      return res.status(404).json({ message: "Application not found." });
+    }
+    if (application.applicationStatus !== 'Rejected') {
+      return res.status(400).json({ message: "Only rejected applications can be deleted." });
+    }
+    await MemberApplication.findByIdAndDelete(id);
+    return res.status(200).json({ message: "Application deleted successfully." });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 };
