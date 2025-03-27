@@ -105,7 +105,7 @@ const AdditionalServicesList = () => {
             </div>
             
             <div className="mt-4 mb-4 text-2xl font-bold">
-              ${service.price}
+              Rs.{service.price}
             </div>
             
             <div className="mt-auto flex justify-end space-x-2">

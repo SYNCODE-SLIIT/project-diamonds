@@ -437,7 +437,7 @@ const PackageForm = ({ package: initialPackage, onSuccess, onCancel }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Travel Fees */}
         <div>
-          <label className="block mb-1 font-medium">Travel Fees ($)</label>
+          <label className="block mb-1 font-medium">Travel Fees (Rs.)</label>
           <input
             type="number"
             min="0"
@@ -451,7 +451,7 @@ const PackageForm = ({ package: initialPackage, onSuccess, onCancel }) => {
         </div>
         {/* Price */}
         <div>
-          <label className="block mb-1 font-medium">Price ($)</label>
+          <label className="block mb-1 font-medium">Price (Rs.)</label>
           <input
             type="number"
             min="0"

@@ -7,7 +7,6 @@ const PaymentGatewayForm = ({ onClose }) => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Payment Gateway typically does not require a file upload.
   const validateAmount = () => {
     const parsedAmount = parseFloat(amount);
     return !isNaN(parsedAmount) && parsedAmount > 0 && parsedAmount <= 100000;
@@ -27,7 +26,6 @@ const PaymentGatewayForm = ({ onClose }) => {
     try {
       const formData = new FormData();
       formData.append('amount', amount);
-      // Set the payment method for Payment Gateway
       formData.append('paymentMethod', 'payment_gateway');
 
       const res = await axiosInstance.post('http://localhost:4000/api/finance/mp', formData, {
@@ -58,7 +56,7 @@ const PaymentGatewayForm = ({ onClose }) => {
             Payment Amount
           </label>
           <div className="relative">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">RS.</span>
             <input
               type="number"
               id="amount"
