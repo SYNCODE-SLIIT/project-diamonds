@@ -102,7 +102,8 @@ const HeadmanChatRoom = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-xl bg-white shadow-xl rounded-xl overflow-hidden">
+      {/* Increased container size: max-w-4xl */}
+      <div className="w-full max-w-4xl bg-white shadow-xl rounded-xl overflow-hidden">
         <div className="bg-gradient-to-r from-green-500 to-green-700 p-4">
           <h1 className="text-2xl font-bold text-white text-center">{groupName}</h1>
         </div>
@@ -118,7 +119,8 @@ const HeadmanChatRoom = () => {
           </div>
         )}
         
-        <div className="h-96 overflow-y-auto p-4 space-y-4 bg-gray-50">
+        {/* Increased height for the messages container */}
+        <div className="h-[600px] overflow-y-auto p-4 space-y-4 bg-gray-50">
           {messages.length === 0 ? (
             <p className="text-center text-gray-500">No messages yet.</p>
           ) : (

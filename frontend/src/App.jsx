@@ -51,7 +51,6 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import Expense from './pages/Dashboard/Expense';
 import RecentTransactionPage from './pages/Dashboard/RecentTransaction';
 
-
 import FinancialReport from './components/Financial/FinancialReport';
 import BudgetForm from './components/Financial/BudgetForm';
 import RefundForm from './components/Financial/RefundForm';
@@ -63,21 +62,19 @@ import Contactus from './pages/Contactus';
 
 import OrganizerProfile from './pages/EventOrganizerProfile';
 
-import { Toaster } from 'react-hot-toast';
-import BlogPosts from './pages/content/BlogpostView';
-import EditBlogPost from './pages/content/EditBlogPost';
-import UploadMedia from './pages/content/UploadMedia';
+
+import EventBookingPage from './pages/EventBookingPage';
 
 
 import EventRequestForm from './components/event/EventRequestForm';
+
 import OrganizerEventRequests from './components/event/OrganizerEventRequests';
-
-
 
 import MemberDashboardLayout from './components/layout/MemberDashboardLayout';
 
 import AdminLayout from './components/layout/AdminLayout';
 import UserProvider from './context/userContext';
+
 
 import ViewMedia from './pages/content/ViewMedia';
 import EditMedia from './pages/content/EditMedia';
@@ -115,11 +112,16 @@ const App = () => {
               <Route path='/contactUs' element={<Contactus />} />
               <Route path='/organizer-profile' element={<OrganizerProfile />} />
               <Route path='/login' element={<Login />} />
+
+              {/* <Route path='/event-request' element={<EventRequestForm />} /> */}
+              <Route path='/register/member/application' element={<MemberApplication />} />
+
               <Route path='/apply-now' element={<MemberApplication />} />
+
               <Route path='/register/member/createAccount' element={<CreateMemberAccount />} />
               <Route path="/application-submitted" element={<ApplicationSubmitted />} />
 
-              <Route path='/events' element={<EventRequestForm />} />
+              <Route path='/events' element={<EventBookingPage />} />
               <Route path="/event-requests" element={<OrganizerEventRequests />} />
 
               {/* <Route path='/organizer/new-event' element={<OrganizerNewEvent />} />
@@ -165,19 +167,6 @@ const App = () => {
             <Route path="applications/combined" element={<AdminApplicationsCombinedList />} />
             <Route path="finalized/:id" element={<FinalizedDetails />} />
           </Route>
-
-
-  <Route path="/create-blog-post" element={<CreateBlogPost />} /> {/* Route to CreateBlogPost page */}
-            <Route path="/blog" element={<BlogPosts />} />
-            <Route path="/blog/edit/:id" element={<EditBlogPost />}/>
-
-            <Route path="/upload" element={<UploadMedia />} />
-
-
-            {/* Content Management Route */}
-            <Route path="/Cmanager" element={<ContentMediaDashboard />} />
-           
-          {/* </Routes> */}
 
 
           <Route path='/bform' element={<BudgetForm/>} />

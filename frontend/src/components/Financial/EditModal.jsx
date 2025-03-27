@@ -50,19 +50,17 @@ const EditModal = ({ item, onClose, activeTab }) => {
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
-  // Helper: Get status options based on activeTab
+  //Get status options based on activeTab
   const getStatusOptions = () => {
     if (activeTab === 'payments') {
       return ['pending', 'approved', 'rejected'];
     } else if (activeTab === 'budgets') {
       return ['pending', 'approved', 'rejected'];
     } else if (activeTab === 'invoices') {
-      // Order as Paid, Failed, Pending (as specified)
       return ['paid', 'failed', 'pending'];
     } else if (activeTab === 'refunds') {
       return ['pending', 'approved', 'rejected'];
     } else {
-      // Fallback: include all options
       return ['pending', 'approved', 'declined', 'rejected'];
     }
   };
@@ -181,7 +179,6 @@ const EditModal = ({ item, onClose, activeTab }) => {
                               ))}
                             </select>
                           ) : (
-                            // For other select fields, fallback behavior.
                             <select
                               id={key}
                               value={value}
@@ -217,7 +214,6 @@ const EditModal = ({ item, onClose, activeTab }) => {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-50 z-50 p-4">
       <div className="bg-white bg-opacity-80 w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 rounded-lg shadow-2xl overflow-hidden">
-        {/* Header */}
         <div className="bg-gray-100 bg-opacity-80 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
           <h3 className="text-xl font-semibold text-gray-800">
             Edit {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Record
@@ -231,13 +227,9 @@ const EditModal = ({ item, onClose, activeTab }) => {
             </svg>
           </button>
         </div>
-        
-        {/* Body */}
         <div className="p-6 overflow-y-auto max-h-[calc(100vh-12rem)]">
           {renderFieldGroups()}
         </div>
-        
-        {/* Footer */}
         <div className="bg-gray-50 bg-opacity-80 px-6 py-4 border-t border-gray-200 flex flex-col gap-3">
           <div className="flex flex-wrap justify-end gap-3">
             <button 

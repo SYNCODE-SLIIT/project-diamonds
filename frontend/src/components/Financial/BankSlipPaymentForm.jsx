@@ -49,7 +49,7 @@ const BankSlipPaymentForm = ({ onClose }) => {
     setIsSubmitting(true);
     setError('');
 
-    // Comprehensive validation before submission
+    //validation before submission
     const validations = [
       { validate: validateFirstName(), message: 'Invalid first name' },
       { validate: validateLastName(), message: 'Invalid last name' },
@@ -71,7 +71,7 @@ const BankSlipPaymentForm = ({ onClose }) => {
       formData.append('lastName', lastName);
       formData.append('reason', reason);
       formData.append('amount', amount);
-      // Include the payment method so the backend knows which category to use
+    
       formData.append('paymentMethod', 'bankslip');
       
       if (bankSlip) {
@@ -159,7 +159,7 @@ const BankSlipPaymentForm = ({ onClose }) => {
               Payment Amount
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">RS.</span>
               <input
                 type="number"
                 id="amount"

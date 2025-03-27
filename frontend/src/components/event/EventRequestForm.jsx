@@ -3,13 +3,17 @@ import { getPackages } from '../../services/packageService';
 import { getAdditionalServices } from '../../services/additionalServiceService';
 import { submitEventRequest } from '../../services/eventRequestService';
 import { UserContext } from '../../context/userContext';
-import { XIcon, CheckIcon, AlertTriangleIcon } from 'lucide-react';
+import { XIcon, CheckIcon, AlertTriangleIcon, EyeIcon,  PlusIcon} from 'lucide-react';
+import PackageDetailsModal from './PackageDetailsModal.jsx';
+import CustomPackageModal from './CustomPackageModal.jsx';
+
 
 const EventRequestForm = () => {
   const { user } = useContext(UserContext);
   const organizerID = user?._id;
-
   const [step, setStep] = useState(1);
+  const [viewingPackage, setViewingPackage] = useState(null);
+const [showCustomModal, setShowCustomModal] = useState(false);
   const [systemPackages, setSystemPackages] = useState([]);
   const [services, setServices] = useState([]);
   const [formData, setFormData] = useState({
@@ -39,6 +43,13 @@ const EventRequestForm = () => {
     };
     fetchData();
   }, []);
+
+  const handleCustomPackageCreated = (newPackage) => {
+    setSystemPackages(prev => [...prev, newPackage]); // append to the list
+    setFormData(prev => ({ ...prev, selectedPackageID: newPackage._id }));
+    setShowCustomModal(false);
+    setStep(3); // proceed to next step
+  };
 
   // Validation Functions
   const validateStep1 = () => {
@@ -195,7 +206,7 @@ const EventRequestForm = () => {
     };
 
     return (
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-xl mt-50 ">
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-xl mt-20 ">
         <div className="flex justify-between items-center p-4">
           <div>
             <h2 className="text-2xl font-bold">Book a Dance Team</h2>
@@ -332,44 +343,85 @@ const EventRequestForm = () => {
 
         {/* Rest of the code remains the same as before */}
         {step === 2 && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">Choose Package</h3>
-            <div className="grid md:grid-cols-2 gap-4">
-              {systemPackages.map(pkg => (
-                <label 
-                  key={pkg._id} 
-                  className={`border rounded-lg p-4 cursor-pointer 
-                    ${formData.selectedPackageID === pkg._id 
-                      ? 'border-blue-500 bg-blue-50' 
-                      : 'border-gray-200'
-                    }`}
-                >
-                  <div className="flex items-center">
-                    <input
-                      type="radio"
-                      name="selectedPackageID"
-                      value={pkg._id}
-                      onChange={handleChange}
-                      checked={formData.selectedPackageID === pkg._id}
-                      className="mr-3"
-                    />
-                    <div>
-                      <h4 className="font-bold text-gray-800">{pkg.packageName}</h4>
-                      <p className="text-sm text-gray-600">${pkg.price?.toFixed(2)} (may vary)</p>
-                    </div>
-                  </div>
-                </label>
-              ))}
+  <div className="space-y-4">
+    <h3 className="text-lg font-semibold text-gray-700 mb-2">Choose Package</h3>
+
+    {/* Package List */}
+    <div className="grid md:grid-cols-2 gap-4">
+      {systemPackages.map(pkg => (
+        <div
+          key={pkg._id}
+          className={`border rounded-lg p-4 relative group cursor-pointer ${
+            formData.selectedPackageID === pkg._id
+              ? 'border-blue-500 bg-blue-50'
+              : 'border-gray-200'
+          }`}
+        >
+          <div className="flex justify-between items-start">
+            <div>
+              <h4 className="font-bold text-gray-800">{pkg.packageName}</h4>
+              <p className="text-sm text-gray-600 mt-1">
+                {pkg.description.length > 80 ? pkg.description.slice(0, 80) + '...' : pkg.description}
+              </p>
             </div>
-            {errors.selectedPackageID && (
-              <p className="text-red-500 text-sm mt-1">{errors.selectedPackageID}</p>
-            )}
-            <div className="flex justify-between mt-4">
-              <button onClick={prevStep} className="btn-secondary border p-2 rounded">Previous Step</button>
-              <button onClick={nextStep} className="btn bg-blue-600 text-white px-4 py-2 rounded">Next Step</button>
-            </div>
+            <button onClick={() => setViewingPackage(pkg)} className="text-gray-500 hover:text-blue-600">
+              <EyeIcon className="w-5 h-5" />
+            </button>
           </div>
-        )}
+
+          {/* Performances */}
+          <div className="mt-2">
+            <p className="text-sm font-medium text-gray-700">Performances:</p>
+            <ul className="list-disc list-inside text-sm text-gray-600">
+              {pkg.performances.map((perf, index) => (
+                <li key={index}>{perf.type} – {perf.duration}</li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Dance Styles */}
+          <div className="mt-2">
+            <p className="text-sm font-medium text-gray-700">Dance Styles:</p>
+            <p className="text-sm text-gray-600">{pkg.danceStyles.join(', ')}</p>
+          </div>
+
+          {/* Radio Button */}
+          <div className="mt-4">
+            <input
+              type="radio"
+              name="selectedPackageID"
+              value={pkg._id}
+              onChange={handleChange}
+              checked={formData.selectedPackageID === pkg._id}
+              className="mr-2"
+            />
+            <label>Select this package</label>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {errors.selectedPackageID && (
+      <p className="text-red-500 text-sm mt-1">{errors.selectedPackageID}</p>
+    )}
+
+    {/* Custom Package Button */}
+    <div className="mt-6">
+      <button
+        onClick={() => setShowCustomModal(true)}
+        className="flex items-center gap-2 bg-white text-blue-600 px-4 py-2 border border-blue-500 rounded hover:bg-blue-50"
+      >
+        <PlusIcon className="w-4 h-4" />
+        Create Custom Package
+      </button>
+    </div>
+
+    <div className="flex justify-between mt-6">
+      <button onClick={prevStep} className="btn-secondary border p-2 rounded">Previous Step</button>
+      <button onClick={nextStep} className="btn bg-blue-600 text-white px-4 py-2 rounded">Next Step</button>
+    </div>
+  </div>
+)}
 
         {/* Additional Services and Review & Submit steps remain the same */}
         {step === 3 && (
@@ -394,7 +446,7 @@ const EventRequestForm = () => {
                     />
                     <div>
                       <h4 className="font-bold text-gray-800">{service.serviceName}</h4>
-                      <p className="text-sm text-gray-600">${service.price.toFixed(2)}</p>
+                      <p className="text-sm text-gray-600">Rs.{service.price.toFixed(2)}</p>
                     </div>
                   </div>
                 </label>
@@ -421,14 +473,14 @@ const EventRequestForm = () => {
                 }</p>
                 <p><strong>Estimated Price:</strong> {
                   formData.selectedPackageID
-                    ? `$${systemPackages.find(p => p._id === formData.selectedPackageID)?.price.toFixed(2)} + additional charges`
+                    ? `Rs.${systemPackages.find(p => p._id === formData.selectedPackageID)?.price.toFixed(2)} + additional charges`
                     : `Custom quote - price will be confirmed by admin`
                 }</p>
               </div>
               <p className="mt-3"><strong>Additional Services:</strong> {
                 services
                   .filter(s => formData.selectedServices.includes(s._id))
-                  .map(s => `${s.serviceName} ($${s.price})`)
+                  .map(s => `${s.serviceName} (Rs.${s.price})`)
                   .join(', ') || 'None'
               }</p>
             </div>
@@ -444,6 +496,25 @@ const EventRequestForm = () => {
             </div>
           </div>
         )}
+        {/* Modals */}
+{viewingPackage && (
+  <PackageDetailsModal
+    pkg={viewingPackage}
+    onClose={() => setViewingPackage(null)}
+    onCreateCustom={() => {
+      setViewingPackage(null);
+      setShowCustomModal(true);
+    }}
+  />
+)}
+
+{showCustomModal && (
+  <CustomPackageModal
+    onClose={() => setShowCustomModal(false)}
+    onSuccess={handleCustomPackageCreated}
+    createdBy={user._id}
+  />
+)}
       </div>
     </div>
   );

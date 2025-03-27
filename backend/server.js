@@ -11,16 +11,20 @@ import financialRoutes from './routes/financialRoutes.js';
 import transactionRoutes from "./routes/transactionRoutes.js";
 import packageRoutes from './routes/packageRoutes.js';
 import userRoutes from "./routes/userRoutes.js";
-import organizerRoutes from "./routes/organizerRoutes.js";
+
 import blogPostRoutes from "./routes/blogPostRoutes.js";
 import managePostRoutes from "./routes/managePostRoutes.js";
 import calendarRoutes from './routes/calendarRoutes.js';
 import additionalServiceRoutes from './routes/additionalServiceRoutes.js';
 import eventRequestRoutes from './routes/eventRequestRoutes.js';
+
+import organizerRoutes from './routes/organizerRoutes.js'
+
 import memberApplicationRoutes from './routes/memberApplicationRoutes.js';
 import adminApplicationRoutes from './routes/adminApplicationRoutes.js';
 import chatGroupRoutes from './routes/chatGroupRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
+
 
 import path from "path";
 import { fileURLToPath } from "url";

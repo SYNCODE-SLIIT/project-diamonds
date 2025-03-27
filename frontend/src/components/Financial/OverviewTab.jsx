@@ -16,12 +16,10 @@ import {
 } from "recharts";
 
 const Dashboard = () => {
-  // State to hold dashboard data from the backend
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch dashboard data on component mount
   useEffect(() => {
     axiosInstance
       .get("/api/finance/dashboard")
@@ -46,16 +44,14 @@ const Dashboard = () => {
     return <div className="p-6 text-center text-red-600">{error}</div>;
   }
 
-  // Destructure data received from backend
   const {
     totalIncome,
     totalExpense,
     transactions,
     refunds,
     payments,
-    invoices,
     budget,
-    dailyTrends, // Aggregated daily trends from the backend
+    dailyTrends, 
   } = dashboardData;
 
   // Calculate derived KPI values
@@ -64,10 +60,8 @@ const Dashboard = () => {
   const allocatedBudget = budget ? budget.allocatedBudget : 0;
   const remainingBudget = budget ? budget.remainingBudget : 0;
 
-  // Process daily trends data for charting
-  // dailyTrends is expected as an array of objects with _id (YYYY-MM-DD), total, and count.
   const dailyTrendsChartData = dailyTrends.map((item) => ({
-    date: item._id, // Day as a string (YYYY-MM-DD)
+    date: item._id, 
     total: item.total,
     count: item.count,
   }));
@@ -118,7 +112,7 @@ const Dashboard = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen space-y-8">
-      {/* 1. KPI Summary */}
+      {/*KPI Summary */}
       <section>
         <h2 className="text-3xl font-bold text-purple-700 text-center mb-6">
           Financial Dashboard - KPI Summary
@@ -141,7 +135,7 @@ const Dashboard = () => {
         </div>
       </section>
 
-      {/* 3. Payment & Refund Analysis */}
+      {/*Payment & Refund Analysis */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow p-4">
           <h4 className="font-semibold text-lg text-purple-700 mb-2">
@@ -168,7 +162,7 @@ const Dashboard = () => {
         </div>
       </section>
 
-      {/* 4. User-Centric Analysis */}
+      {/* User-Centric Analysis */}
       <section>
         <h2 className="text-2xl font-semibold text-purple-700 mb-4">
           User-Centric Analysis
@@ -189,7 +183,7 @@ const Dashboard = () => {
         </div>
       </section>
 
-      {/* 5. Predictive Analytics & Forecasting */}
+      {/*Predictive Analytics & Forecasting */}
       <section>
         <h2 className="text-2xl font-semibold text-purple-700 mb-4">
           Predictive Analytics & Forecasting
@@ -198,7 +192,6 @@ const Dashboard = () => {
           <h4 className="font-semibold text-lg text-purple-700 mb-2">
             Future Cash Flow Forecast
           </h4>
-          {/* For forecasting, we assume a 5% growth on the daily totals */}
           <CustomLineChart
             data={dailyTrendsChartData.map((item) => ({
               date: item.date,
@@ -209,8 +202,6 @@ const Dashboard = () => {
           />
         </div>
       </section>
-
-      {/* 6. Comparative Analysis */}
       <section>
         <h2 className="text-2xl font-semibold text-purple-700 mb-4">
           Comparative Analysis
@@ -241,7 +232,6 @@ const Dashboard = () => {
         </div>
       </section>
 
-      {/* 7. Advanced Visualization Techniques */}
       <section>
         <h2 className="text-2xl font-semibold text-purple-700 mb-4">
           Advanced Visualization Techniques
