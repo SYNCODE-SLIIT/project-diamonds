@@ -186,7 +186,7 @@ const UploadMedia = () => {
         </form>
         <div className="mt-4">
           <button
-            onClick={() => navigate("/media")}
+            onClick={() => navigate("/admin/media")}
             className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition duration-200"
           >
             Go to Media
