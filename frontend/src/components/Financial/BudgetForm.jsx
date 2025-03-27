@@ -4,8 +4,8 @@ import axiosInstance from '../../utils/axiosInstance';
 const BudgetForm = ({ onClose }) => {
   const [allocatedBudget, setAllocatedBudget] = useState('');
   const [remainingBudget, setRemainingBudget] = useState('');
-  const [reason, setReason] = useState('');         // New state for reason
-  const [infoFile, setInfoFile] = useState(null);     // New state for file upload
+  const [reason, setReason] = useState('');        
+  const [infoFile, setInfoFile] = useState(null);     
   const [status, setStatus] = useState('pending');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -77,7 +77,6 @@ const BudgetForm = ({ onClose }) => {
     }
 
     try {
-      // Use FormData for file upload
       const formData = new FormData();
       formData.append('allocatedBudget', allocatedBudget);
       formData.append('remainingBudget', remainingBudget);
@@ -124,7 +123,7 @@ const BudgetForm = ({ onClose }) => {
               Allocated Budget
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center justify-between text-black">RS. </span>
               <input
                 type="number"
                 id="allocatedBudget"
@@ -136,7 +135,7 @@ const BudgetForm = ({ onClose }) => {
                 min="0.01"
                 step="0.01"
                 required
-                placeholder="Enter allocated budget"
+                placeholder="   Enter allocated budget"
               />
             </div>
           </div>
@@ -146,7 +145,7 @@ const BudgetForm = ({ onClose }) => {
               Remaining Budget
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">RS. </span>
               <input
                 type="number"
                 id="remainingBudget"
@@ -158,7 +157,7 @@ const BudgetForm = ({ onClose }) => {
                 min="0"
                 step="0.01"
                 required
-                placeholder="Enter remaining budget"
+                placeholder="   Enter remaining budget"
               />
             </div>
           </div>

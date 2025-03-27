@@ -6,7 +6,7 @@ import { useState } from 'react'
 const EmojiPickerPopup = ({icon, onSelect }) => {
     const [isOpen, setIsOpen] = useState(false);
   return (
-    <div className="flex flex-col md:flex-row items-start gap-5 mb-6">
+    <div className="flex flex-col md:flex-row items-start gap-5 mb-6 bg-">
         <div
             className="flex items-center gap-4 cursor-pointer"
             onClick={() => setIsOpen(true)}
@@ -19,7 +19,7 @@ const EmojiPickerPopup = ({icon, onSelect }) => {
         )}
         </div>
 
-        <p className="">{icon ? "Change Icon" : "Pick Icon"}</p>
+        <p className="text-white">{icon ? "Change Icon" : "Pick Icon"}</p>
         </div>
 
         {isOpen && (

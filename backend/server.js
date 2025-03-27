@@ -1,8 +1,8 @@
-
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/mongodb.js';
+
 import authRoutes from "./routes/authRoutes.js";
 import incomeRoutes from "./routes/incomeRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
@@ -10,19 +10,28 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 import financialRoutes from './routes/financialRoutes.js';
 import transactionRoutes from "./routes/transactionRoutes.js";
 import packageRoutes from './routes/packageRoutes.js';
-
 import userRoutes from "./routes/userRoutes.js";
-import organizerRoutes from "./routes/organizerRoutes.js";
+
 import blogPostRoutes from "./routes/blogPostRoutes.js";
 import managePostRoutes from "./routes/managePostRoutes.js";
-import calendarRoutes from './routes/calendarRoutes.js'; 
+import calendarRoutes from './routes/calendarRoutes.js';
+import additionalServiceRoutes from './routes/additionalServiceRoutes.js';
+import eventRequestRoutes from './routes/eventRequestRoutes.js';
+
+
+import organizerRoutes from './routes/organizerRoutes.js'
+
+import memberApplicationRoutes from './routes/memberApplicationRoutes.js';
+import adminApplicationRoutes from './routes/adminApplicationRoutes.js';
+import chatGroupRoutes from './routes/chatGroupRoutes.js';
+import messageRoutes from './routes/messageRoutes.js';
+
+
+import adminRoutes from './routes/adminRoutes.js';
+
 
 import path from "path";
 import { fileURLToPath } from "url";
-import additionalServiceRoutes from './routes/additionalServiceRoutes.js';
-import eventRequestRoutes from './routes/eventRequestRoutes.js';
-import adminRoutes from './routes/adminRoutes.js';
-
 
 // Load environment variables
 dotenv.config();
@@ -39,9 +48,9 @@ const port = process.env.PORT || 4000;
 app.use(express.json());
 app.use(cors());
 app.use('/uploads', express.static('uploads'));
+
 // Connect to MongoDB
 connectDB();
-
 
 // Memebr Application Routes
 import memberApplicationRoutes from '../backend/routes/memberApplicationRoutes.js';
@@ -74,19 +83,14 @@ app.use('/api/finance', financialRoutes);
 
 
 // Mount Routes
-
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/income", incomeRoutes);
 app.use("/api/v1/expense", expenseRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes);
 app.use("/api/v1/transaction", transactionRoutes);
 
-
-//Team Manager Routes
+// Additional routes (Team Manager, Packages, etc.)
 app.use('/api/calendar', calendarRoutes);
-
-
-// Package Routes from the 'dev' branch
 app.use('/api/packages', packageRoutes);
 app.use('/api/services', additionalServiceRoutes);
 app.use('/api/event-requests', eventRequestRoutes);
@@ -95,25 +99,23 @@ app.use("/api/finance", financialRoutes);
 app.use("/api/member-applications", memberApplicationRoutes);
 app.use("/api/admin/applications", adminApplicationRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/chat-groups", chatGroupRoutes);
+app.use("/api/messages", messageRoutes);
 app.use("/api/organizers", organizerRoutes);
 app.use("/api/blogposts", blogPostRoutes);
 app.use("/api/media", managePostRoutes);
-
 // API Endpoints
 app.get('/register/member/application', (req, res) => {
     res.send('API Working');
 });
-
 
 // Serve static files (if needed for media uploads)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // API Health Check
 app.get("/", (req, res) => {
-  res.send("API is running...");
-
+    res.send("API is running...");
 });
-
 
 // Start Server
 app.listen(port, () => console.log(`Server running on port ${port}`));

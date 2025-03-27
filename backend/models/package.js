@@ -45,8 +45,8 @@ const PackageSchema = new mongoose.Schema({
         MC: { type: Number, min: 0, default: 0 }
     },
     travelFees: { type: Number, default: 0, min: 0 },
-    bookingTerms: { type: String, required: true, minlength: 10 },
-    price: { type: Number, default: null, min: 0 },
+    bookingTerms: { type: String, required: false, minlength: 10 },
+    price: { type: Number, default: 0, min: 0 },
     image: { 
         type: String, 
         default: DEFAULT_IMAGE_URL

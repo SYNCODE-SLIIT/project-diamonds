@@ -3,6 +3,7 @@ import { UserContext } from '../../context/userContext';
 import { useNavigate } from 'react-router-dom';
 import { useUserAuth } from '../../hooks/useUserAuth';
 import './EditMemberProfile.css';
+
 const EditMemberProfile = () => {
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
@@ -12,6 +13,9 @@ const EditMemberProfile = () => {
   const [editedEmail, setEditedEmail] = useState('');
   const [editedContactNumber, setEditedContactNumber] = useState('');
   const [editedAvailabilities, setEditedAvailabilities] = useState([]);
+  // New states for dance style and achievements
+  const [editedDanceStyle, setEditedDanceStyle] = useState('');
+  const [editedAchievements, setEditedAchievements] = useState('');
   const [newProfilePicture, setNewProfilePicture] = useState(null);
 
   // Temporary states for new availability input
@@ -39,6 +43,9 @@ const EditMemberProfile = () => {
           setEditedEmail(appData.email || '');
           setEditedContactNumber(appData.contactNumber || '');
           setEditedAvailabilities(appData.availability || []);
+          // Set new fields from the application data
+          setEditedDanceStyle(appData.danceStyle || '');
+          setEditedAchievements(appData.achievements ? appData.achievements.join(', ') : '');
           setLoading(false);
         })
         .catch((err) => {
@@ -83,7 +90,7 @@ const EditMemberProfile = () => {
         setProfileData((prev) => ({ ...prev, profilePicture: picData.profilePicture }));
       }
 
-      // Update profile details (email, contact number, availability)
+      // Update profile details (email, contact number, availability, dance style, achievements)
       const updateResponse = await fetch('http://localhost:4000/api/member-applications/update-profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -91,14 +98,14 @@ const EditMemberProfile = () => {
           userId: user.profileId,
           email: editedEmail,
           contactNumber: editedContactNumber,
-          availability: editedAvailabilities
+          availability: editedAvailabilities,
+          danceStyle: editedDanceStyle,
+          achievements: editedAchievements.split(',').map(a => a.trim())
         })
       });
       if (!updateResponse.ok) {
         throw new Error('Error updating profile details');
       }
-      // Optionally, you can update local state with the returned data.
-      // After a successful update, navigate back to the profile view.
       navigate('/member-dashboard/profile');
     } catch (error) {
       console.error('Error saving changes:', error);
@@ -141,6 +148,28 @@ const EditMemberProfile = () => {
             id="contactNumber"
             value={editedContactNumber}
             onChange={(e) => setEditedContactNumber(e.target.value)}
+          />
+        </div>
+
+        {/* New field for Dance Style */}
+        <div className="form-group">
+          <label htmlFor="danceStyle">Dance Style:</label>
+          <input
+            type="text"
+            id="danceStyle"
+            value={editedDanceStyle}
+            onChange={(e) => setEditedDanceStyle(e.target.value)}
+          />
+        </div>
+
+        {/* New field for Achievements */}
+        <div className="form-group">
+          <label htmlFor="achievements">Achievements (comma separated):</label>
+          <input
+            type="text"
+            id="achievements"
+            value={editedAchievements}
+            onChange={(e) => setEditedAchievements(e.target.value)}
           />
         </div>
 

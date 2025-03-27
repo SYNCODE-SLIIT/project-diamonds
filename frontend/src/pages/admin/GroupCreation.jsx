@@ -53,12 +53,20 @@ const GroupCreation = () => {
     setErrorMsg('');
     setSuccessMsg('');
   
+    // Default admin ID to be included in the members list.
+    const adminId = "67e0f270314253356851facb";
+  
+    // Ensure the admin is included in the group members by default.
+    let groupMembers = [...selectedMembers];
+    if (!groupMembers.includes(adminId)) {
+      groupMembers.unshift(adminId);
+    }
+    
     const payload = {
       groupName: formData.groupName,
       description: formData.description,
-      // Supply a default dummy value for createdBy (make sure it’s a valid ObjectId in your DB)
-      createdBy: "67e0f270314253356851facb",
-      members: selectedMembers
+      createdBy: adminId,
+      members: groupMembers
     };
   
     try {
@@ -144,7 +152,7 @@ const GroupCreation = () => {
 
           {/* Members Selection */}
           <div>
-            <label className="block text-gray-700 font-semibold mb-2 flex items-center">
+            <label className=" text-gray-700 font-semibold mb-2 flex items-center">
               <UsersIcon className="w-5 h-5 mr-2" />
               Select Members
             </label>

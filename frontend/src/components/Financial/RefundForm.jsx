@@ -116,7 +116,7 @@ const RefundForm = ({ onClose }) => {
               Refund Amount
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">RS.</span>
               <input
                 type="number"
                 id="refundAmount"
@@ -128,7 +128,7 @@ const RefundForm = ({ onClose }) => {
                 min="0.01"
                 step="0.01"
                 required
-                placeholder="Enter refund amount"
+                placeholder="   Enter refund amount"
               />
             </div>
           </div>

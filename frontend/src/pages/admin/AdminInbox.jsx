@@ -12,7 +12,10 @@ const AdminInbox = () => {
   useEffect(() => {
     if (user && user._id) {
       fetch(`http://localhost:4000/api/chat-groups/user/${user._id}`)
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) throw new Error(`Error: ${res.status}`);
+          return res.json();
+        })
         .then((data) => {
           setGroups(data.groups || []);
           setLoading(false);
@@ -24,20 +27,39 @@ const AdminInbox = () => {
     }
   }, [user]);
 
+  const handleDeleteGroup = async (groupId) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this group?");
+    if (!confirmDelete) return;
+    try {
+      const res = await fetch(`http://localhost:4000/api/chat-groups/${groupId}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (res.ok) {
+        // Remove the group from the state so the list updates
+        setGroups(prev => prev.filter(g => g._id !== groupId));
+      } else {
+        alert(data.message || "Error deleting group.");
+      }
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
       {/* Top Section: Create Group Button */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-bold">Admin Inbox</h2>
         <button 
-          onClick={() => navigate('/messaging/create-group')}
+          onClick={() => navigate('/admin/messaging/create-group')}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
         >
           Create Group
         </button>
       </div>
 
-      {/* Bottom Section: Existing Chat Groups List */}
+      {/* Groups List */}
       {loading && <div className="text-center py-8">Loading groups...</div>}
       {errorMsg && <div className="text-center text-red-500">{errorMsg}</div>}
       {!loading && groups.length === 0 && (
@@ -68,13 +90,25 @@ const AdminInbox = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {group.description}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
                     <Link 
-                      to={`/messaging/chat/${group._id}`}
+                      to={`/admin/chat/${group._id}`}
                       className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-300"
                     >
                       View Group
                     </Link>
+                    <Link 
+                      to={`/admin/groups/${group._id}/members`}
+                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-300"
+                    >
+                      View Members
+                    </Link>
+                    <button 
+                      onClick={() => handleDeleteGroup(group._id)}
+                      className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-300"
+                    >
+                      Delete Group
+                    </button>
                   </td>
                 </tr>
               ))}
