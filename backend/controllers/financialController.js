@@ -9,7 +9,7 @@ import Income from '../models/Income.js';
 import Expense from '../models/Expense.js';
 import Salary from '../models/Salary.js';
 import User from '../models/User.js';
-// import moment from 'moment';
+
 import nodemailer from "nodemailer";
 import cloudinary from '../config/cloudinary.js';
 
@@ -516,7 +516,7 @@ export const paySalary = async (req, res) => {
     // Create an Income record with the specified icon and source
     const incomeRecord = await Income.create({
       userId: member._id,
-      icon: LuHandCoins,
+      icon: " ",
       source: "Team Diamond Salary",
       amount: salaryAmount,
     });
