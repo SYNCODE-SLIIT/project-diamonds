@@ -332,7 +332,7 @@ const AdminSidebar = () => {
                   Event Assignments
                 </NavLink>
               </li>
-              <li className="mb-[15px]">
+              {/* <li className="mb-[15px]">
                 <NavLink
                   to="/admin/practice-assignments"
                   className={({ isActive }) =>
@@ -343,7 +343,7 @@ const AdminSidebar = () => {
                 >
                   Practice Assignments
                 </NavLink>
-              </li>
+              </li> */}
               <li className="mb-[15px]">
                 <NavLink
                   to="/admin/event-calendar"
