@@ -98,7 +98,7 @@ export const deleteEventRequest = async (req, res) => {
 };
 
 // Admin approval/rejection
-import Event from '../models/event.js';
+import Event from '../models/Event.js';
 
 export const updateRequestStatus = async (req, res) => {
   try {
