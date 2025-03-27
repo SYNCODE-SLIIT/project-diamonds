@@ -23,6 +23,7 @@
     "boxicons": "^2.1.4",
     "cloudinary": "^1.41.3",
     "emoji-picker-react": "^4.12.2",
+    "esbuild": "^0.25.1",
     "font-awesome": "^4.7.0",
     "framer-motion": "^12.6.2",
     "jspdf": "^3.0.1",
@@ -44,7 +45,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
-    "@rollup/rollup-win32-x64-msvc": "^4.37.0",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react-swc": "^3.8.0",

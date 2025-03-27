@@ -11,6 +11,8 @@ import BlogPosts from './pages/content/BlogpostView';
 import EditBlogPost from './pages/content/EditBlogPost';
 import Events from './pages/content/Events';
 import UploadMedia from './pages/content/UploadMedia';
+import Merchandise from './pages/content/Merchandise';
+
 
 // User Management Imports
 import MemberApplication from './pages/authentication/MemberApplication';
@@ -88,7 +90,6 @@ import EditContentCreator from './pages/content/EditContentCreator';
 
 import CalendarEvents from './pages/CalendarEvents';
 
-
 import AdminDashboard from './components/team/AdminDashboard';
 
 
@@ -117,6 +118,8 @@ const App = () => {
           <Route path="/content-creators/new" element={<ContentCreatorForm />} />
           <Route path="/content-creators/edit/:id" element={<EditContentCreator />} />
           <Route path="/content-creators/view/:id" element={<ContentCreatorView />} />
+
+          
           
 
           <Route element={<PublicLayout />}>
@@ -198,9 +201,10 @@ const App = () => {
           <Route path="/event" element={<Events />} />
           <Route path="/upload" element={<UploadMedia />} />
           <Route path="/Cmanager" element={<ContentMediaDashboard />} />
+          <Route path="/merc" element={<Merchandise />} />
         </Routes>
 
-
+        
         
         {/* Notifications */}
         <Toaster

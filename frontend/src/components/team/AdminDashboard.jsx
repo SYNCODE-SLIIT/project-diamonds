@@ -35,15 +35,15 @@ const AdminDashboard = () => {
       component: <CalendarView />
     },
     { 
-      key: 'budget', 
-      label: 'Budget Request', 
+      key: 'Refund', 
+      label: 'Refund Request', 
       icon: Clock,  
       component: (
-        <Link to="/bform">
+        <Link to="/rform">
           <button 
             className="flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white shadow-lg transition-all duration-300 font-semibold"
           >
-            Request Budget
+            Refund Budget
           </button>
         </Link>
       )
