@@ -260,6 +260,17 @@ const Navbar = () => {
             'Join our online community forums'
           ]
         },
+        {
+          name: 'Merchandise',
+          description: 'Show your support and represent the team.',
+          bulletPoints: [
+            'Exclusive Team T-shirts and Hoodies',
+            'Custom Team Hats and Beanies',
+            'Limited Edition Mugs and Water Bottles',
+            'Phone Cases with Team Logo',
+            'Stickers and Pins for your collection'
+          ]
+        },
         { 
           name: 'Feedback', 
           description: 'Join local events.',

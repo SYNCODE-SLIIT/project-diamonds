@@ -3,13 +3,17 @@ import { getPackages } from '../../services/packageService';
 import { getAdditionalServices } from '../../services/additionalServiceService';
 import { submitEventRequest } from '../../services/eventRequestService';
 import { UserContext } from '../../context/userContext';
-import { XIcon, CheckIcon, AlertTriangleIcon } from 'lucide-react';
+import { XIcon, CheckIcon, AlertTriangleIcon, EyeIcon,  PlusIcon} from 'lucide-react';
+import PackageDetailsModal from './PackageDetailsModal.jsx';
+import CustomPackageModal from './CustomPackageModal.jsx';
+
 
 const EventRequestForm = () => {
   const { user } = useContext(UserContext);
   const organizerID = user?._id;
-
   const [step, setStep] = useState(1);
+  const [viewingPackage, setViewingPackage] = useState(null);
+const [showCustomModal, setShowCustomModal] = useState(false);
   const [systemPackages, setSystemPackages] = useState([]);
   const [services, setServices] = useState([]);
   const [formData, setFormData] = useState({
@@ -39,6 +43,13 @@ const EventRequestForm = () => {
     };
     fetchData();
   }, []);
+
+  const handleCustomPackageCreated = (newPackage) => {
+    setSystemPackages(prev => [...prev, newPackage]); // append to the list
+    setFormData(prev => ({ ...prev, selectedPackageID: newPackage._id }));
+    setShowCustomModal(false);
+    setStep(3); // proceed to next step
+  };
 
   // Validation Functions
   const validateStep1 = () => {
@@ -115,13 +126,48 @@ const EventRequestForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-
-    // Clear specific error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }));
+  
+    const updatedErrors = { ...errors };
+  
+    // Live validation logic
+    if (name === 'eventName') {
+      if (!value.trim()) updatedErrors.eventName = 'Event name is required';
+      else if (value.trim().length < 3) updatedErrors.eventName = 'At least 3 characters required';
+      else delete updatedErrors.eventName;
     }
+  
+    if (name === 'eventLocation') {
+      if (!value.trim()) updatedErrors.eventLocation = 'Event location is required';
+      else delete updatedErrors.eventLocation;
+    }
+  
+    if (name === 'guestCount') {
+      const count = Number(value);
+      if (!value.trim()) updatedErrors.guestCount = 'Guest count is required';
+      else if (isNaN(count) || count <= 0) updatedErrors.guestCount = 'Enter a valid positive number';
+      else delete updatedErrors.guestCount;
+    }
+  
+    if (name === 'eventDate') {
+      const selectedDate = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const fiveDaysFromNow = new Date(today);
+      fiveDaysFromNow.setDate(today.getDate() + 5);
+  
+      if (!value) {
+        updatedErrors.eventDate = 'Event date is required';
+      } else if (selectedDate < today) {
+        updatedErrors.eventDate = 'Event date must be today or in the future';
+      } else if (selectedDate < fiveDaysFromNow) {
+        updatedErrors.eventDate = 'Please book at least 5 days in advance';
+      } else {
+        delete updatedErrors.eventDate;
+      }
+    }
+  
+    setErrors(updatedErrors);
   };
-
   const toggleService = (id) => {
     setFormData(prev => ({
       ...prev,
@@ -195,7 +241,7 @@ const EventRequestForm = () => {
     };
 
     return (
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-xl mt-50 ">
+      <div className="bg-gradient-to-r from-red-900 to-red-700 text-white rounded-t-xl mt-20 ">
         <div className="flex justify-between items-center p-4">
           <div>
             <h2 className="text-2xl font-bold">Book a Dance Team</h2>
@@ -238,10 +284,23 @@ const EventRequestForm = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-xl">
+    <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl">
       <ProgressIndicator />
 
-      <div className="p-6">
+      <div className="p-8">
+      {step === 1 && (
+          <h3 className="text-2xl font-semibold text-red-900 mb-6">Enter Event Details</h3>
+        )}
+        {step === 2 && (
+          <h3 className="text-2xl font-semibold text-red-900 mb-6">Select Your Dance Package</h3>
+        )}
+        {step === 3 && (
+          <h3 className="text-2xl font-semibold text-red-900 mb-6">Add Additional Services</h3>
+        )}
+        {step === 4 && (
+          <h3 className="text-2xl font-semibold text-red-900 mb-6">Review Your Booking</h3>
+        )}
+
         {message && (
           <div className={`mb-4 p-3 rounded ${
             message.includes('successfully') 
@@ -300,18 +359,19 @@ const EventRequestForm = () => {
                 )}
               </div>
               <div className="col-span-1">
-                <input 
-                  name="eventDate" 
-                  type="date" 
-                  value={formData.eventDate} 
-                  onChange={handleChange} 
-                  className={`input border p-2 rounded w-full ${
-                    errors.eventDate ? 'border-red-500' : ''
-                  }`} 
-                />
-                {errors.eventDate && (
-                  <p className="text-red-500 text-sm mt-1">{errors.eventDate}</p>
-                )}
+              <input 
+  name="eventDate" 
+  type="date" 
+  value={formData.eventDate} 
+  onChange={handleChange} 
+  min={new Date().toISOString().split('T')[0]} 
+  className={`input border p-2 rounded w-full ${
+    errors.eventDate ? 'border-red-500' : ''
+  }`} 
+/>
+{errors.eventDate && (
+  <p className="text-red-500 text-sm mt-1">{errors.eventDate}</p>
+)}
               </div>
               <div className="col-span-2">
                 <textarea 
@@ -332,44 +392,113 @@ const EventRequestForm = () => {
 
         {/* Rest of the code remains the same as before */}
         {step === 2 && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">Choose Package</h3>
-            <div className="grid md:grid-cols-2 gap-4">
-              {systemPackages.map(pkg => (
-                <label 
-                  key={pkg._id} 
-                  className={`border rounded-lg p-4 cursor-pointer 
-                    ${formData.selectedPackageID === pkg._id 
-                      ? 'border-blue-500 bg-blue-50' 
-                      : 'border-gray-200'
-                    }`}
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold text-gray-700 mb-2">Choose Package</h3>
+
+      {/* Scrollable Package Container */}
+      <div className="max-h-[500px] overflow-y-auto pr-2">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {systemPackages.map(pkg => (
+            <div
+              key={pkg._id}
+              className={`border rounded-lg overflow-hidden shadow-md group cursor-pointer relative
+                ${formData.selectedPackageID === pkg._id
+                  ? 'border-blue-500 ring-2 ring-blue-500'
+                  : 'border-gray-200 hover:border-blue-300'
+                }`}
+            >
+              {/* Package Image */}
+              <div className="relative">
+                <img 
+                  src={pkg.image || '/api/placeholder/400/250'} 
+                  alt={pkg.packageName} 
+                  className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                  onError={(e) => {
+                    e.target.src = '/api/placeholder/400/250';
+                    e.target.onerror = null;
+                  }}
+                />
+                
+                {/* Eye Icon for Details */}
+                <button 
+                  onClick={() => setViewingPackage(pkg)}
+                  className="absolute top-2 right-2 bg-white/80 p-2 rounded-full hover:bg-white"
                 >
-                  <div className="flex items-center">
-                    <input
-                      type="radio"
-                      name="selectedPackageID"
-                      value={pkg._id}
-                      onChange={handleChange}
-                      checked={formData.selectedPackageID === pkg._id}
-                      className="mr-3"
-                    />
-                    <div>
-                      <h4 className="font-bold text-gray-800">{pkg.packageName}</h4>
-                      <p className="text-sm text-gray-600">${pkg.price?.toFixed(2)} (may vary)</p>
-                    </div>
+                  <EyeIcon className="w-5 h-5 text-gray-700" />
+                </button>
+              </div>
+
+              {/* Package Details */}
+              <div className="p-4">
+                <div className="flex justify-between items-start">
+                  <h4 className="font-bold text-gray-800 text-lg">{pkg.packageName}</h4>
+                  
+                  {/* Radio Button */}
+                  <input
+                    type="radio"
+                    name="selectedPackageID"
+                    value={pkg._id}
+                    onChange={(e) => {
+                      handleChange(e);
+                      // Clear any previous errors
+                      setErrors(prev => ({ ...prev, selectedPackageID: undefined }));
+                    }}
+                    checked={formData.selectedPackageID === pkg._id}
+                    className="mt-1"
+                  />
+                </div>
+
+                {/* Description */}
+                <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                  {pkg.description}
+                </p>
+
+                {/* Dance Styles */}
+                <div className="mt-2">
+                  <p className="text-sm font-medium text-gray-700">Dance Styles:</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {pkg.danceStyles && pkg.danceStyles.slice(0, 3).map((style, idx) => (
+                      <span 
+                        key={idx} 
+                        className="bg-gray-100 px-2 py-1 rounded text-xs"
+                      >
+                        {style}
+                      </span>
+                    ))}
+                    {pkg.danceStyles && pkg.danceStyles.length > 3 && (
+                      <span className="text-xs text-gray-500 ml-1">
+                        +{pkg.danceStyles.length - 3} more
+                      </span>
+                    )}
                   </div>
-                </label>
-              ))}
+                </div>
+              </div>
             </div>
-            {errors.selectedPackageID && (
-              <p className="text-red-500 text-sm mt-1">{errors.selectedPackageID}</p>
-            )}
-            <div className="flex justify-between mt-4">
-              <button onClick={prevStep} className="btn-secondary border p-2 rounded">Previous Step</button>
-              <button onClick={nextStep} className="btn bg-blue-600 text-white px-4 py-2 rounded">Next Step</button>
-            </div>
-          </div>
-        )}
+          ))}
+        </div>
+      </div>
+
+      {errors.selectedPackageID && (
+        <p className="text-red-500 text-sm mt-1">{errors.selectedPackageID}</p>
+      )}
+
+      {/* Custom Package Button */}
+      <div className="mt-6">
+        <button
+          onClick={() => setShowCustomModal(true)}
+          className="flex items-center gap-2 bg-white text-blue-600 px-4 py-2 border border-blue-500 rounded hover:bg-blue-50"
+        >
+          <PlusIcon className="w-4 h-4" />
+          Create Custom Package
+        </button>
+      </div>
+
+      <div className="flex justify-between mt-6">
+        <button onClick={prevStep} className="btn-secondary border p-2 rounded">Previous Step</button>
+        <button onClick={nextStep} className="btn bg-blue-600 text-white px-4 py-2 rounded">Next Step</button>
+      </div>
+    </div>
+  )}
 
         {/* Additional Services and Review & Submit steps remain the same */}
         {step === 3 && (
@@ -394,7 +523,7 @@ const EventRequestForm = () => {
                     />
                     <div>
                       <h4 className="font-bold text-gray-800">{service.serviceName}</h4>
-                      <p className="text-sm text-gray-600">${service.price.toFixed(2)}</p>
+                      <p className="text-sm text-gray-600">Rs.{service.price.toFixed(2)}</p>
                     </div>
                   </div>
                 </label>
@@ -421,14 +550,14 @@ const EventRequestForm = () => {
                 }</p>
                 <p><strong>Estimated Price:</strong> {
                   formData.selectedPackageID
-                    ? `$${systemPackages.find(p => p._id === formData.selectedPackageID)?.price.toFixed(2)} + additional charges`
+                    ? `Rs.${systemPackages.find(p => p._id === formData.selectedPackageID)?.price.toFixed(2)} + additional charges`
                     : `Custom quote - price will be confirmed by admin`
                 }</p>
               </div>
               <p className="mt-3"><strong>Additional Services:</strong> {
                 services
                   .filter(s => formData.selectedServices.includes(s._id))
-                  .map(s => `${s.serviceName} ($${s.price})`)
+                  .map(s => `${s.serviceName} (Rs.${s.price})`)
                   .join(', ') || 'None'
               }</p>
             </div>
@@ -444,6 +573,25 @@ const EventRequestForm = () => {
             </div>
           </div>
         )}
+        {/* Modals */}
+{viewingPackage && (
+  <PackageDetailsModal
+    pkg={viewingPackage}
+    onClose={() => setViewingPackage(null)}
+    onCreateCustom={() => {
+      setViewingPackage(null);
+      setShowCustomModal(true);
+    }}
+  />
+)}
+
+{showCustomModal && (
+  <CustomPackageModal
+    onClose={() => setShowCustomModal(false)}
+    onSuccess={handleCustomPackageCreated}
+    createdBy={user._id}
+  />
+)}
       </div>
     </div>
   );

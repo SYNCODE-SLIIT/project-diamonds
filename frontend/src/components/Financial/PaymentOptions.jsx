@@ -3,10 +3,8 @@ import BankSlipPaymentForm from './BankSlipPaymentForm';
 import PaymentGatewayForm from './PaymentGatewayForm';
 
 const PaymentOptions = () => {
-  // Admin configuration to show/hide the Payment Gateway option.
   const showPaymentGateway = true; // Set to false to hide Payment Gateway option
   
-  // If Payment Gateway is hidden, default to Bank Slip.
   const [selectedMethod, setSelectedMethod] = useState('bankslip');
 
   return (
