@@ -27,7 +27,7 @@ const BankSlipPaymentForm = ({ onClose }) => {
     reason.trim().length >= 10 && reason.trim().length <= 500;
 
   const validateBankSlip = () => 
-    bankSlip && (bankSlip.type === 'image/png' || bankSlip.type === 'application/pdf');
+    bankSlip && (bankSlip.type === 'image/png');
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -39,7 +39,7 @@ const BankSlipPaymentForm = ({ onClose }) => {
         setError('');
       } else {
         setBankSlip(null);
-        setError('Invalid file type. Please upload PNG or PDF.');
+        setError('Invalid file type. Please upload PNG.');
       }
     }
   };
@@ -178,12 +178,12 @@ const BankSlipPaymentForm = ({ onClose }) => {
           
           <div>
             <label htmlFor="bankSlip" className="block text-sm font-medium text-gray-700 mb-2">
-              Upload Bank Slip (PNG or PDF)
+              Upload Bank Slip (Only PNG)
             </label>
             <input
               type="file"
               id="bankSlip"
-              accept="image/png,application/pdf"
+              accept="image/png"
               onChange={handleFileChange}
               className="w-full px-3 py-2 border-2 border-gray-300 rounded-xl 
                 file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 

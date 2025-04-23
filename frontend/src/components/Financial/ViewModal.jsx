@@ -351,7 +351,7 @@ const ViewModal = ({ item, onClose, activeTab }) => {
               <div className="p-4">
                 {item.bankSlipFile.toLowerCase().endsWith('.pdf') ? (
                   <iframe
-                    src={`http://localhost:4000/uploads/${item.bankSlipFile}`}
+                    src={item.bankSlipFile}
                     width="100%"
                     height="400"
                     title="Deposit Slip PDF"
@@ -359,7 +359,7 @@ const ViewModal = ({ item, onClose, activeTab }) => {
                   />
                 ) : (
                   <img
-                    src={`http://localhost:4000/uploads/${item.bankSlipFile}`}
+                    src={item.bankSlipFile}
                     alt="Deposit Slip"
                     className="max-w-full h-auto rounded"
                   />
@@ -377,7 +377,7 @@ const ViewModal = ({ item, onClose, activeTab }) => {
               <div className="p-4">
                 {item.receiptFile.toLowerCase().endsWith('.pdf') ? (
                   <iframe
-                    src={`http://localhost:4000/uploads/${item.receiptFile}`}
+                    src={item.receiptFile}
                     width="100%"
                     height="400"
                     title="Receipt PDF"
@@ -385,7 +385,7 @@ const ViewModal = ({ item, onClose, activeTab }) => {
                   />
                 ) : (
                   <img
-                    src={`http://localhost:4000/uploads/${item.receiptFile}`}
+                    src={item.receiptFile}
                     alt="Receipt"
                     className="max-w-full h-auto rounded"
                   />
@@ -403,7 +403,7 @@ const ViewModal = ({ item, onClose, activeTab }) => {
               <div className="p-4">
                 {item.infoFile.toLowerCase().endsWith('.pdf') ? (
                   <iframe
-                    src={`http://localhost:4000/uploads/${item.infoFile}`}
+                    src={item.infoFile}
                     width="100%"
                     height="400"
                     title="Receipt PDF"
@@ -411,7 +411,7 @@ const ViewModal = ({ item, onClose, activeTab }) => {
                   />
                 ) : (
                   <img
-                    src={`http://localhost:4000/uploads/${item.infoFile}`}
+                    src={item.infoFile}
                     alt="Receipt"
                     className="max-w-full h-auto rounded"
                   />

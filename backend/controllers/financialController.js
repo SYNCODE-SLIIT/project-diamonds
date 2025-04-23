@@ -97,16 +97,17 @@ export const getAllTransactionsWithUserData = async (req, res) => {
 export const createBudget = async (req, res) => {
   try {
     const { allocatedBudget, remainingBudget, status, reason } = req.body;
-    // Use Multer's file object if available (same as payment)
-    const infoFile = req.file ? req.file.filename : null;
     let infoFileUrl = null;
 
+    // If a file is uploaded, upload it to Cloudinary using resource_type "auto"
     if (req.file) {
-      // Upload the temporary file to Cloudinary
       const result = await cloudinary.uploader.upload(req.file.path, {
-        resource_type: "auto",
+        resource_type: "image",
+        folder: "budget_files", // Optional: Organize budget files under a specific folder in Cloudinary
+        use_filename: true,     // Optionally keep the original filename
+        unique_filename: false, // Optionally disable Cloudinary's automatic renaming
       });
-      infoFileUrl  = result.secure_url;
+      infoFileUrl = result.secure_url;
     }
 
     const newBudget = new Budget({
@@ -114,7 +115,7 @@ export const createBudget = async (req, res) => {
       remainingBudget,
       status,
       reason,
-      infoFile: infoFileUrl,
+      infoFile: infoFileUrl, // Save the Cloudinary URL (or null if no file was provided)
       user: req.user._id,
     });
     await newBudget.save();
@@ -142,18 +143,30 @@ export const createBudget = async (req, res) => {
 export const requestRefund = async (req, res) => {
   try {
     const { refundAmount, reason, invoiceNumber } = req.body;
-    // Use Multer's file object if available (like in your payment function)
-    const receiptFile = req.file ? req.file.filename : null;
+    let receiptFileUrl = null;
 
+    // If a file is uploaded, use Cloudinary to upload it
+    if (req.file) {
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: "refund_receipts", // Optional: Organize refund receipts under a specific folder
+        resource_type: "image",      // Automatically detect the resource type (image, pdf, etc.)
+        use_filename: true,         // Optionally retain the original filename
+        unique_filename: false,     // Optionally disable Cloudinary's automatic renaming
+      });
+      receiptFileUrl = uploadResult.secure_url;
+    }
+
+    // Create a new Refund document using the Cloudinary file URL (or null if not provided)
     const refund = new Refund({
       refundAmount,
       reason,
       invoiceNumber,
-      receiptFile,
+      receiptFile: receiptFileUrl,
       user: req.user._id,
     });
     await refund.save();
 
+    // Record the transaction details for the refund request
     const refundTransaction = new Transaction({
       transactionType: "refund",
       user: req.user._id,
@@ -168,7 +181,10 @@ export const requestRefund = async (req, res) => {
       transaction: refundTransaction,
     });
   } catch (error) {
-    res.status(500).json({ message: "Error requesting refund", error: error.message });
+    res.status(500).json({
+      message: "Error requesting refund",
+      error: error.message,
+    });
   }
 };
 
@@ -178,13 +194,32 @@ export const makePayment = async (req, res) => {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
-    // Extract fields from req.body
+    
+    // Extract fields from the request body
     const { amount, paymentMethod } = req.body;
-    // Use Multer's file object if available
-    const bankSlipFile = req.file ? req.file.filename : null;
+    
+    // Initialize the variable to store Cloudinary URL
+    let bankSlipFileUrl = null;
+    
+    // If a file is uploaded, use Cloudinary to upload it
+    if (req.file) {
+      // Note: req.file.path is provided by Multer as the temporary location of the file.
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        resource_type:'image',
+        folder: "bank_slips", // Optional: Organize uploads under a specific folder
+        use_filename: true,   // Optional: Keep the original filename in Cloudinary if desired
+        unique_filename: false // Optional: If you want to override Cloudinary's automatic renaming
+      });
+      bankSlipFileUrl = uploadResult.secure_url;
+    }
+    
+    // Get the user object from the request (set by authentication middleware)
     const user = req.user;
     
+    // Generate a unique invoice number
     const invoiceNumber = `INV-${Date.now()}`;
+    
+    // Create and save the Invoice document
     const invoice = new Invoice({
       invoiceNumber,
       amount,
@@ -194,16 +229,18 @@ export const makePayment = async (req, res) => {
     });
     await invoice.save({ session });
     
+    // Create and save the Payment document using Cloudinary's secure URL
     const payment = new Payment({
       invoiceId: invoice._id,
       user: user._id,
       amount,
       paymentMethod,
-      bankSlipFile, // now uses the uploaded file's filename
+      bankSlipFile: bankSlipFileUrl, // Now holds the Cloudinary URL
       status: "paid",
     });
     await payment.save({ session });
     
+    // Create and save the related Transaction document
     const paymentTransaction = new Transaction({
       transactionType: "payment",
       invoiceId: invoice._id,
@@ -213,10 +250,13 @@ export const makePayment = async (req, res) => {
     });
     await paymentTransaction.save({ session });
     
+    // Finalize the transaction
     await session.commitTransaction();
     session.endSession();
     
+    // Populate the Payment document with the user details
     const populatedPayment = await Payment.findById(payment._id).populate("user").lean();
+    
     res.status(201).json({
       message: "Payment processed successfully",
       invoice,
