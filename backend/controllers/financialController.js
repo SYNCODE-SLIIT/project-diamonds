@@ -138,7 +138,6 @@ export const createBudget = async (req, res) => {
   }
 };
 
-
 // Create Refund Request and record transaction.
 export const requestRefund = async (req, res) => {
   try {
@@ -148,10 +147,10 @@ export const requestRefund = async (req, res) => {
     // If a file is uploaded, use Cloudinary to upload it
     if (req.file) {
       const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-        folder: "refund_receipts", // Optional: Organize refund receipts under a specific folder
-        resource_type: "image",      // Automatically detect the resource type (image, pdf, etc.)
-        use_filename: true,         // Optionally retain the original filename
-        unique_filename: false,     // Optionally disable Cloudinary's automatic renaming
+        folder: "refund_receipts",
+        resource_type: "image",      
+        use_filename: true,         
+        unique_filename: false,     
       });
       receiptFileUrl = uploadResult.secure_url;
     }
@@ -189,36 +188,30 @@ export const requestRefund = async (req, res) => {
 };
 
 
-// Make Payment: auto-create an invoice and record the payment/transaction.
+// Make Payment: auto-create an invoice and record the payment/transaction. 
 export const makePayment = async (req, res) => {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
-    
-    // Extract fields from the request body
-    const { amount, paymentMethod } = req.body;
-    
-    // Initialize the variable to store Cloudinary URL
+
+    // Extract payment details from the request body, including paymentFor
+    const { amount, paymentMethod, paymentFor } = req.body;
     let bankSlipFileUrl = null;
-    
-    // If a file is uploaded, use Cloudinary to upload it
+
+    // Upload file if available
     if (req.file) {
-      // Note: req.file.path is provided by Multer as the temporary location of the file.
       const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-        resource_type:'image',
-        folder: "bank_slips", // Optional: Organize uploads under a specific folder
-        use_filename: true,   // Optional: Keep the original filename in Cloudinary if desired
-        unique_filename: false // Optional: If you want to override Cloudinary's automatic renaming
+        resource_type: 'image',
+        folder: "bank_slips",
+        use_filename: true,
+        unique_filename: false,
       });
       bankSlipFileUrl = uploadResult.secure_url;
     }
     
-    // Get the user object from the request (set by authentication middleware)
     const user = req.user;
-    
-    // Generate a unique invoice number
     const invoiceNumber = `INV-${Date.now()}`;
-    
+
     // Create and save the Invoice document
     const invoice = new Invoice({
       invoiceNumber,
@@ -229,18 +222,19 @@ export const makePayment = async (req, res) => {
     });
     await invoice.save({ session });
     
-    // Create and save the Payment document using Cloudinary's secure URL
+    // Create and save the Payment document, including paymentFor
     const payment = new Payment({
       invoiceId: invoice._id,
       user: user._id,
       amount,
       paymentMethod,
-      bankSlipFile: bankSlipFileUrl, // Now holds the Cloudinary URL
-      status: "paid",
+      bankSlipFile: bankSlipFileUrl,
+      status: "paid", // Note: status is set to "paid" by default.
+      paymentFor, // Captures what the user is paying for.
     });
     await payment.save({ session });
     
-    // Create and save the related Transaction document
+    // Create and save the Transaction document for auditing
     const paymentTransaction = new Transaction({
       transactionType: "payment",
       invoiceId: invoice._id,
@@ -250,18 +244,25 @@ export const makePayment = async (req, res) => {
     });
     await paymentTransaction.save({ session });
     
-    // Finalize the transaction
+    // Do NOT create an Expense record here.
+    // Expense record creation should only occur when the payment status is changed to "approved"
+    // (for example, in your PATCH update logic).
+    
+    // Commit the transaction and end the session
     await session.commitTransaction();
     session.endSession();
     
-    // Populate the Payment document with the user details
-    const populatedPayment = await Payment.findById(payment._id).populate("user").lean();
+    // Populate payment for response clarity
+    const populatedPayment = await Payment.findById(payment._id)
+      .populate("user")
+      .lean();
     
     res.status(201).json({
       message: "Payment processed successfully",
       invoice,
       payment: populatedPayment,
       transaction: paymentTransaction,
+      // No expense record is returned here.
     });
   } catch (error) {
     await session.abortTransaction();
@@ -464,50 +465,55 @@ export const deleteFinancialRecord = async (req, res) => {
   }
 };
 
-//Edit financial record
+//Edit financial record 
 export const updateFinancialRecord = async (req, res) => {
   try {
     const { recordType, id } = req.params;
     const updateData = req.body;
-
     let updatedRecord;
 
-
-    switch (recordType) {
-      case 'p': // Payment
-        updatedRecord = await Payment.findByIdAndUpdate(id, updateData, { new: true });
-        break;
-      case 'b': // Budget
-        updatedRecord = await Budget.findByIdAndUpdate(id, updateData, { new: true });
-        break;
-      case 'i': // Invoice
-        updatedRecord = await Invoice.findByIdAndUpdate(id, updateData, { new: true });
-        break;
-      case 'r': // Refund
-        updatedRecord = await Refund.findByIdAndUpdate(id, updateData, { new: true });
-        break;
-      case 't': // Transaction
-        updatedRecord = await Transaction.findByIdAndUpdate(id, updateData, { new: true });
-        break;
-      default:
-        return res.status(400).json({
+    if (recordType === 'p') { // Payment
+      const payment = await Payment.findById(id);
+      if (!payment) {
+        return res.status(404).json({
           success: false,
-          message: "Invalid record type. Must be one of: p, b, i, r, t."
+          message: `No payment record found with id: ${id}`
         });
-    }
+      }
+      const previousStatus = payment.status;
+      updatedRecord = await Payment.findByIdAndUpdate(id, updateData, { new: true });
 
-    if (!updatedRecord) {
-      return res.status(404).json({
+      // If the status has changed and is now "approved."
+      if (updateData.status === 'approved' && previousStatus !== 'approved') {
+        const expenseExists = await Expense.findOne({ paymentId: id });
+        if (!expenseExists) {
+          const expenseCategory =
+            payment.paymentFor === 'merchandise'
+              ? 'Merchandise Payment'
+              : payment.paymentFor === 'package'
+                ? 'Package Payment'
+                : 'Other Payment';
+          const expense = new Expense({
+            userId: payment.user,
+            icon: payment.bankSlipFile || "default_payment_icon_url",
+            category: expenseCategory,
+            amount: payment.amount,
+            date: new Date(),
+            paymentId: payment._id   // Linking the expense record to this payment
+          });
+          await expense.save();
+        }
+      } else if (updateData.status !== 'approved' && previousStatus === 'approved') {
+        // Remove the expense record if the payment is no longer approved.
+        await Expense.deleteOne({ paymentId: id });
+      }
+    } else {
+      return res.status(400).json({
         success: false,
-        message: `No record found with id: ${id}`
+        message: "Invalid record type. Must be one of: p, b, i, r, t."
       });
     }
-
-    return res.status(200).json({
-      success: true,
-      message: "Record updated successfully",
-      data: updatedRecord
-    });
+    return res.status(200).json({ success: true, data: updatedRecord });
   } catch (error) {
     console.error("Error updating record:", error);
     return res.status(500).json({
@@ -575,8 +581,6 @@ export const paySalary = async (req, res) => {
     });
   }
 };
-
-
 
 export const getFinancialReport = async (req, res) => {
   try {

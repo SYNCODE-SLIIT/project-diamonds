@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
 
-const BankSlipPaymentForm = ({ onClose }) => {
+const BankSlipPaymentForm = ({ onClose, onExpenseAdded }) => {
+  // New state for paymentFor
+  const [paymentFor, setPaymentFor] = useState('merchandise'); // default to 'merchandise'
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [reason, setReason] = useState('');
@@ -11,35 +13,30 @@ const BankSlipPaymentForm = ({ onClose }) => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Validation functions
-  const validateFirstName = () => 
+  // Validation functions remain the same...
+  const validateFirstName = () =>
     firstName.trim().length >= 2 && /^[A-Za-z]+$/.test(firstName);
-  
-  const validateLastName = () => 
+  const validateLastName = () =>
     lastName.trim().length >= 2 && /^[A-Za-z]+$/.test(lastName);
-  
   const validateAmount = () => {
     const parsedAmount = parseFloat(amount);
     return !isNaN(parsedAmount) && parsedAmount > 0 && parsedAmount <= 100000;
   };
-
-  const validateReason = () => 
+  const validateReason = () =>
     reason.trim().length >= 10 && reason.trim().length <= 500;
-
-  const validateBankSlip = () => 
-    bankSlip && (bankSlip.type === 'image/png');
+  const validateBankSlip = () =>
+    bankSlip && (bankSlip.type === 'image/png' || bankSlip.type === 'application/pdf');
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const validTypes = ['image/png', 'application/pdf'];
-      
       if (validTypes.includes(file.type)) {
         setBankSlip(file);
         setError('');
       } else {
         setBankSlip(null);
-        setError('Invalid file type. Please upload PNG.');
+        setError('Invalid file type. Please upload PNG or PDF.');
       }
     }
   };
@@ -49,7 +46,7 @@ const BankSlipPaymentForm = ({ onClose }) => {
     setIsSubmitting(true);
     setError('');
 
-    //validation before submission
+    // Validate inputs
     const validations = [
       { validate: validateFirstName(), message: 'Invalid first name' },
       { validate: validateLastName(), message: 'Invalid last name' },
@@ -57,7 +54,6 @@ const BankSlipPaymentForm = ({ onClose }) => {
       { validate: validateReason(), message: 'Reason must be 10-500 characters' },
       { validate: validateBankSlip(), message: 'Invalid bank slip' }
     ];
-
     const failedValidation = validations.find(v => !v.validate);
     if (failedValidation) {
       setError(failedValidation.message);
@@ -71,21 +67,24 @@ const BankSlipPaymentForm = ({ onClose }) => {
       formData.append('lastName', lastName);
       formData.append('reason', reason);
       formData.append('amount', amount);
-    
+      // Append the payment method and paymentFor information
       formData.append('paymentMethod', 'bankslip');
-      
+      formData.append('paymentFor', paymentFor);
+
       if (bankSlip) {
         formData.append('bankSlip', bankSlip);
       }
-
       const res = await axiosInstance.post('http://localhost:4000/api/finance/mp', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-
       setResponse(res.data);
       setError('');
+
+      if (onExpenseAdded && res.data.expense) {
+        onExpenseAdded(res.data.expense);
+      }
     } catch (err) {
       console.error(err);
       setError('Payment failed. Please try again.');
@@ -101,6 +100,7 @@ const BankSlipPaymentForm = ({ onClose }) => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Other input fields for first name, last name, etc. */}
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
@@ -118,8 +118,8 @@ const BankSlipPaymentForm = ({ onClose }) => {
               placeholder="Enter first name"
             />
           </div>
-          
-          <div>
+
+        <div>
             <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
               Last Name
             </label>
@@ -136,7 +136,7 @@ const BankSlipPaymentForm = ({ onClose }) => {
             />
           </div>
         </div>
-        
+
         <div>
           <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-2">
             Reason for Payment
@@ -152,7 +152,7 @@ const BankSlipPaymentForm = ({ onClose }) => {
             placeholder="Describe the reason for your payment"
           />
         </div>
-        
+
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
@@ -175,25 +175,44 @@ const BankSlipPaymentForm = ({ onClose }) => {
               />
             </div>
           </div>
-          
+
           <div>
-            <label htmlFor="bankSlip" className="block text-sm font-medium text-gray-700 mb-2">
-              Upload Bank Slip (Only PNG)
+            <label htmlFor="paymentFor" className="block text-sm font-medium text-gray-700 mb-2">
+              Payment For
             </label>
-            <input
-              type="file"
-              id="bankSlip"
-              accept="image/png"
-              onChange={handleFileChange}
-              className="w-full px-3 py-2 border-2 border-gray-300 rounded-xl 
-                file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 
-                file:text-blue-700 hover:file:bg-blue-100 
-                focus:outline-none focus:ring-2 focus:ring-blue-500 
+            <select
+              id="paymentFor"
+              value={paymentFor}
+              onChange={(e) => setPaymentFor(e.target.value)}
+              className="w-full px-3 py-3 border-2 border-gray-300 rounded-xl 
+                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
                 transition duration-300"
-            />
+              required
+            >
+              <option value="merchandise">Merchandise</option>
+              <option value="package">Package</option>
+              <option value="other">Other</option>
+            </select>
           </div>
         </div>
-        
+
+        <div>
+          <label htmlFor="bankSlip" className="block text-sm font-medium text-gray-700 mb-2">
+            Upload Bank Slip (PNG or PDF)
+          </label>
+          <input
+            type="file"
+            id="bankSlip"
+            accept="image/png,application/pdf"
+            onChange={handleFileChange}
+            className="w-full px-3 py-2 border-2 border-gray-300 rounded-xl 
+              file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 
+              file:text-blue-700 hover:file:bg-blue-100 
+              focus:outline-none focus:ring-2 focus:ring-blue-500 
+              transition duration-300"
+          />
+        </div>
+
         <button 
           type="submit" 
           disabled={isSubmitting}
@@ -205,16 +224,24 @@ const BankSlipPaymentForm = ({ onClose }) => {
           {isSubmitting ? 'Processing Payment...' : 'Submit Payment'}
         </button>
       </form>
-      
+
       {error && (
         <div className="mt-4 bg-red-50 border-l-4 border-red-500 p-3 rounded">
           <p className="text-red-700">{error}</p>
         </div>
       )}
-      
+
       {response && (
         <div className="mt-4 bg-green-50 border-l-4 border-green-500 p-3 rounded">
           <p className="text-green-700">Payment Processed Successfully</p>
+          {response.expense && (
+            <div className="mt-2">
+              <h3 className="text-sm font-bold">Expense Record</h3>
+              <p>Category: {response.expense.category}</p>
+              <p>Amount: RS. {response.expense.amount}</p>
+              <p>Date: {new Date(response.expense.date).toLocaleString()}</p>
+            </div>
+          )}
         </div>
       )}
     </div>

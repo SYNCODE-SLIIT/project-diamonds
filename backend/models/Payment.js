@@ -6,7 +6,12 @@ const PaymentSchema = new mongoose.Schema({
   amount: { type: Number, required: true },
   paymentMethod: { type: String, required: true },
   bankSlipFile: { type: String }, // Will be null when testing via JSON
-  status: { type: String, default: 'Pending' }
+  status: { type: String, default: 'Pending' },
+  paymentFor: { 
+    type: String, 
+    enum: ['merchandise', 'package', 'other'], 
+    required: true 
+  }
 });
 
 const Payment = mongoose.model('Payment', PaymentSchema);
