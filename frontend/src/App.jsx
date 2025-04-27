@@ -100,6 +100,7 @@ import CalendarEvents from './pages/CalendarEvents';
 
 import AdminDashboard from './components/team/AdminDashboard';
 import MyEvents  from './components/event/MyEvents';
+import AdminBudgetRequests from './pages/admin/AdminBudgetRequests';
 
 const App = () => {
   return (
@@ -194,6 +195,7 @@ const App = () => {
             <Route path="financial" element={<FinancialDashboard />} />
             <Route path="applications/combined" element={<AdminApplicationsCombinedList />} />
             <Route path="finalized/:id" element={<FinalizedDetails />} />
+            <Route path="budget-requests" element={<AdminBudgetRequests />} />
           </Route>
        
 

@@ -103,7 +103,33 @@ const Dashboard = () => {
   const handleStatusChange = async (item, newStatus) => {
     try {
       const recordType = updateRecordMap[activeTab];
-      const updateData = activeTab === 'invoices' ? { paymentStatus: newStatus } : { status: newStatus };
+      let updateData;
+      if (activeTab === 'budgets') {
+        // Check if any required field is missing
+        let fullBudget = item;
+        if (
+          item.allocatedBudget === undefined ||
+          item.currentSpend === undefined ||
+          item.reason === undefined ||
+          item.remainingBudget === undefined
+        ) {
+          // Fetch full budget object
+          const res = await axiosInstance.get(`/api/finance/getb/${item._id}`);
+          fullBudget = res.data;
+        }
+        updateData = {
+          allocatedBudget: fullBudget.allocatedBudget ?? 0,
+          currentSpend: fullBudget.currentSpend ?? 0,
+          status: newStatus,
+          reason: fullBudget.reason ?? '',
+          remainingBudget: fullBudget.remainingBudget ?? 0,
+        };
+        console.log('PATCH budget updateData:', updateData);
+      } else if (activeTab === 'invoices') {
+        updateData = { paymentStatus: newStatus };
+      } else {
+        updateData = { status: newStatus };
+      }
       await axiosInstance.patch(`/api/finance/${recordType}/${item._id}`, updateData);
       toast.success('Status updated successfully.');
       fetchData();

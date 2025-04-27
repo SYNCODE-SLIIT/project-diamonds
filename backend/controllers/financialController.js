@@ -517,6 +517,15 @@ export const updateFinancialRecord = async (req, res) => {
         });
       }
       updatedRecord = await Refund.findByIdAndUpdate(id, updateData, { new: true });
+    } else if (recordType === 'b') { // Budget
+      const budget = await Budget.findById(id);
+      if (!budget) {
+        return res.status(404).json({
+          success: false,
+          message: `No budget record found with id: ${id}`
+        });
+      }
+      updatedRecord = await Budget.findByIdAndUpdate(id, updateData, { new: true });
     } else {
       return res.status(400).json({
         success: false,
