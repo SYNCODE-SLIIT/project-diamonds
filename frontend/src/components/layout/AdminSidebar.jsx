@@ -182,6 +182,18 @@ const AdminSidebar = () => {
               </li>
               <li className="mb-[15px]">
                 <NavLink
+                  to="/admin/merchandise"
+                  className={({ isActive }) =>
+                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
+                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                  }
+                >
+                  Merchandise
+                </NavLink>
+              </li>
+              <li className="mb-[15px]">
+                <NavLink
                   to="/admin/collaboration"
                   className={({ isActive }) =>
                     `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
@@ -202,18 +214,6 @@ const AdminSidebar = () => {
                   }
                 >
                   Content
-                </NavLink>
-              </li>
-              <li className="mb-[15px]">
-                <NavLink
-                  to="/admin/merchandise"
-                  className={({ isActive }) =>
-                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
-                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
-                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
-                  }
-                >
-                  Merchandise
                 </NavLink>
               </li>
             </ul>

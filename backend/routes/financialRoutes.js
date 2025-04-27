@@ -18,6 +18,7 @@ import {
   getAllMembers,
   paySalary,
   getFinancialReport,
+  getPaymentStatus,
 } from '../controllers/financialController.js';
 import upload from '../middleware/uploadmiddleware.js';
 import Payment from '../models/Payment.js';
@@ -54,6 +55,7 @@ router.get('/getp/:id', async (req, res) => {
     res.status(500).json({ message: 'Error fetching payment', error: error.message });
   }
 });
+router.get('/payment-status/:orderId', getPaymentStatus);
 
 // DELETE
 router.delete('/:recordType/:id', deleteFinancialRecord);

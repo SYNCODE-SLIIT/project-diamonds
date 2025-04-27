@@ -34,6 +34,7 @@ import ContentcreatorRoutes from './routes/ContentcreatorRoutes.js';
 import path from "path";
 import { fileURLToPath } from "url";
 import refundRoutes from "./routes/refundRoutes.js";
+import merchandiseRoutes from './routes/merchandiseRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -105,6 +106,7 @@ app.use("/api/blogposts", blogPostRoutes);
 app.use("/api/media", managePostRoutes);
 app.use("/api/content-creators", ContentcreatorRoutes);
 app.use("/api/v1/refund", refundRoutes);
+app.use('/api/merchandise', merchandiseRoutes);
 
 // API Endpoints
 app.get('/register/member/application', (req, res) => {

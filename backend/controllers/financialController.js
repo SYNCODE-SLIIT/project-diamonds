@@ -230,8 +230,13 @@ export const makePayment = async (req, res) => {
       amount,
       paymentMethod,
       bankSlipFile: bankSlipFileUrl,
-      status: "paid", // Note: status is set to "paid" by default.
+      status: "Pending", // Always set to Pending on creation
       paymentFor, // Captures what the user is paying for.
+      // Optional merchandise fields
+      productId: req.body.productId || undefined,
+      productName: req.body.productName || undefined,
+      quantity: req.body.quantity || undefined,
+      orderId: req.body.orderId || undefined,
     });
     await payment.save({ session });
     
@@ -526,6 +531,15 @@ export const updateFinancialRecord = async (req, res) => {
         });
       }
       updatedRecord = await Budget.findByIdAndUpdate(id, updateData, { new: true });
+    } else if (recordType === 'i') { // Invoice
+      const invoice = await Invoice.findById(id);
+      if (!invoice) {
+        return res.status(404).json({
+          success: false,
+          message: `No invoice record found with id: ${id}`
+        });
+      }
+      updatedRecord = await Invoice.findByIdAndUpdate(id, { paymentStatus: updateData.paymentStatus }, { new: true });
     } else {
       return res.status(400).json({
         success: false,
@@ -644,6 +658,18 @@ export const getFinancialReport = async (req, res) => {
     return res
       .status(500)
       .json({ success: false, message: error.message || "Internal Server Error" });
+  }
+};
+
+export const getPaymentStatus = async (req, res) => {
+  try {
+    const payment = await Payment.findOne({ orderId: req.params.orderId });
+    if (!payment) {
+      return res.status(404).json({ status: 'Not found' });
+    }
+    res.json({ status: payment.status });
+  } catch (error) {
+    res.status(500).json({ status: 'Error', error: error.message });
   }
 };
  

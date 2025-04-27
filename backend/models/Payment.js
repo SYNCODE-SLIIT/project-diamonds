@@ -11,7 +11,12 @@ const PaymentSchema = new mongoose.Schema({
     type: String, 
     enum: ['merchandise', 'package', 'other'], 
     required: true 
-  }
+  },
+  // Optional fields for merchandise payments
+  productId: { type: String },
+  productName: { type: String },
+  quantity: { type: Number },
+  orderId: { type: String },
 });
 
 const Payment = mongoose.model('Payment', PaymentSchema);
