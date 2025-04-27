@@ -56,6 +56,7 @@ import Income from './pages/Dashboard/Income';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Expense from './pages/Dashboard/Expense';
 import RecentTransactionPage from './pages/Dashboard/RecentTransaction';
+import RefundHistory from './pages/Dashboard/RefundHistory';
 
 import FinancialReport from './components/Financial/FinancialReport';
 import BudgetForm from './components/Financial/BudgetForm';
@@ -164,6 +165,7 @@ const App = () => {
               <Route path="new-request" element={<MemberDashboardNewRequest />} />
               <Route path="upcoming-events" element={<MemberDashboardUpcomingEvents />} />
               <Route path="calendar-events" element={<CalendarEvents />} />
+              <Route path="refund-history" element={<RefundHistory />} />
           </Route>
 
 

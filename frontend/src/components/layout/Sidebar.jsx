@@ -139,6 +139,18 @@ const Sidebar = () => {
                   Expense
                 </NavLink>
               </li>
+              <li className="mb-[15px]">
+                <NavLink
+                  to="/member-dashboard/refund-history"
+                  className={({ isActive }) =>
+                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px] 
+                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                  }
+                >
+                  Refund History
+                </NavLink>
+              </li>
             </ul>
           )}
         </li>

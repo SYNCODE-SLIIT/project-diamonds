@@ -75,6 +75,7 @@ const RefundForm = ({ onClose, paymentId, prefillInvoiceNumber, userData }) => {
       formData.append('refundAmount', refundAmount);
       formData.append('reason', reason);
       formData.append('invoiceNumber', invoiceNumber);
+      // Only append paymentId if it exists
       if (paymentId) {
         formData.append('paymentId', paymentId);
       }
@@ -94,7 +95,7 @@ const RefundForm = ({ onClose, paymentId, prefillInvoiceNumber, userData }) => {
       setReceiptFile(null);
     } catch (error) {
       console.error('Error requesting refund:', error);
-      setMessage('Error requesting refund.');
+      setMessage(error.response?.data?.message || 'Error requesting refund.');
     } finally {
       setIsSubmitting(false);
     }
