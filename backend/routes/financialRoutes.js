@@ -20,6 +20,7 @@ import {
   getFinancialReport,
 } from '../controllers/financialController.js';
 import upload from '../middleware/uploadmiddleware.js';
+import Payment from '../models/Payment.js';
 
 const router = express.Router();
 
@@ -42,6 +43,17 @@ router.get('/dashboard', getDashboardData);
 router.get('/invoice-report', generateInvoiceReport);
 router.get('/excel-report', generateExcelReport);
 router.get('/report', getFinancialReport);
+router.get('/getp/:id', async (req, res) => {
+  try {
+    const payment = await Payment.findById(req.params.id).populate('invoiceId');
+    if (!payment) return res.status(404).json({ message: 'Payment not found' });
+    const paymentObj = payment.toObject();
+    paymentObj.invoiceNumber = paymentObj.invoiceId?.invoiceNumber || '';
+    res.json(paymentObj);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching payment', error: error.message });
+  }
+});
 
 // DELETE
 router.delete('/:recordType/:id', deleteFinancialRecord);

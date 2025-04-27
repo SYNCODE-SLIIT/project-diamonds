@@ -180,6 +180,7 @@ export const requestRefund = async (req, res) => {
       transaction: refundTransaction,
     });
   } catch (error) {
+    console.error("Refund error:", error);
     res.status(500).json({
       message: "Error requesting refund",
       error: error.message,
@@ -507,6 +508,15 @@ export const updateFinancialRecord = async (req, res) => {
         // Remove the expense record if the payment is no longer approved.
         await Expense.deleteOne({ paymentId: id });
       }
+    } else if (recordType === 'r') { // Refund
+      const refund = await Refund.findById(id);
+      if (!refund) {
+        return res.status(404).json({
+          success: false,
+          message: `No refund record found with id: ${id}`
+        });
+      }
+      updatedRecord = await Refund.findByIdAndUpdate(id, updateData, { new: true });
     } else {
       return res.status(400).json({
         success: false,
