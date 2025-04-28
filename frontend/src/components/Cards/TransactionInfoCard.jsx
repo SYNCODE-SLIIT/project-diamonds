@@ -64,7 +64,7 @@ const TransactionInfoCard = ({
           </button>
         )}
         
-        {type === "expense" && onViewDetails && (
+        {(type === "expense" || type === "income") && onViewDetails && (
           <button
             className="p-1 text-gray-400 hover:text-blue-600 transition-opacity opacity-0 group-hover:opacity-100"
             onClick={() => onViewDetails(id)}

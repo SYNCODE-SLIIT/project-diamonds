@@ -52,6 +52,38 @@ const PaymentDetails = ({ payment, onBack, onRequestRefund }) => {
           </div>
         </div>
 
+        {/* Show Bank Slip Image or File if available */}
+        {payment.bankSlipFile && (
+          <div className="mt-4">
+            <h6 className="text-sm font-medium text-gray-500 mb-2">Bank Slip</h6>
+            {payment.bankSlipFile.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+              <img
+                src={payment.bankSlipFile}
+                alt="Bank Slip"
+                className="max-w-xs max-h-64 rounded shadow border"
+              />
+            ) : payment.bankSlipFile.match(/\.pdf$/i) ? (
+              <a
+                href={payment.bankSlipFile}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline"
+              >
+                View Bank Slip (PDF)
+              </a>
+            ) : (
+              <a
+                href={payment.bankSlipFile}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline"
+              >
+                Download Bank Slip
+              </a>
+            )}
+          </div>
+        )}
+
         <div className="mt-6 flex justify-end">
           <button 
             className="btn-primary flex items-center gap-2"
