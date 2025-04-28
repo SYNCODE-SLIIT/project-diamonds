@@ -293,16 +293,81 @@ export const generateInvoiceReport = async (req, res) => {
 // Generate Excel Report 
 export const generateExcelReport = async (req, res) => {
   try {
-    const transactions = await Transaction.find({}).lean();
+    // Gather all analytics data
+    const transactions = await Transaction.find({}).populate('user').lean();
+    const payments = await Payment.find({}).lean();
+    const refunds = await Refund.find({}).lean();
+    const income = await Income.find({}).lean();
+    const expense = await Expense.find({}).lean();
+
+    // KPIs
+    const totalIncome = income.reduce((acc, t) => acc + (t.amount || 0), 0);
+    const totalExpense = expense.reduce((acc, t) => acc + (t.amount || 0), 0);
+    const netProfit = totalIncome - totalExpense;
+    const totalPayments = payments.reduce((acc, p) => acc + (p.amount || 0), 0);
+    const totalRefunds = refunds.reduce((acc, r) => acc + (r.refundAmount || 0), 0);
+    const avgTransaction = transactions.length > 0 ? (transactions.reduce((acc, t) => acc + (t.totalAmount || 0), 0) / transactions.length).toFixed(2) : 0;
+    // Top user by spend
+    const userSpendMap = {};
+    transactions.forEach(tx => {
+      if (tx.user && tx.user.fullName) {
+        userSpendMap[tx.user.fullName] = (userSpendMap[tx.user.fullName] || 0) + (tx.totalAmount || 0);
+      }
+    });
+    const topUser = Object.keys(userSpendMap).length > 0 ? Object.entries(userSpendMap).reduce((a, b) => a[1] > b[1] ? a : b) : null;
+    // Top users table
+    const topUsersTable = Object.entries(userSpendMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([user, spend]) => ({ User: user, TotalSpend: spend }));
+    // Recent activity
+    const recentTransactions = [...transactions]
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 5)
+      .map(tx => ({
+        User: tx.user?.fullName || tx.user?.email || 'Unknown',
+        Type: tx.transactionType,
+        Amount: tx.totalAmount,
+        Date: tx.date ? new Date(tx.date).toLocaleString() : ''
+      }));
+
+    // Build summary sheet data
+    const summaryRows = [
+      ['KPI', 'Value'],
+      ['Total Income', totalIncome],
+      ['Total Expense', totalExpense],
+      ['Net Profit', netProfit],
+      ['Total Payments', totalPayments],
+      ['Total Refunds', totalRefunds],
+      ['Avg Transaction', avgTransaction],
+      ['Top User', topUser ? `${topUser[0]} (RS.${topUser[1]})` : 'N/A'],
+      [],
+      ['Recent Activity'],
+      ['User', 'Type', 'Amount', 'Date'],
+      ...recentTransactions.map(tx => [tx.User, tx.Type, tx.Amount, tx.Date]),
+      [],
+      ['Top Users'],
+      ['User', 'Total Spend'],
+      ...topUsersTable.map(u => [u.User, u.TotalSpend])
+    ];
+    const summarySheet = xlsx.utils.aoa_to_sheet(summaryRows);
+
+    // Transactions sheet (as before)
+    const worksheet = xlsx.utils.json_to_sheet(transactions.map(tx => ({
+      ...tx,
+      user: tx.user?.fullName || tx.user?.email || 'Unknown'
+    })));
+
+    // Build workbook
     const workbook = xlsx.utils.book_new();
-    const worksheet = xlsx.utils.json_to_sheet(transactions);
-    xlsx.utils.book_append_sheet(workbook, worksheet, "Transactions");
-    const excelBuffer = xlsx.write(workbook, { type: "buffer", bookType: "xlsx" });
-    res.setHeader("Content-Disposition", "attachment; filename=Financial_Report.xlsx");
-    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    xlsx.utils.book_append_sheet(workbook, summarySheet, 'Summary');
+    xlsx.utils.book_append_sheet(workbook, worksheet, 'Transactions');
+    const excelBuffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+    res.setHeader('Content-Disposition', 'attachment; filename=Financial_Report.xlsx');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.send(excelBuffer);
   } catch (error) {
-    console.error("Error generating Excel report:", error);
+    console.error('Error generating Excel report:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -573,7 +638,7 @@ export const getAllMembers = async (req, res) => {
 
 export const paySalary = async (req, res) => {
   try {
-    const { memberId, salaryAmount } = req.body;
+    const { memberId, salaryAmount, incomeType, note } = req.body;
     if (!memberId || !salaryAmount) {
       return res.status(400).json({ success: false, message: "memberId and salaryAmount are required." });
     }
@@ -592,12 +657,13 @@ export const paySalary = async (req, res) => {
       salaryAmount,
     });
     
-    // Create an Income record with the specified icon and source
+    // Create an Income record with the specified icon, source, and note/description
     const incomeRecord = await Income.create({
       userId: member._id,
       icon: "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f483.png",
-      source: "Team Diamond Salary",
+      source: incomeType || "Team Diamond Salary",
       amount: salaryAmount,
+      description: note || undefined,
     });
     
     return res.status(200).json({
