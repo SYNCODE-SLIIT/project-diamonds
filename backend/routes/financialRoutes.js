@@ -11,7 +11,6 @@ import {
   getDashboardData,
   generateInvoiceReport,
   generateExcelReport,
-  sendPdfByEmail,
   deleteFinancialRecord,
   updateFinancialRecord,
   getAllMembers,
@@ -37,7 +36,6 @@ router.use(protect);
 router.post('/cb', upload.single('infoFile'), createBudget); // Updated to process file upload for budget
 router.post('/ef', upload.single('receiptFile'), requestRefund);
 router.post('/mp', upload.single('bankSlip'), makePayment);
-router.post('/send-email', sendPdfByEmail);
 
 // GET endpoints
 router.get('/getp', getAllPaymentsWithUserData);

@@ -10,7 +10,6 @@ import Expense from '../models/Expense.js';
 import Salary from '../models/Salary.js';
 import User from '../models/User.js';
 
-import nodemailer from "nodemailer";
 import cloudinary from '../config/cloudinary.js';
 import { createFinanceNotification } from './financeNotificationController.js';
 import { uploadFile, deleteFile } from '../utils/fileUpload.js';
@@ -169,34 +168,6 @@ export const makePayment = async (req, res) => {
       user: user._id,
     });
     await invoice.save({ session });
-    
-    // Send invoice to user's email automatically
-    try {
-      if (user.email) {
-        // Set up the NodeMailer transporter (using Gmail as an example)
-        const transporter = nodemailer.createTransport({
-          service: "gmail",
-          auth: {
-            user: "neeeleee7@gmail.com", // your email
-            pass: "12345@l",  // your email password or app-specific password
-          },
-        });
-        // Compose invoice details as plain text
-        const invoiceText = `Dear ${user.fullName || user.email},\n\nThank you for your payment. Here are your invoice details:\n\nInvoice Number: ${invoice.invoiceNumber}\nAmount: RS. ${invoice.amount}\nStatus: ${invoice.paymentStatus}\n\nIf you have any questions, please contact us.\n\nBest regards,\nTeam Diamond`;
-        // Define the mail options
-        const mailOptions = {
-          from: "neeleee7@gmail.com",
-          to: user.email,
-          subject: `Your Invoice - ${invoice.invoiceNumber}`,
-          text: invoiceText,
-        };
-        // Send the email
-        await transporter.sendMail(mailOptions);
-      }
-    } catch (emailErr) {
-      console.error('Error sending invoice email:', emailErr);
-      // Do not fail the payment process if email fails
-    }
     
     // Create and save the Payment document
     const payment = new Payment({
@@ -426,56 +397,6 @@ export const getDashboardData = async (req, res) => {
   }
 };
 
-// Send PDF via Email: expects recordId, pdfData, and email in the request body.
-export const sendPdfByEmail = async (req, res) => {
-  try {
-    const { recordId, pdfData } = req.body;
-
-    // Retrieve the user (and email) from the database using recordId
-    const user = await User.findById(recordId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    const email = user.email;
-
-    // Set up the NodeMailer transporter (using Gmail as an example)
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: "neeleee7@gmail.com", // your email
-        pass: "12345@Npl",  // your email password or app-specific password
-      },
-    });
-
-    // Define the mail options, including the PDF attachment
-    const mailOptions = {
-      from: "neeleee7@gmail.com",
-      to: email,
-      subject: "Your PDF Document",
-      text: "Please find your PDF attached.",
-      attachments: [
-        {
-          filename: "document.pdf",
-          content: pdfData,
-          encoding: "base64", // adjust if your pdfData is encoded differently
-        },
-      ],
-    };
-
-    // Send the email
-    await transporter.sendMail(mailOptions);
-
-    res
-      .status(200)
-      .json({ message: `PDF sent successfully to ${email}` });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error sending PDF email",
-      error: error.message,
-    });
-  }
-};
-
 // Delete a financial record (Payment, Budget, Invoice, Refund, or Transaction)
 export const deleteFinancialRecord = async (req, res) => {
   try {
@@ -548,7 +469,7 @@ export const updateFinancialRecord = async (req, res) => {
     let updatedRecord;
 
     if (recordType === 'p') { // Payment
-      const payment = await Payment.findById(id);
+      const payment = await Payment.findById(id).populate('invoiceId');
       if (!payment) {
         return res.status(404).json({
           success: false,
@@ -578,6 +499,23 @@ export const updateFinancialRecord = async (req, res) => {
           });
           await expense.save();
         }
+        // Send notification to the user about approval
+        await createFinanceNotification({
+          userId: payment.user,
+          message: `Your payment of RS. ${payment.amount}${payment.invoiceId ? ` for invoice ${payment.invoiceId.invoiceNumber}` : ''} has been approved.`,
+          type: 'success',
+          invoiceId: payment.invoiceId?._id,
+          paymentId: payment._id
+        });
+      } else if (updateData.status === 'rejected' && previousStatus !== 'rejected') {
+        // Send notification to the user about rejection
+        await createFinanceNotification({
+          userId: payment.user,
+          message: `Your payment of RS. ${payment.amount}${payment.invoiceId ? ` for invoice ${payment.invoiceId.invoiceNumber}` : ''} has been rejected.`,
+          type: 'error',
+          invoiceId: payment.invoiceId?._id,
+          paymentId: payment._id
+        });
       } else if (updateData.status !== 'approved' && previousStatus === 'approved') {
         // Remove the expense record if the payment is no longer approved.
         await Expense.deleteOne({ paymentId: id });
@@ -590,7 +528,24 @@ export const updateFinancialRecord = async (req, res) => {
           message: `No refund record found with id: ${id}`
         });
       }
+      const previousStatus = refund.status;
       updatedRecord = await Refund.findByIdAndUpdate(id, updateData, { new: true });
+      // Notify user if refund is approved or rejected
+      if (updateData.status === 'approved' && previousStatus !== 'approved') {
+        await createFinanceNotification({
+          userId: refund.user,
+          message: `Your refund request of RS. ${refund.refundAmount}${refund.invoiceNumber ? ` for invoice ${refund.invoiceNumber}` : ''} has been approved.`,
+          type: 'success',
+          refundId: refund._id
+        });
+      } else if (updateData.status === 'rejected' && previousStatus !== 'rejected') {
+        await createFinanceNotification({
+          userId: refund.user,
+          message: `Your refund request of RS. ${refund.refundAmount}${refund.invoiceNumber ? ` for invoice ${refund.invoiceNumber}` : ''} has been rejected.`,
+          type: 'error',
+          refundId: refund._id
+        });
+      }
     } else if (recordType === 'b') { // Budget
       const budget = await Budget.findById(id);
       if (!budget) {
