@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/mongodb.js';
+import { handleMulterError } from './middleware/uploadmiddleware.js';
 
 import authRoutes from "./routes/authRoutes.js";
 import incomeRoutes from "./routes/incomeRoutes.js";
@@ -35,6 +36,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import refundRoutes from "./routes/refundRoutes.js";
 import merchandiseRoutes from './routes/merchandiseRoutes.js';
+import financeNotificationRoutes from './routes/financeNotificationRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -51,6 +53,9 @@ const port = process.env.PORT || 4000;
 app.use(express.json());
 app.use(cors());
 app.use('/uploads', express.static('uploads'));
+
+// Add multer error handling middleware
+app.use(handleMulterError);
 
 // Connect to MongoDB
 connectDB();
@@ -79,6 +84,7 @@ app.use('/api/organizers', organizerRoutes);
 
 // Financial Management Routes
 app.use('/api/finance', financialRoutes);
+app.use('/api/finance/notifications', financeNotificationRoutes);
 
 
 

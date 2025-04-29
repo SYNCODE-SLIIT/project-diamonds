@@ -12,6 +12,8 @@ import User from '../models/User.js';
 
 import nodemailer from "nodemailer";
 import cloudinary from '../config/cloudinary.js';
+import { createFinanceNotification } from './financeNotificationController.js';
+import { uploadFile, deleteFile } from '../utils/fileUpload.js';
 
 
 // GET all payments with user data
@@ -102,7 +104,7 @@ export const createBudget = async (req, res) => {
     // If a file is uploaded, upload it to Cloudinary using resource_type "auto"
     if (req.file) {
       const result = await cloudinary.uploader.upload(req.file.path, {
-        resource_type: "image",
+        resource_type: req.file.mimetype === 'application/pdf' ? 'raw' : 'image',
         folder: "budget_files", // Optional: Organize budget files under a specific folder in Cloudinary
         use_filename: true,     // Optionally keep the original filename
         unique_filename: false, // Optionally disable Cloudinary's automatic renaming
@@ -138,76 +140,21 @@ export const createBudget = async (req, res) => {
   }
 };
 
-// Create Refund Request and record transaction.
-export const requestRefund = async (req, res) => {
-  try {
-    const { refundAmount, reason, invoiceNumber } = req.body;
-    let receiptFileUrl = null;
-
-    // If a file is uploaded, use Cloudinary to upload it
-    if (req.file) {
-      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-        folder: "refund_receipts",
-        resource_type: "image",      
-        use_filename: true,         
-        unique_filename: false,     
-      });
-      receiptFileUrl = uploadResult.secure_url;
-    }
-
-    // Create a new Refund document using the Cloudinary file URL (or null if not provided)
-    const refund = new Refund({
-      refundAmount,
-      reason,
-      invoiceNumber,
-      receiptFile: receiptFileUrl,
-      user: req.user._id,
-    });
-    await refund.save();
-
-    // Record the transaction details for the refund request
-    const refundTransaction = new Transaction({
-      transactionType: "refund",
-      user: req.user._id,
-      totalAmount: refundAmount,
-      details: { note: "Refund requested" },
-    });
-    await refundTransaction.save();
-
-    res.status(201).json({
-      message: "Refund requested successfully",
-      refund,
-      transaction: refundTransaction,
-    });
-  } catch (error) {
-    console.error("Refund error:", error);
-    res.status(500).json({
-      message: "Error requesting refund",
-      error: error.message,
-    });
-  }
-};
-
-
 // Make Payment: auto-create an invoice and record the payment/transaction. 
 export const makePayment = async (req, res) => {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
 
-    // Extract payment details from the request body, including paymentFor
     const { amount, paymentMethod, paymentFor } = req.body;
     let bankSlipFileUrl = null;
+    let fileProvider = null;
 
-    // Upload file if available
+    // Upload file if available using the new utility
     if (req.file) {
-      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-        resource_type: 'image',
-        folder: "bank_slips",
-        use_filename: true,
-        unique_filename: false,
-      });
-      bankSlipFileUrl = uploadResult.secure_url;
+      const uploadResult = await uploadFile(req.file, 'bank_slips');
+      bankSlipFileUrl = uploadResult.url;
+      fileProvider = uploadResult.provider;
     }
     
     const user = req.user;
@@ -223,16 +170,44 @@ export const makePayment = async (req, res) => {
     });
     await invoice.save({ session });
     
-    // Create and save the Payment document, including paymentFor
+    // Send invoice to user's email automatically
+    try {
+      if (user.email) {
+        // Set up the NodeMailer transporter (using Gmail as an example)
+        const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: "neeeleee7@gmail.com", // your email
+            pass: "12345@l",  // your email password or app-specific password
+          },
+        });
+        // Compose invoice details as plain text
+        const invoiceText = `Dear ${user.fullName || user.email},\n\nThank you for your payment. Here are your invoice details:\n\nInvoice Number: ${invoice.invoiceNumber}\nAmount: RS. ${invoice.amount}\nStatus: ${invoice.paymentStatus}\n\nIf you have any questions, please contact us.\n\nBest regards,\nTeam Diamond`;
+        // Define the mail options
+        const mailOptions = {
+          from: "neeleee7@gmail.com",
+          to: user.email,
+          subject: `Your Invoice - ${invoice.invoiceNumber}`,
+          text: invoiceText,
+        };
+        // Send the email
+        await transporter.sendMail(mailOptions);
+      }
+    } catch (emailErr) {
+      console.error('Error sending invoice email:', emailErr);
+      // Do not fail the payment process if email fails
+    }
+    
+    // Create and save the Payment document
     const payment = new Payment({
       invoiceId: invoice._id,
       user: user._id,
       amount,
       paymentMethod,
       bankSlipFile: bankSlipFileUrl,
-      status: "Pending", // Always set to Pending on creation
-      paymentFor, // Captures what the user is paying for.
-      // Optional merchandise fields
+      fileProvider, // Store the provider information
+      status: "Pending",
+      paymentFor,
       productId: req.body.productId || undefined,
       productName: req.body.productName || undefined,
       quantity: req.body.quantity || undefined,
@@ -263,6 +238,32 @@ export const makePayment = async (req, res) => {
       .populate("user")
       .lean();
     
+    // After payment, notify the financial manager
+    try {
+      const manager = await User.findOne({ role: 'financial_manager' });
+      if (manager) {
+        await createFinanceNotification({
+          userId: manager._id,
+          message: `A new payment was made by ${user.fullName || user.email}. Invoice #${invoice.invoiceNumber}`,
+          type: 'info',
+        });
+      }
+    } catch (notifErr) {
+      console.error('Error creating finance notification:', notifErr);
+    }
+    
+    // Notify the user who made the payment
+    try {
+      await createFinanceNotification({
+        userId: user._id,
+        message: `Your payment was successful. Invoice #${invoice.invoiceNumber} has been generated. Amount: RS. ${invoice.amount}`,
+        type: 'success',
+        invoiceId: invoice._id,
+      });
+    } catch (notifErr) {
+      console.error('Error creating user invoice notification:', notifErr);
+    }
+    
     res.status(201).json({
       message: "Payment processed successfully",
       invoice,
@@ -271,6 +272,9 @@ export const makePayment = async (req, res) => {
       // No expense record is returned here.
     });
   } catch (error) {
+    if (req.file && bankSlipFileUrl) {
+      await deleteFile(bankSlipFileUrl).catch(console.error);
+    }
     await session.abortTransaction();
     session.endSession();
     res.status(500).json({ message: "Error processing payment", error: error.message });
@@ -736,6 +740,57 @@ export const getPaymentStatus = async (req, res) => {
     res.json({ status: payment.status });
   } catch (error) {
     res.status(500).json({ status: 'Error', error: error.message });
+  }
+};
+
+// Create Refund Request and record transaction.
+export const requestRefund = async (req, res) => {
+  try {
+    const { refundAmount, reason, invoiceNumber } = req.body;
+    let receiptFileUrl = null;
+    let fileProvider = null;
+
+    // If a file is uploaded, use the new upload utility
+    if (req.file) {
+      const uploadResult = await uploadFile(req.file, 'refund_receipts');
+      receiptFileUrl = uploadResult.url;
+      fileProvider = uploadResult.provider;
+    }
+
+    // Create a new Refund document
+    const refund = new Refund({
+      refundAmount,
+      reason,
+      invoiceNumber,
+      receiptFile: receiptFileUrl,
+      fileProvider, // Store the provider information
+      user: req.user._id,
+    });
+    await refund.save();
+
+    // Record the transaction details for the refund request
+    const refundTransaction = new Transaction({
+      transactionType: "refund",
+      user: req.user._id,
+      totalAmount: refundAmount,
+      details: { note: "Refund requested" },
+    });
+    await refundTransaction.save();
+
+    res.status(201).json({
+      message: "Refund requested successfully",
+      refund,
+      transaction: refundTransaction,
+    });
+  } catch (error) {
+    if (req.file && receiptFileUrl) {
+      await deleteFile(receiptFileUrl).catch(console.error);
+    }
+    console.error("Refund error:", error);
+    res.status(500).json({
+      message: "Error requesting refund",
+      error: error.message,
+    });
   }
 };
  
