@@ -1,8 +1,30 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { LuArrowLeft, LuRefreshCw } from 'react-icons/lu';
 import moment from 'moment';
+import axiosInstance from '../../utils/axiosInstance';
 
 const PaymentDetails = ({ payment, onBack, onRequestRefund }) => {
+  const [merchandise, setMerchandise] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchMerchandiseDetails = async () => {
+      if (payment?.paymentFor === 'merchandise' && payment?.productId) {
+        setLoading(true);
+        try {
+          const response = await axiosInstance.get(`/api/merchandise/${payment.productId}`);
+          setMerchandise(response.data);
+        } catch (error) {
+          console.error('Error fetching merchandise details:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchMerchandiseDetails();
+  }, [payment]);
+
   if (!payment) return null;
 
   return (
@@ -51,6 +73,59 @@ const PaymentDetails = ({ payment, onBack, onRequestRefund }) => {
             <p className="text-base font-semibold">{payment.status}</p>
           </div>
         </div>
+
+        {/* Show Merchandise Information if payment is for merchandise */}
+        {payment.paymentFor === 'merchandise' && (
+          <div className="mt-4">
+            <h6 className="text-sm font-medium text-gray-500 mb-2">Merchandise Details</h6>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {loading ? (
+                <div className="col-span-2 text-center py-4">Loading merchandise details...</div>
+              ) : (
+                <>
+                  {merchandise?.image && (
+                    <div className="col-span-2 bg-gray-50 p-4 rounded-lg">
+                      <h6 className="text-sm font-medium text-gray-500 mb-2">Product Image</h6>
+                      <img 
+                        src={merchandise.image} 
+                        alt={merchandise.name || 'Product'} 
+                        className="max-h-48 mx-auto rounded-lg object-contain"
+                      />
+                    </div>
+                  )}
+                  
+                  {payment.productName && (
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h6 className="text-sm font-medium text-gray-500">Product Name</h6>
+                      <p className="text-base font-semibold">{payment.productName}</p>
+                    </div>
+                  )}
+                  
+                  {payment.quantity && (
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h6 className="text-sm font-medium text-gray-500">Quantity</h6>
+                      <p className="text-base font-semibold">{payment.quantity}</p>
+                    </div>
+                  )}
+                  
+                  {payment.orderId && (
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h6 className="text-sm font-medium text-gray-500">Order ID</h6>
+                      <p className="text-base font-semibold">{payment.orderId}</p>
+                    </div>
+                  )}
+                  
+                  {payment.productId && (
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h6 className="text-sm font-medium text-gray-500">Product ID</h6>
+                      <p className="text-base font-semibold">{payment.productId}</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Show Bank Slip Image or File if available */}
         {payment.bankSlipFile && (
