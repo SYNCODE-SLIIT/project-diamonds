@@ -10,6 +10,8 @@ const RefundForm = ({ onClose, paymentId, prefillInvoiceNumber, userData }) => {
   const [receiptFile, setReceiptFile] = useState(null);
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   // Pre-fill invoice number if provided
   useEffect(() => {
@@ -17,6 +19,15 @@ const RefundForm = ({ onClose, paymentId, prefillInvoiceNumber, userData }) => {
       setInvoiceNumber(prefillInvoiceNumber);
     }
   }, [prefillInvoiceNumber]);
+
+  // Clean up preview URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   // Validation functions
   const validateRefundAmount = () => {
@@ -26,21 +37,50 @@ const RefundForm = ({ onClose, paymentId, prefillInvoiceNumber, userData }) => {
 
   const validateReason = () => reason.trim().length >= 10 && reason.trim().length <= 500;
   const validateInvoiceNumber = () => invoiceNumber.trim().length > 0;
-  // Receipt file is required—ensure the file is PNG or PDF.
-  const validateReceiptFile = () =>
-    receiptFile && (receiptFile.type === 'image/png' || receiptFile.type === 'application/pdf');
+  
+  // Enhanced PDF validation
+  const validateReceiptFile = () => {
+    if (!receiptFile) return false;
+    
+    // Check file type
+    const validTypes = ['image/png', 'application/pdf'];
+    if (!validTypes.includes(receiptFile.type)) {
+      setMessage('Invalid file type. Please upload PNG or PDF.');
+      return false;
+    }
+    
+    // Check file size (5MB limit)
+    if (receiptFile.size > 5 * 1024 * 1024) {
+      setMessage('File size must be less than 5MB.');
+      return false;
+    }
+    
+    // For PDFs, check extension
+    if (receiptFile.type === 'application/pdf' && !receiptFile.name.toLowerCase().endsWith('.pdf')) {
+      setMessage('Invalid PDF file. File must have a .pdf extension.');
+      return false;
+    }
+    
+    return true;
+  };
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const validTypes = ['image/png', 'application/pdf'];
-      if (validTypes.includes(file.type)) {
-        setReceiptFile(file);
-        setMessage('');
-      } else {
-        setReceiptFile(null);
-        setMessage('Invalid file type. Please upload PNG or PDF.');
+      
+      // Clear previous preview
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
       }
+      
+      // Set the file
+      setReceiptFile(file);
+      setMessage('');
+      
+      // Create preview URL for images and PDFs
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
     }
   };
 
@@ -48,6 +88,7 @@ const RefundForm = ({ onClose, paymentId, prefillInvoiceNumber, userData }) => {
     e.preventDefault();
     setIsSubmitting(true);
     setMessage('');
+    setUploadProgress(0);
 
     if (!validateRefundAmount()) {
       setMessage('Invalid refund amount.');
@@ -65,7 +106,6 @@ const RefundForm = ({ onClose, paymentId, prefillInvoiceNumber, userData }) => {
       return;
     }
     if (!validateReceiptFile()) {
-      setMessage('Invalid receipt file. Only PNG or PDF accepted.');
       setIsSubmitting(false);
       return;
     }
@@ -75,7 +115,6 @@ const RefundForm = ({ onClose, paymentId, prefillInvoiceNumber, userData }) => {
       formData.append('refundAmount', refundAmount);
       formData.append('reason', reason);
       formData.append('invoiceNumber', invoiceNumber);
-      // Only append paymentId if it exists
       if (paymentId) {
         formData.append('paymentId', paymentId);
       }
@@ -83,13 +122,27 @@ const RefundForm = ({ onClose, paymentId, prefillInvoiceNumber, userData }) => {
         formData.append('receiptFile', receiptFile);
       }
 
-      // Use the financial route endpoint from API_PATHS.
       const res = await axiosInstance.post(API_PATHS.REFUND.ADD_REFUND, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: { 
+          'Content-Type': 'multipart/form-data',
+          'Accept': 'application/json'
+        },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          setUploadProgress(percentCompleted);
+        }
       });
 
       setMessage(res.data.message || 'Refund requested successfully.');
-      // Clear refund amount and reason; invoice number remains for reference.
+      
+      // If the response includes the Cloudinary URL, update the preview
+      if (res.data.receiptFile) {
+        setPreviewUrl(res.data.receiptFile);
+      }
+
+      // Clear form fields but keep the preview URL for confirmation
       setRefundAmount('');
       setReason('');
       setReceiptFile(null);
@@ -98,119 +151,205 @@ const RefundForm = ({ onClose, paymentId, prefillInvoiceNumber, userData }) => {
       setMessage(error.response?.data?.message || 'Error requesting refund.');
     } finally {
       setIsSubmitting(false);
+      setUploadProgress(0);
     }
   };
 
+  // PDF Preview Component
+  const FilePreview = () => {
+    if (!previewUrl) return null;
+    
+    const isPDF = receiptFile?.type === 'application/pdf' || previewUrl.includes('.pdf');
+    
+    return (
+      <div className="mt-4 border rounded p-2">
+        <h4 className="text-sm font-medium mb-2">File Preview</h4>
+        {isPDF ? (
+          <div className="bg-gray-100 p-4 rounded text-center">
+            <div className="flex items-center justify-center mb-4">
+              <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <p className="text-gray-600 mb-2">PDF Document</p>
+            <p className="text-sm text-gray-500 mb-4">
+              {receiptFile?.name || 'Uploaded PDF'}
+            </p>
+            <div className="flex flex-col items-center space-y-2">
+              {/* For Cloudinary PDFs */}
+              {previewUrl.includes('cloudinary') && (
+                <iframe
+                  src={previewUrl.replace('/upload/', '/upload/fl_attachment/')}
+                  className="w-full h-96 border rounded mb-2"
+                  title="PDF Preview"
+                />
+              )}
+              {/* For local file preview */}
+              {!previewUrl.includes('cloudinary') && (
+                <iframe
+                  src={previewUrl}
+                  className="w-full h-96 border rounded mb-2"
+                  title="PDF Preview"
+                />
+              )}
+              {/* Always show download and open buttons */}
+              <div className="flex justify-center space-x-2 w-full">
+                <a 
+                  href={previewUrl.includes('cloudinary') 
+                    ? previewUrl.replace('/upload/', '/upload/fl_attachment/') 
+                    : previewUrl}
+                  download
+                  className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download PDF
+                </a>
+                <a 
+                  href={previewUrl.includes('cloudinary') 
+                    ? previewUrl.replace('/upload/', '/upload/fl_attachment/') 
+                    : previewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  View in Browser
+                </a>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <img 
+            src={previewUrl} 
+            alt="Receipt Preview" 
+            className="max-h-96 mx-auto"
+          />
+        )}
+      </div>
+    );
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Transparent backdrop with subtle blur */}
-      <div className="bg-white bg-opacity-90 backdrop-blur-sm shadow-2xl rounded-2xl w-full max-w-md relative transform transition-all duration-300">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-semibold text-gray-800 text-center">Refund Request Form</h2>
-        </div>
-        {onClose && (
-          <button
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Request Refund</h2>
+          <button 
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-600 hover:text-gray-800 focus:outline-none"
+            className="text-gray-500 hover:text-gray-700"
           >
             &times;
           </button>
-        )}
-
-        {/* Display user information if available */}
-        {userData && (
-          <div className="p-4 border-b border-gray-200">
-            <p className="text-sm text-gray-700">
-              <strong>Name:</strong> {userData.name}
-            </p>
-            <p className="text-sm text-gray-700">
-              <strong>Email:</strong> {userData.email}
-            </p>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label htmlFor="refundAmount" className="block text-sm font-medium text-gray-700 mb-1">
-              Refund Amount (RS)
+        </div>
+        
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Refund Amount (RS.)
             </label>
             <input
               type="number"
-              id="refundAmount"
               value={refundAmount}
               onChange={(e) => setRefundAmount(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-500"
-              min="0.01"
-              step="0.01"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter amount"
               required
-              placeholder="Enter refund amount"
             />
           </div>
-
-          <div>
-            <label htmlFor="invoiceNumber" className="block text-sm font-medium text-gray-700 mb-1">
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Invoice Number
             </label>
             <input
               type="text"
-              id="invoiceNumber"
               value={invoiceNumber}
               onChange={(e) => setInvoiceNumber(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-500"
-              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter invoice number"
+              required
             />
           </div>
-
-          <div>
-            <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-1">
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Reason for Refund
             </label>
             <textarea
-              id="reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-500 transition duration-300"
-              placeholder="Enter a detailed reason (10-500 characters)"
-              rows="4"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Explain why you need a refund (10-500 characters)"
+              rows="3"
               required
             ></textarea>
           </div>
-
-          <div>
-            <label htmlFor="receiptFile" className="block text-sm font-medium text-gray-700 mb-1">
-              Upload Receipt (PNG or PDF)
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Receipt File (PNG or PDF)
             </label>
             <input
               type="file"
-              id="receiptFile"
-              accept="image/png,application/pdf"
               onChange={handleFileChange}
-              className="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              accept=".png,.pdf,image/png,application/pdf"
               required
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Maximum file size: 5MB. Accepted formats: PNG, PDF
+            </p>
           </div>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300 disabled:opacity-50"
-          >
-            {isSubmitting ? 'Processing...' : 'Submit Refund Request'}
-          </button>
-        </form>
-
-        {message && (
-          <div className="p-4">
-            <div
-              className={`p-3 rounded-md text-sm ${
-                message.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-              }`}
-            >
+          
+          {/* File Preview */}
+          <FilePreview />
+          
+          {/* Upload Progress */}
+          {uploadProgress > 0 && uploadProgress < 100 && (
+            <div className="mb-4">
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div 
+                  className="bg-blue-600 h-2.5 rounded-full" 
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-gray-500 mt-1 text-right">
+                Uploading: {uploadProgress}%
+              </p>
+            </div>
+          )}
+          
+          {message && (
+            <div className={`mb-4 p-3 rounded ${
+              message.includes('successfully') 
+                ? 'bg-green-100 text-green-800' 
+                : 'bg-red-100 text-red-800'
+            }`}>
               {message}
             </div>
+          )}
+          
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              className="mr-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit Refund Request'}
+            </button>
           </div>
-        )}
+        </form>
       </div>
     </div>
   );

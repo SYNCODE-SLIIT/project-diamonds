@@ -1,5 +1,4 @@
 import express from 'express';
-import { protect } from '../middleware/authmiddleware.js';
 import {
   getAllMerchandise,
   getMerchandiseById,
@@ -9,6 +8,7 @@ import {
 } from '../controllers/merchandiseController.js';
 
 import multer from 'multer';
+import { protect } from '../middleware/authMiddleware.js';
 const memoryUpload = multer({ storage: multer.memoryStorage() });
 
 const router = express.Router();
