@@ -289,7 +289,7 @@ const Dashboard = () => {
           />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4 bg-gray-50">
-          {dataArray.map((member, idx) => (
+            {dataArray.map((member, idx) => (
             <div
               key={idx}
               className="bg-white rounded-2xl shadow-md p-5 flex flex-col gap-4 hover:shadow-lg transition group focus-within:ring-2 focus-within:ring-blue-400"
@@ -306,9 +306,9 @@ const Dashboard = () => {
               </div>
               <div className="flex flex-col gap-3">
                 <label className="text-xs text-gray-500 font-medium" htmlFor={`salary-${member?._id}`}>Salary Payment</label>
-                <input
+                  <input
                   id={`salary-${member?._id}`}
-                  type="number"
+                    type="number"
                   placeholder="Enter amount"
                   value={salaryInputs[member?._id] || ''}
                   onChange={(e) => handleSalaryInputChange(member?._id, e.target.value)}
@@ -345,7 +345,7 @@ const Dashboard = () => {
                 />
               </div>
               <div className="flex justify-end mt-2">
-                <button
+                  <button
                   onClick={async () => {
                     setPayingMemberId(member?._id);
                     await handlePaySalary(member?._id);
@@ -359,10 +359,10 @@ const Dashboard = () => {
                     <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
                   ) : null}
                   Pay
-                </button>
+                  </button>
               </div>
             </div>
-          ))}
+            ))}
         </div>
       </div>
     );
@@ -440,52 +440,52 @@ const Dashboard = () => {
               {(activeTab === 'payments' || activeTab === 'invoices' || activeTab === 'budgets' || activeTab === 'refunds') && (
                 <div className="flex flex-col gap-2">
                   <label className="text-xs text-gray-500 font-medium">Change Status</label>
-                  <select
-                    value={activeTab === 'invoices' ? item.paymentStatus : item.status}
-                    onChange={(e) => handleStatusChange(item, e.target.value)}
-                    className="py-2 px-3 rounded border border-gray-300 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm"
-                  >
-                    {activeTab === 'invoices' ? (
-                      <>
-                        <option value="pending">Pending</option>
-                        <option value="paid">Paid</option>
-                        <option value="failed">Failed</option>
-                      </>
-                    ) : (
-                      <>
-                        <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
-                      </>
-                    )}
-                  </select>
-                </div>
-              )}
+                      <select
+                        value={activeTab === 'invoices' ? item.paymentStatus : item.status}
+                        onChange={(e) => handleStatusChange(item, e.target.value)}
+                        className="py-2 px-3 rounded border border-gray-300 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm"
+                      >
+                        {activeTab === 'invoices' ? (
+                          <>
+                            <option value="pending">Pending</option>
+                            <option value="paid">Paid</option>
+                            <option value="failed">Failed</option>
+                          </>
+                        ) : (
+                          <>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+                  )}
               {/* Action buttons */}
               <div className="flex gap-2 mt-2 flex-wrap">
-                {activeTab === 'budgets' && (
-                  <button
-                    onClick={() => handleEdit(item)}
+                    {activeTab === 'budgets' && (
+                      <button
+                        onClick={() => handleEdit(item)}
                     className="bg-gray-600 hover:bg-gray-700 text-white py-1 px-3 rounded shadow-md hover:shadow-lg transition-all text-sm font-semibold"
-                  >
-                    Edit
-                  </button>
-                )}
-                <button
-                  onClick={() => handleDelete(item)}
+                      >
+                        Edit
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDelete(item)}
                   className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded shadow-md hover:shadow-lg transition-all text-sm font-semibold"
-                >
-                  Delete
-                </button>
-                <button
-                  onClick={() => handleView(item)}
+                    >
+                      Delete
+                    </button>
+                    <button
+                      onClick={() => handleView(item)}
                   className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded shadow-md hover:shadow-lg transition-all text-sm font-semibold"
-                >
-                  View
-                </button>
-              </div>
+                    >
+                      View
+                    </button>
+                  </div>
             </div>
-          ))}
+            ))}
         </div>
       </div>
     );
@@ -493,7 +493,9 @@ const Dashboard = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h2 className="text-3xl font-bold mb-8 text-gray-800 text-center">Financial Dashboard</h2>
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-3xl font-bold text-gray-800 text-center flex-1">Financial Dashboard</h2>
+      </div>
       
       <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
         <div className="flex flex-wrap justify-center border-b border-gray-200 mb-4">
@@ -506,9 +508,9 @@ const Dashboard = () => {
             { id: 'transactions', label: 'Transactions' },
             { id: 'salary', label: 'Salary' },
           ].map((tab) => (
-            <button
+            <button 
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => setActiveTab(tab.id)} 
               className={`relative px-3 py-1.5 text-xs md:px-4 md:py-2 md:text-sm font-medium text-gray-700 rounded-full mx-1 my-1 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 focus:z-10
                 ${activeTab === tab.id ? 'bg-blue-100 text-blue-700 shadow font-semibold' : 'hover:bg-gray-100'}`}
               aria-current={activeTab === tab.id ? 'page' : undefined}
