@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import 'boxicons';
+import BudgetForm from '../../components/Financial/BudgetForm';
 
 const AdminSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -8,6 +9,7 @@ const AdminSidebar = () => {
   const [mediaMgmtToggle, setMediaMgmtToggle] = useState(false);
   const [eventMgmtToggle, setEventMgmtToggle] = useState(false);
   const [teamMgmtToggle, setTeamMgmtToggle] = useState(false);
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
 
   const navigate = useNavigate();
   const handleLogout = () => {
@@ -180,6 +182,18 @@ const AdminSidebar = () => {
               </li>
               <li className="mb-[15px]">
                 <NavLink
+                  to="/admin/merchandise"
+                  className={({ isActive }) =>
+                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
+                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                  }
+                >
+                  Merchandise
+                </NavLink>
+              </li>
+              <li className="mb-[15px]">
+                <NavLink
                   to="/admin/collaboration"
                   className={({ isActive }) =>
                     `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
@@ -200,18 +214,6 @@ const AdminSidebar = () => {
                   }
                 >
                   Content
-                </NavLink>
-              </li>
-              <li className="mb-[15px]">
-                <NavLink
-                  to="/admin/merchandise"
-                  className={({ isActive }) =>
-                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
-                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
-                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
-                  }
-                >
-                  Merchandise
                 </NavLink>
               </li>
             </ul>
@@ -354,6 +356,19 @@ const AdminSidebar = () => {
                   }
                 >
                   Calendar
+                </NavLink>
+              </li>
+              {/* Budget Request Tab as a navigation link */}
+              <li className="mb-[15px]">
+                <NavLink
+                  to="/admin/budget-requests"
+                  className={({ isActive }) =>
+                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
+                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                  }
+                >
+                  {!collapsed &&<span>Budget Request</span>}
                 </NavLink>
               </li>
             </ul>

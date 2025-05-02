@@ -56,6 +56,7 @@ import Income from './pages/Dashboard/Income';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Expense from './pages/Dashboard/Expense';
 import RecentTransactionPage from './pages/Dashboard/RecentTransaction';
+import RefundHistory from './pages/Dashboard/RefundHistory';
 
 import FinancialReport from './components/Financial/FinancialReport';
 import BudgetForm from './components/Financial/BudgetForm';
@@ -99,6 +100,8 @@ import CalendarEvents from './pages/CalendarEvents';
 
 import AdminDashboard from './components/team/AdminDashboard';
 import MyEvents  from './components/event/MyEvents';
+import AdminBudgetRequests from './pages/admin/AdminBudgetRequests';
+import MerchandiseAdmin from './pages/admin/MerchandiseAdmin';
 
 const App = () => {
   return (
@@ -164,6 +167,7 @@ const App = () => {
               <Route path="new-request" element={<MemberDashboardNewRequest />} />
               <Route path="upcoming-events" element={<MemberDashboardUpcomingEvents />} />
               <Route path="calendar-events" element={<CalendarEvents />} />
+              <Route path="refund-history" element={<RefundHistory />} />
           </Route>
 
 
@@ -192,6 +196,8 @@ const App = () => {
             <Route path="financial" element={<FinancialDashboard />} />
             <Route path="applications/combined" element={<AdminApplicationsCombinedList />} />
             <Route path="finalized/:id" element={<FinalizedDetails />} />
+            <Route path="budget-requests" element={<AdminBudgetRequests />} />
+            <Route path="merchandise" element={<MerchandiseAdmin />} />
           </Route>
        
 

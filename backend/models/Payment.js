@@ -5,8 +5,28 @@ const PaymentSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   amount: { type: Number, required: true },
   paymentMethod: { type: String, required: true },
-  bankSlipFile: { type: String }, // Will be null when testing via JSON
-  status: { type: String, default: 'Pending' }
+  bankSlipFile: {
+    type: String,
+    required: false
+  },
+  fileProvider: {
+    type: String,
+    enum: ['cloudinary', 's3', null],
+    default: null
+  },
+  status: { type: String, default: 'Pending' },
+  paymentFor: { 
+    type: String, 
+    enum: ['merchandise', 'package', 'other'], 
+    required: true 
+  },
+  // Optional fields for merchandise payments
+  productId: { type: String },
+  productName: { type: String },
+  quantity: { type: Number },
+  orderId: { type: String },
+}, {
+  timestamps: true
 });
 
 const Payment = mongoose.model('Payment', PaymentSchema);

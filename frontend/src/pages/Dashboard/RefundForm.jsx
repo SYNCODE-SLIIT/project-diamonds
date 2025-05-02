@@ -1,26 +1,24 @@
+// components/Dashboard/RefundForm.jsx
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
 import { API_PATHS } from '../../utils/apiPaths';
 
-const BankSlipPaymentForm = ({ onClose, userData }) => {
-  const [paymentFor, setPaymentFor] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+const RefundForm = ({ onClose, paymentId, prefillInvoiceNumber, userData }) => {
+  const [refundAmount, setRefundAmount] = useState('');
   const [reason, setReason] = useState('');
-  const [amount, setAmount] = useState('');
-  const [bankSlip, setBankSlip] = useState(null);
+  const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [receiptFile, setReceiptFile] = useState(null);
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Pre-fill user data if available
+  // Pre-fill invoice number if provided
   useEffect(() => {
-    if (userData) {
-      setFirstName(userData.firstName || '');
-      setLastName(userData.lastName || '');
+    if (prefillInvoiceNumber) {
+      setInvoiceNumber(prefillInvoiceNumber);
     }
-  }, [userData]);
+  }, [prefillInvoiceNumber]);
 
   // Clean up preview URL when component unmounts
   useEffect(() => {
@@ -32,35 +30,33 @@ const BankSlipPaymentForm = ({ onClose, userData }) => {
   }, [previewUrl]);
 
   // Validation functions
-  const validatePaymentFor = () => paymentFor.trim().length > 0;
-  const validateFirstName = () => firstName.trim().length > 0;
-  const validateLastName = () => lastName.trim().length > 0;
-  const validateReason = () => reason.trim().length >= 10 && reason.trim().length <= 500;
-  
-  const validateAmount = () => {
-    const parsedAmount = parseFloat(amount);
+  const validateRefundAmount = () => {
+    const parsedAmount = parseFloat(refundAmount);
     return !isNaN(parsedAmount) && parsedAmount > 0 && parsedAmount <= 100000;
   };
+
+  const validateReason = () => reason.trim().length >= 10 && reason.trim().length <= 500;
+  const validateInvoiceNumber = () => invoiceNumber.trim().length > 0;
   
   // Enhanced PDF validation
-  const validateBankSlip = () => {
-    if (!bankSlip) return false;
+  const validateReceiptFile = () => {
+    if (!receiptFile) return false;
     
     // Check file type
     const validTypes = ['image/png', 'application/pdf'];
-    if (!validTypes.includes(bankSlip.type)) {
+    if (!validTypes.includes(receiptFile.type)) {
       setMessage('Invalid file type. Please upload PNG or PDF.');
       return false;
     }
     
     // Check file size (5MB limit)
-    if (bankSlip.size > 5 * 1024 * 1024) {
+    if (receiptFile.size > 5 * 1024 * 1024) {
       setMessage('File size must be less than 5MB.');
       return false;
     }
     
     // For PDFs, check extension
-    if (bankSlip.type === 'application/pdf' && !bankSlip.name.toLowerCase().endsWith('.pdf')) {
+    if (receiptFile.type === 'application/pdf' && !receiptFile.name.toLowerCase().endsWith('.pdf')) {
       setMessage('Invalid PDF file. File must have a .pdf extension.');
       return false;
     }
@@ -79,7 +75,7 @@ const BankSlipPaymentForm = ({ onClose, userData }) => {
       }
       
       // Set the file
-      setBankSlip(file);
+      setReceiptFile(file);
       setMessage('');
       
       // Create preview URL for images and PDFs
@@ -94,18 +90,8 @@ const BankSlipPaymentForm = ({ onClose, userData }) => {
     setMessage('');
     setUploadProgress(0);
 
-    if (!validatePaymentFor()) {
-      setMessage('Payment purpose is required.');
-      setIsSubmitting(false);
-      return;
-    }
-    if (!validateFirstName()) {
-      setMessage('First name is required.');
-      setIsSubmitting(false);
-      return;
-    }
-    if (!validateLastName()) {
-      setMessage('Last name is required.');
+    if (!validateRefundAmount()) {
+      setMessage('Invalid refund amount.');
       setIsSubmitting(false);
       return;
     }
@@ -114,29 +100,29 @@ const BankSlipPaymentForm = ({ onClose, userData }) => {
       setIsSubmitting(false);
       return;
     }
-    if (!validateAmount()) {
-      setMessage('Invalid amount.');
+    if (!validateInvoiceNumber()) {
+      setMessage('Invoice number is required.');
       setIsSubmitting(false);
       return;
     }
-    if (!validateBankSlip()) {
+    if (!validateReceiptFile()) {
       setIsSubmitting(false);
       return;
     }
 
     try {
       const formData = new FormData();
-      formData.append('paymentFor', paymentFor);
-      formData.append('firstName', firstName);
-      formData.append('lastName', lastName);
+      formData.append('refundAmount', refundAmount);
       formData.append('reason', reason);
-      formData.append('amount', amount);
-      if (bankSlip) {
-        formData.append('bankSlip', bankSlip);
+      formData.append('invoiceNumber', invoiceNumber);
+      if (paymentId) {
+        formData.append('paymentId', paymentId);
+      }
+      if (receiptFile) {
+        formData.append('receiptFile', receiptFile);
       }
 
-      // Use the financial route endpoint from API_PATHS with progress tracking
-      const res = await axiosInstance.post(API_PATHS.FINANCIAL.ADD_PAYMENT, formData, {
+      const res = await axiosInstance.post(API_PATHS.REFUND.ADD_REFUND, formData, {
         headers: { 
           'Content-Type': 'multipart/form-data',
           'Accept': 'application/json'
@@ -149,23 +135,20 @@ const BankSlipPaymentForm = ({ onClose, userData }) => {
         }
       });
 
-      setMessage(res.data.message || 'Payment submitted successfully.');
+      setMessage(res.data.message || 'Refund requested successfully.');
       
       // If the response includes the Cloudinary URL, update the preview
-      if (res.data.bankSlipFile) {
-        setPreviewUrl(res.data.bankSlipFile);
+      if (res.data.receiptFile) {
+        setPreviewUrl(res.data.receiptFile);
       }
 
       // Clear form fields but keep the preview URL for confirmation
-      setPaymentFor('');
-      setFirstName('');
-      setLastName('');
+      setRefundAmount('');
       setReason('');
-      setAmount('');
-      setBankSlip(null);
+      setReceiptFile(null);
     } catch (error) {
-      console.error('Error submitting payment:', error);
-      setMessage(error.response?.data?.message || 'Error submitting payment.');
+      console.error('Error requesting refund:', error);
+      setMessage(error.response?.data?.message || 'Error requesting refund.');
     } finally {
       setIsSubmitting(false);
       setUploadProgress(0);
@@ -176,7 +159,7 @@ const BankSlipPaymentForm = ({ onClose, userData }) => {
   const FilePreview = () => {
     if (!previewUrl) return null;
     
-    const isPDF = bankSlip?.type === 'application/pdf' || previewUrl.includes('.pdf');
+    const isPDF = receiptFile?.type === 'application/pdf' || previewUrl.includes('.pdf');
     
     return (
       <div className="mt-4 border rounded p-2">
@@ -190,7 +173,7 @@ const BankSlipPaymentForm = ({ onClose, userData }) => {
             </div>
             <p className="text-gray-600 mb-2">PDF Document</p>
             <p className="text-sm text-gray-500 mb-4">
-              {bankSlip?.name || 'Uploaded PDF'}
+              {receiptFile?.name || 'Uploaded PDF'}
             </p>
             <div className="flex flex-col items-center space-y-2">
               {/* For Cloudinary PDFs */}
@@ -242,7 +225,7 @@ const BankSlipPaymentForm = ({ onClose, userData }) => {
         ) : (
           <img 
             src={previewUrl} 
-            alt="Bank Slip Preview" 
+            alt="Receipt Preview" 
             className="max-h-96 mx-auto"
           />
         )}
@@ -254,7 +237,7 @@ const BankSlipPaymentForm = ({ onClose, userData }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Bank Slip Payment</h2>
+          <h2 className="text-xl font-semibold">Request Refund</h2>
           <button 
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
@@ -266,55 +249,12 @@ const BankSlipPaymentForm = ({ onClose, userData }) => {
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Payment For
-            </label>
-            <input
-              type="text"
-              value={paymentFor}
-              onChange={(e) => setPaymentFor(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter payment purpose"
-              required
-            />
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                First Name
-              </label>
-              <input
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter first name"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Last Name
-              </label>
-              <input
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter last name"
-                required
-              />
-            </div>
-          </div>
-          
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Amount (RS.)
+              Refund Amount (RS.)
             </label>
             <input
               type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              value={refundAmount}
+              onChange={(e) => setRefundAmount(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter amount"
               required
@@ -323,13 +263,27 @@ const BankSlipPaymentForm = ({ onClose, userData }) => {
           
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Reason
+              Invoice Number
+            </label>
+            <input
+              type="text"
+              value={invoiceNumber}
+              onChange={(e) => setInvoiceNumber(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter invoice number"
+              required
+            />
+          </div>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Reason for Refund
             </label>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Explain the payment reason (10-500 characters)"
+              placeholder="Explain why you need a refund (10-500 characters)"
               rows="3"
               required
             ></textarea>
@@ -337,7 +291,7 @@ const BankSlipPaymentForm = ({ onClose, userData }) => {
           
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Bank Slip (PNG or PDF)
+              Receipt File (PNG or PDF)
             </label>
             <input
               type="file"
@@ -392,7 +346,7 @@ const BankSlipPaymentForm = ({ onClose, userData }) => {
               disabled={isSubmitting}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              {isSubmitting ? 'Submitting...' : 'Submit Payment'}
+              {isSubmitting ? 'Submitting...' : 'Submit Refund Request'}
             </button>
           </div>
         </form>
@@ -401,4 +355,4 @@ const BankSlipPaymentForm = ({ onClose, userData }) => {
   );
 };
 
-export default BankSlipPaymentForm;
+export default RefundForm;
