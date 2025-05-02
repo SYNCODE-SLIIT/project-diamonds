@@ -43,7 +43,7 @@ const MerchandiseStore = () => {
       if (formMode === 'add') {
         await axios.post('/api/merchandise', form);
       } else if (formMode === 'edit' && editProduct) {
-        await axios.put(`/api/merchandise/${editProduct._id}`, form);
+        await axios.put(/api/merchandise/${editProduct._id}, form);
       }
       setForm({ name: '', price: '', image: '', description: '' });
       setFormMode('add');
@@ -70,7 +70,7 @@ const MerchandiseStore = () => {
   const handleDelete = async (product) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
-        await axios.delete(`/api/merchandise/${product._id}`);
+        await axios.delete(/api/merchandise/${product._id});
         fetchProducts();
       } catch (err) {
         setError('Failed to delete merchandise');
