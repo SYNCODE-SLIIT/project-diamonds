@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/mongodb.js';
+import { handleMulterError } from './middleware/uploadmiddleware.js';
 
 import authRoutes from "./routes/authRoutes.js";
 import incomeRoutes from "./routes/incomeRoutes.js";
@@ -29,9 +30,13 @@ import messageRoutes from './routes/messageRoutes.js';
 
 import adminRoutes from './routes/adminRoutes.js';
 
+import ContentcreatorRoutes from './routes/ContentcreatorRoutes.js'; 
 
 import path from "path";
 import { fileURLToPath } from "url";
+import refundRoutes from "./routes/refundRoutes.js";
+import merchandiseRoutes from './routes/merchandiseRoutes.js';
+import financeNotificationRoutes from './routes/financeNotificationRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -49,10 +54,14 @@ app.use(express.json());
 app.use(cors());
 app.use('/uploads', express.static('uploads'));
 
+// Add multer error handling middleware
+app.use(handleMulterError);
+
 // Connect to MongoDB
 connectDB();
 
 // Memebr Application Routes
+
 app.use('/api/member-applications', memberApplicationRoutes);
 
 // Admin Application Routes
@@ -75,6 +84,7 @@ app.use('/api/organizers', organizerRoutes);
 
 // Financial Management Routes
 app.use('/api/finance', financialRoutes);
+app.use('/api/finance/notifications', financeNotificationRoutes);
 
 
 
@@ -100,6 +110,10 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/organizers", organizerRoutes);
 app.use("/api/blogposts", blogPostRoutes);
 app.use("/api/media", managePostRoutes);
+app.use("/api/content-creators", ContentcreatorRoutes);
+app.use("/api/v1/refund", refundRoutes);
+app.use('/api/merchandise', merchandiseRoutes);
+
 // API Endpoints
 app.get('/register/member/application', (req, res) => {
     res.send('API Working');

@@ -1,10 +1,11 @@
 import React from 'react';
+import EventCalendar from '../admin/EventCalender'; // Adjust the relative path if needed
 
 const MemberDashboardCalender = () => {
   return (
-    <div>
-      <h1>Calender</h1>
-      <p>This is your calender page.</p>
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-4">Calendar</h1>
+      <EventCalendar />
     </div>
   );
 };

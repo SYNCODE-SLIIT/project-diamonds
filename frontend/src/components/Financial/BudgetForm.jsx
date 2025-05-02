@@ -180,12 +180,12 @@ const BudgetForm = ({ onClose }) => {
           
           <div>
             <label htmlFor="infoFile" className="block text-sm font-medium text-gray-700 mb-2">
-              Upload Supporting Document (PNG or PDF)
+              Upload Supporting Document (Only PNG)
             </label>
             <input
               type="file"
               id="infoFile"
-              accept="image/png,application/pdf"
+              accept="image/png,application"
               onChange={handleFileChange}
               className="w-full px-3 py-2 border-2 border-gray-300 rounded-xl 
                 file:mr-4 file:rounded-full file:border-0 file:bg-green-50 
