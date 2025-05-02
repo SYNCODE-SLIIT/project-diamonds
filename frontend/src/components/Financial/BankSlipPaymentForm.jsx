@@ -1,222 +1,402 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
+import { API_PATHS } from '../../utils/apiPaths';
 
-const BankSlipPaymentForm = ({ onClose }) => {
+const BankSlipPaymentForm = ({ onClose, userData }) => {
+  const [paymentFor, setPaymentFor] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [reason, setReason] = useState('');
   const [amount, setAmount] = useState('');
   const [bankSlip, setBankSlip] = useState(null);
-  const [response, setResponse] = useState(null);
-  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Pre-fill user data if available
+  useEffect(() => {
+    if (userData) {
+      setFirstName(userData.firstName || '');
+      setLastName(userData.lastName || '');
+    }
+  }, [userData]);
+
+  // Clean up preview URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   // Validation functions
-  const validateFirstName = () => 
-    firstName.trim().length >= 2 && /^[A-Za-z]+$/.test(firstName);
-  
-  const validateLastName = () => 
-    lastName.trim().length >= 2 && /^[A-Za-z]+$/.test(lastName);
+  const validatePaymentFor = () => paymentFor.trim().length > 0;
+  const validateFirstName = () => firstName.trim().length > 0;
+  const validateLastName = () => lastName.trim().length > 0;
+  const validateReason = () => reason.trim().length >= 10 && reason.trim().length <= 500;
   
   const validateAmount = () => {
     const parsedAmount = parseFloat(amount);
     return !isNaN(parsedAmount) && parsedAmount > 0 && parsedAmount <= 100000;
   };
-
-  const validateReason = () => 
-    reason.trim().length >= 10 && reason.trim().length <= 500;
-
-  const validateBankSlip = () => 
-    bankSlip && (bankSlip.type === 'image/png' || bankSlip.type === 'application/pdf');
+  
+  // Enhanced PDF validation
+  const validateBankSlip = () => {
+    if (!bankSlip) return false;
+    
+    // Check file type
+    const validTypes = ['image/png', 'application/pdf'];
+    if (!validTypes.includes(bankSlip.type)) {
+      setMessage('Invalid file type. Please upload PNG or PDF.');
+      return false;
+    }
+    
+    // Check file size (5MB limit)
+    if (bankSlip.size > 5 * 1024 * 1024) {
+      setMessage('File size must be less than 5MB.');
+      return false;
+    }
+    
+    // For PDFs, check extension
+    if (bankSlip.type === 'application/pdf' && !bankSlip.name.toLowerCase().endsWith('.pdf')) {
+      setMessage('Invalid PDF file. File must have a .pdf extension.');
+      return false;
+    }
+    
+    return true;
+  };
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const validTypes = ['image/png', 'application/pdf'];
       
-      if (validTypes.includes(file.type)) {
-        setBankSlip(file);
-        setError('');
-      } else {
-        setBankSlip(null);
-        setError('Invalid file type. Please upload PNG or PDF.');
+      // Clear previous preview
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
       }
+      
+      // Set the file
+      setBankSlip(file);
+      setMessage('');
+      
+      // Create preview URL for images and PDFs
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setError('');
+    setMessage('');
+    setUploadProgress(0);
 
-    //validation before submission
-    const validations = [
-      { validate: validateFirstName(), message: 'Invalid first name' },
-      { validate: validateLastName(), message: 'Invalid last name' },
-      { validate: validateAmount(), message: 'Invalid amount' },
-      { validate: validateReason(), message: 'Reason must be 10-500 characters' },
-      { validate: validateBankSlip(), message: 'Invalid bank slip' }
-    ];
-
-    const failedValidation = validations.find(v => !v.validate);
-    if (failedValidation) {
-      setError(failedValidation.message);
+    if (!validatePaymentFor()) {
+      setMessage('Payment purpose is required.');
+      setIsSubmitting(false);
+      return;
+    }
+    if (!validateFirstName()) {
+      setMessage('First name is required.');
+      setIsSubmitting(false);
+      return;
+    }
+    if (!validateLastName()) {
+      setMessage('Last name is required.');
+      setIsSubmitting(false);
+      return;
+    }
+    if (!validateReason()) {
+      setMessage('Reason must be between 10 and 500 characters.');
+      setIsSubmitting(false);
+      return;
+    }
+    if (!validateAmount()) {
+      setMessage('Invalid amount.');
+      setIsSubmitting(false);
+      return;
+    }
+    if (!validateBankSlip()) {
       setIsSubmitting(false);
       return;
     }
 
     try {
       const formData = new FormData();
+      formData.append('paymentFor', paymentFor);
       formData.append('firstName', firstName);
       formData.append('lastName', lastName);
       formData.append('reason', reason);
       formData.append('amount', amount);
-    
-      formData.append('paymentMethod', 'bankslip');
-      
       if (bankSlip) {
         formData.append('bankSlip', bankSlip);
       }
 
-      const res = await axiosInstance.post('http://localhost:4000/api/finance/mp', formData, {
-        headers: {
+      // Use the financial route endpoint from API_PATHS with progress tracking
+      const res = await axiosInstance.post(API_PATHS.FINANCIAL.ADD_PAYMENT, formData, {
+        headers: { 
           'Content-Type': 'multipart/form-data',
+          'Accept': 'application/json'
         },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          setUploadProgress(percentCompleted);
+        }
       });
 
-      setResponse(res.data);
-      setError('');
-    } catch (err) {
-      console.error(err);
-      setError('Payment failed. Please try again.');
+      setMessage(res.data.message || 'Payment submitted successfully.');
+      
+      // If the response includes the Cloudinary URL, update the preview
+      if (res.data.bankSlipFile) {
+        setPreviewUrl(res.data.bankSlipFile);
+      }
+
+      // Clear form fields but keep the preview URL for confirmation
+      setPaymentFor('');
+      setFirstName('');
+      setLastName('');
+      setReason('');
+      setAmount('');
+      setBankSlip(null);
+    } catch (error) {
+      console.error('Error submitting payment:', error);
+      setMessage(error.response?.data?.message || 'Error submitting payment.');
     } finally {
       setIsSubmitting(false);
+      setUploadProgress(0);
     }
   };
 
-  return (
-    <div className="bg-white shadow-2xl rounded-2xl p-6 transform transition-all duration-300 hover:scale-105">
-      <div className="bg-gradient-to-r from-blue-500 to-teal-600 p-4 -mx-6 -mt-6 mb-6 rounded-t-2xl">
-        <h2 className="text-3xl font-bold text-white text-center">Bank Slip Payment</h2>
+  // PDF Preview Component
+  const FilePreview = () => {
+    if (!previewUrl) return null;
+    
+    const isPDF = bankSlip?.type === 'application/pdf' || previewUrl.includes('.pdf');
+    
+    return (
+      <div className="mt-4 border rounded p-2">
+        <h4 className="text-sm font-medium mb-2">File Preview</h4>
+        {isPDF ? (
+          <div className="bg-gray-100 p-4 rounded text-center">
+            <div className="flex items-center justify-center mb-4">
+              <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <p className="text-gray-600 mb-2">PDF Document</p>
+            <p className="text-sm text-gray-500 mb-4">
+              {bankSlip?.name || 'Uploaded PDF'}
+            </p>
+            <div className="flex flex-col items-center space-y-2">
+              {/* For Cloudinary PDFs */}
+              {previewUrl.includes('cloudinary') && (
+                <iframe
+                  src={previewUrl.replace('/upload/', '/upload/fl_attachment/')}
+                  className="w-full h-96 border rounded mb-2"
+                  title="PDF Preview"
+                />
+              )}
+              {/* For local file preview */}
+              {!previewUrl.includes('cloudinary') && (
+                <iframe
+                  src={previewUrl}
+                  className="w-full h-96 border rounded mb-2"
+                  title="PDF Preview"
+                />
+              )}
+              {/* Always show download and open buttons */}
+              <div className="flex justify-center space-x-2 w-full">
+                <a 
+                  href={previewUrl.includes('cloudinary') 
+                    ? previewUrl.replace('/upload/', '/upload/fl_attachment/') 
+                    : previewUrl}
+                  download
+                  className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download PDF
+                </a>
+                <a 
+                  href={previewUrl.includes('cloudinary') 
+                    ? previewUrl.replace('/upload/', '/upload/fl_attachment/') 
+                    : previewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  View in Browser
+                </a>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <img 
+            src={previewUrl} 
+            alt="Bank Slip Preview" 
+            className="max-h-96 mx-auto"
+          />
+        )}
       </div>
+    );
+  };
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
-              First Name
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Bank Slip Payment</h2>
+          <button 
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            &times;
+          </button>
+        </div>
+        
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Payment For
             </label>
             <input
               type="text"
-              id="firstName"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              className="w-full px-3 py-3 border-2 border-gray-300 rounded-xl 
-                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
-                transition duration-300"
+              value={paymentFor}
+              onChange={(e) => setPaymentFor(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter payment purpose"
               required
-              placeholder="Enter first name"
             />
           </div>
           
-          <div>
-            <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
-              Last Name
-            </label>
-            <input
-              type="text"
-              id="lastName"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              className="w-full px-3 py-3 border-2 border-gray-300 rounded-xl 
-                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
-                transition duration-300"
-              required
-              placeholder="Enter last name"
-            />
-          </div>
-        </div>
-        
-        <div>
-          <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-2">
-            Reason for Payment
-          </label>
-          <textarea
-            id="reason"
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            className="w-full px-3 py-3 border-2 border-gray-300 rounded-xl 
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
-              transition duration-300 h-24"
-            required
-            placeholder="Describe the reason for your payment"
-          />
-        </div>
-        
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
-              Payment Amount
-            </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">RS.</span>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                First Name
+              </label>
               <input
-                type="number"
-                id="amount"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="w-full pl-7 pr-3 py-3 border-2 border-gray-300 rounded-xl 
-                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
-                  transition duration-300"
-                min="0.01"
-                step="0.01"
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter first name"
                 required
-                placeholder="Enter amount"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Last Name
+              </label>
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter last name"
+                required
               />
             </div>
           </div>
           
-          <div>
-            <label htmlFor="bankSlip" className="block text-sm font-medium text-gray-700 mb-2">
-              Upload Bank Slip (PNG or PDF)
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Amount (RS.)
+            </label>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter amount"
+              required
+            />
+          </div>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Reason
+            </label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Explain the payment reason (10-500 characters)"
+              rows="3"
+              required
+            ></textarea>
+          </div>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Bank Slip (PNG or PDF)
             </label>
             <input
               type="file"
-              id="bankSlip"
-              accept="image/png,application/pdf"
               onChange={handleFileChange}
-              className="w-full px-3 py-2 border-2 border-gray-300 rounded-xl 
-                file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 
-                file:text-blue-700 hover:file:bg-blue-100 
-                focus:outline-none focus:ring-2 focus:ring-blue-500 
-                transition duration-300"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              accept=".png,.pdf,image/png,application/pdf"
+              required
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Maximum file size: 5MB. Accepted formats: PNG, PDF
+            </p>
           </div>
-        </div>
-        
-        <button 
-          type="submit" 
-          disabled={isSubmitting}
-          className="w-full bg-gradient-to-r from-blue-600 to-teal-700 
-            text-white py-3 rounded-xl hover:from-blue-700 hover:to-teal-800 
-            transition duration-300 transform hover:scale-105 
-            disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? 'Processing Payment...' : 'Submit Payment'}
-        </button>
-      </form>
-      
-      {error && (
-        <div className="mt-4 bg-red-50 border-l-4 border-red-500 p-3 rounded">
-          <p className="text-red-700">{error}</p>
-        </div>
-      )}
-      
-      {response && (
-        <div className="mt-4 bg-green-50 border-l-4 border-green-500 p-3 rounded">
-          <p className="text-green-700">Payment Processed Successfully</p>
-        </div>
-      )}
+          
+          {/* File Preview */}
+          <FilePreview />
+          
+          {/* Upload Progress */}
+          {uploadProgress > 0 && uploadProgress < 100 && (
+            <div className="mb-4">
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div 
+                  className="bg-blue-600 h-2.5 rounded-full" 
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-gray-500 mt-1 text-right">
+                Uploading: {uploadProgress}%
+              </p>
+            </div>
+          )}
+          
+          {message && (
+            <div className={`mb-4 p-3 rounded ${
+              message.includes('successfully') 
+                ? 'bg-green-100 text-green-800' 
+                : 'bg-red-100 text-red-800'
+            }`}>
+              {message}
+            </div>
+          )}
+          
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              className="mr-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit Payment'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

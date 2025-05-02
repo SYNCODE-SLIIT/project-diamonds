@@ -4,6 +4,7 @@ import {
   LuTrendingUp,
   LuTrendingDown,
   LuTrash2,
+  LuEye,
 } from "react-icons/lu";
 
 const TransactionInfoCard = ({
@@ -14,6 +15,8 @@ const TransactionInfoCard = ({
   type,
   hideDeleteBtn,
   onDelete,
+  onViewDetails,
+  id,
 }) => {
   return (
     <div className="group relative flex items-center gap-4 w-full max-w-xl px-4 py-2 rounded-xl shadow-sm bg-white hover:shadow-md transition-shadow duration-300">
@@ -50,15 +53,27 @@ const TransactionInfoCard = ({
         )}
       </div>
 
-      {/* Delete Button positioned consistently at the top-right */}
-      {!hideDeleteBtn && (
-        <button
-          className="absolute right-2 top-2 p-1 text-gray-400 hover:text-red-600 transition-opacity opacity-0 group-hover:opacity-100"
-          onClick={onDelete}
-        >
-          <LuTrash2 size={18} />
-        </button>
-      )}
+      {/* Action Buttons */}
+      <div className="absolute right-2 top-2 flex gap-1">
+        {!hideDeleteBtn && (
+          <button
+            className="p-1 text-gray-400 hover:text-red-600 transition-opacity opacity-0 group-hover:opacity-100"
+            onClick={onDelete}
+          >
+            <LuTrash2 size={18} />
+          </button>
+        )}
+        
+        {(type === "expense" || type === "income") && onViewDetails && (
+          <button
+            className="p-1 text-gray-400 hover:text-blue-600 transition-opacity opacity-0 group-hover:opacity-100"
+            onClick={() => onViewDetails(id)}
+            title="View Details"
+          >
+            <LuEye size={18} />
+          </button>
+        )}
+      </div>
     </div>
   );
 };

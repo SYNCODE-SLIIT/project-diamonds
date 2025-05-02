@@ -2,12 +2,15 @@ import React, { useState, useEffect, useContext } from 'react';
 import 'boxicons';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/userContext';
+import { API_PATHS } from '../../utils/apiPaths';
+import axiosInstance from '../../utils/axiosInstance';
 
 const Sidebar = () => {
   const [expenseToggle, setExpenseToggle] = useState(false);
   const [eventsToggle, setEventsToggle] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [totalUnread, setTotalUnread] = useState(0);
+  const [hasRefunds, setHasRefunds] = useState(false);
   const { user, clearUser } = useContext(UserContext);
   const navigate = useNavigate();
 
@@ -25,6 +28,22 @@ const Sidebar = () => {
     }
   }, [user]);
 
+  // Fetch refund data to check if user has any refund requests
+  useEffect(() => {
+    const fetchRefunds = async () => {
+      try {
+        const response = await axiosInstance.get(API_PATHS.REFUND.GET_ALL_REFUNDS);
+        if (response.data && response.data.success) {
+          setHasRefunds(response.data.data.length > 0);
+        }
+      } catch (error) {
+        console.error("Error fetching refunds:", error);
+      }
+    };
+
+    fetchRefunds();
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     clearUser();
@@ -36,7 +55,7 @@ const Sidebar = () => {
       className={`
         fixed top-0 left-0 
         ${collapsed ? 'w-[80px]' : 'w-[250px]'} 
-        h-full bg-[#1e1e2f] text-white 
+        h-full overflow-y-auto bg-[#1e1e2f] text-white 
         pt-[6px] pb-[6px] pl-[14px] pr-[14px] 
         shadow-[2px_0_12px_rgba(0,0,0,0.2)] 
         flex flex-col 
@@ -139,6 +158,20 @@ const Sidebar = () => {
                   Expense
                 </NavLink>
               </li>
+              {hasRefunds && (
+                <li className="mb-[15px]">
+                  <NavLink
+                    to="/member-dashboard/refund-history"
+                    className={({ isActive }) =>
+                      `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                      flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px] 
+                      transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                    }
+                  >
+                    Refund History
+                  </NavLink>
+                </li>
+              )}
             </ul>
           )}
         </li>
@@ -240,7 +273,6 @@ const Sidebar = () => {
       {/* Profile and Logout */}
       <div className="mt-auto">
         <hr className="border-0 border-t border-t-[rgba(255,255,255,0.2)] my-[10px]" />
-        {/* Profile Item */}
         <div>
           <NavLink
             to="/member-dashboard/profile"
@@ -266,7 +298,6 @@ const Sidebar = () => {
             )}
           </NavLink>
         </div>
-        {/* Logout */}
         <div className="mt-auto mb-[20px] pt-[20px]">
           <button 
             className="flex items-center w-full text-left p-[10px] bg-transparent border-0 text-white cursor-pointer transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]"

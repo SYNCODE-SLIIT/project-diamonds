@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import IncomeList from '../../components/Income/IncomeList';
 import DeleteAlert from '../../components/DeleteAlert';
 import { useUserAuth } from '../../hooks/useUserAuth';
+import IncomeDetails from '../../components/Income/IncomeDetails';
 
 const Income = () => {
 
@@ -22,6 +23,7 @@ const Income = () => {
     data:null,
   });
   const [openAddIncomeModal, setOpenAddIncomeModal] = useState(false);
+  const [selectedIncome, setSelectedIncome] = useState(null);
 
   // Get All Income Details
   const fetchIncomeDetails = async () => {
@@ -130,8 +132,10 @@ const Income = () => {
   }, []);
 
   return (
-  
-      <div className="my-5 mx-auto">
+    <div className="my-5 mx-auto">
+      {selectedIncome ? (
+        <IncomeDetails income={selectedIncome} onBack={() => setSelectedIncome(null)} />
+      ) : (
         <div className="grid grid-cols-1 gap-6">
           <div className="">
             <IncomeOverview
@@ -146,29 +150,33 @@ const Income = () => {
               setOpenDeleteAlert({ show: true, data: id });
             }}
             onDownload={handleDownloadIncomeDetails}
-            />
+            onViewDetails={(id) => {
+              const found = incomeData.find((item) => item._id === id);
+              setSelectedIncome(found || null);
+            }}
+          />
         </div>
+      )}
 
-        <Modal
-          isOpen={openAddIncomeModal}
-          onClose={() => setOpenAddIncomeModal(false)}
-          title="Add Income"
-        >
-          <AddIncomeForm onAddIncome={handleAddIncome} />
-        </Modal>
+      <Modal
+        isOpen={openAddIncomeModal}
+        onClose={() => setOpenAddIncomeModal(false)}
+        title="Add Income"
+      >
+        <AddIncomeForm onAddIncome={handleAddIncome} />
+      </Modal>
 
-        <Modal
+      <Modal
         isOpen={openDeleteAlert.show}
         onClose={()=> setOpenDeleteAlert({ show: false, data: null})}
         title="Delete Income"
-        >
-          <DeleteAlert
-            content="Are you sure you want to delete this income detail?"
-            onDelete={() => deleteIncome(openDeleteAlert.data)}
-          />
-        </Modal>
-      </div>
-   
+      >
+        <DeleteAlert
+          content="Are you sure you want to delete this income detail?"
+          onDelete={() => deleteIncome(openDeleteAlert.data)}
+        />
+      </Modal>
+    </div>
   );
 }
 

@@ -1,4 +1,6 @@
 import EventRequest from '../models/EventRequest.js';
+// Admin approval/rejection
+import Event from '../models/Event.js';
 
 export const createEventRequest = async (req, res) => {
   try {
@@ -59,24 +61,50 @@ export const getRequestsByOrganizer = async (req, res) => {
   }
 };
 
+
 // Update an event request (organizer)
 export const updateEventRequest = async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Find the request first
     const request = await EventRequest.findById(id);
     if (!request) return res.status(404).json({ message: 'Request not found' });
+
+    // Only allow editing if it's still pending
     if (request.status !== 'pending') {
       return res.status(403).json({ message: 'Only pending requests can be updated' });
     }
 
-    const updated = await EventRequest.findByIdAndUpdate(id, req.body, {
+    // Define the allowed fields to update
+    const allowedFields = [
+      'eventName',
+      'eventLocation',
+      'guestCount',
+      'eventDate',
+      'remarks',
+      'additionalServices',
+      'packageID'
+    ];
+
+    // Filter incoming data to only update allowed fields
+    const updates = {};
+    for (const key of allowedFields) {
+      if (key in req.body) {
+        updates[key] = req.body[key];
+      }
+    }
+
+    // Perform update
+    const updatedRequest = await EventRequest.findByIdAndUpdate(id, updates, {
       new: true,
       runValidators: true,
     });
 
-    res.status(200).json(updated);
+    res.status(200).json(updatedRequest);
   } catch (error) {
-    res.status(500).json({ message: 'Error updating event request', error });
+    console.error('Error updating event request:', error);
+    res.status(500).json({ message: 'Error updating event request', error: error.message });
   }
 };
 
@@ -97,23 +125,43 @@ export const deleteEventRequest = async (req, res) => {
   }
 };
 
-// Admin approval/rejection
+
 export const updateRequestStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, reviewedBy } = req.body;
-    if (!['approved', 'rejected'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status' });
+    const { status, reviewedBy, rejectionReason } = req.body;
+
+    const request = await EventRequest.findById(id);
+    if (!request) return res.status(404).json({ message: 'Request not found' });
+
+    request.status = status;
+    request.reviewedBy = reviewedBy;
+    request.approvalDate = new Date();
+
+    await request.save();
+
+    // If approved, create new Event
+    if (status === 'approved') {
+      const newEvent = new Event({
+        organizerID: request.organizerID,
+        packageID: request.packageID,
+        additionalServices: request.additionalServices,
+        eventName: request.eventName,
+        eventDate: request.eventDate,
+        eventLocation: request.eventLocation,
+        guestCount: request.guestCount,
+        status: 'confirmed',
+        approvedBy: reviewedBy,
+        // Default: approvedAt will auto-fill
+        additionalRequests: request.remarks || ""
+      });
+
+      await newEvent.save();
     }
 
-    const updated = await EventRequest.findByIdAndUpdate(
-      id,
-      { status, reviewedBy, approvalDate: new Date() },
-      { new: true }
-    );
-
-    res.status(200).json(updated);
-  } catch (error) {
-    res.status(500).json({ message: 'Error updating status', error });
+    res.json({ message: 'Request updated successfully' });
+  } catch (err) {
+    console.error('Approval error:', err);
+    res.status(500).json({ message: 'Failed to update request', error: err.message });
   }
 };

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import 'boxicons';
+import BudgetForm from '../../components/Financial/BudgetForm';
 
 const AdminSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -8,6 +9,7 @@ const AdminSidebar = () => {
   const [mediaMgmtToggle, setMediaMgmtToggle] = useState(false);
   const [eventMgmtToggle, setEventMgmtToggle] = useState(false);
   const [teamMgmtToggle, setTeamMgmtToggle] = useState(false);
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
 
   const navigate = useNavigate();
   const handleLogout = () => {
@@ -20,7 +22,7 @@ const AdminSidebar = () => {
       className={`
         fixed top-0 left-0 
         ${collapsed ? 'w-[80px]' : 'w-[250px]'} 
-        h-full bg-[#1e1e2f] text-white 
+        h-full overflow-y-auto bg-[#1e1e2f] text-white 
         pt-[6px] pb-[6px] pl-[14px] pr-[14px] 
         shadow-[2px_0_12px_rgba(0,0,0,0.2)] 
         flex flex-col 
@@ -156,7 +158,7 @@ const AdminSidebar = () => {
             <ul className="list-none pl-[20px] transition-all duration-300 ease">
               <li className="mb-[15px]">
                 <NavLink
-                  to="/admin/blog-posts"
+                  to="/admin/blog"
                   className={({ isActive }) =>
                     `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
                     flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
@@ -180,6 +182,18 @@ const AdminSidebar = () => {
               </li>
               <li className="mb-[15px]">
                 <NavLink
+                  to="/admin/merchandise"
+                  className={({ isActive }) =>
+                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
+                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                  }
+                >
+                  Merchandise
+                </NavLink>
+              </li>
+              <li className="mb-[15px]">
+                <NavLink
                   to="/admin/collaboration"
                   className={({ isActive }) =>
                     `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
@@ -192,7 +206,7 @@ const AdminSidebar = () => {
               </li>
               <li className="mb-[15px]">
                 <NavLink
-                  to="/admin/content"
+                  to="/admin/content-creators"
                   className={({ isActive }) =>
                     `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
                     flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
@@ -200,18 +214,6 @@ const AdminSidebar = () => {
                   }
                 >
                   Content
-                </NavLink>
-              </li>
-              <li className="mb-[15px]">
-                <NavLink
-                  to="/admin/merchandise"
-                  className={({ isActive }) =>
-                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
-                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
-                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
-                  }
-                >
-                  Merchandise
                 </NavLink>
               </li>
             </ul>
@@ -269,6 +271,18 @@ const AdminSidebar = () => {
               </li>
               <li className="mb-[15px]">
                 <NavLink
+                  to="/admin/event-requests"
+                  className={({ isActive }) =>
+                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
+                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                  }
+                >
+                  Event Requests
+                </NavLink>
+              </li>
+              <li className="mb-[15px]">
+                <NavLink
                   to="/admin/events"
                   className={({ isActive }) =>
                     `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
@@ -310,7 +324,7 @@ const AdminSidebar = () => {
             <ul className="list-none pl-[20px] transition-all duration-300 ease">
               <li className="mb-[15px]">
                 <NavLink
-                  to="/admin/event-assignments"
+                  to="/admin/dashboard"
                   className={({ isActive }) =>
                     `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
                     flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
@@ -320,7 +334,7 @@ const AdminSidebar = () => {
                   Event Assignments
                 </NavLink>
               </li>
-              <li className="mb-[15px]">
+              {/* <li className="mb-[15px]">
                 <NavLink
                   to="/admin/practice-assignments"
                   className={({ isActive }) =>
@@ -331,10 +345,10 @@ const AdminSidebar = () => {
                 >
                   Practice Assignments
                 </NavLink>
-              </li>
+              </li> */}
               <li className="mb-[15px]">
                 <NavLink
-                  to="/admin/team-calendar"
+                  to="/admin/event-calendar"
                   className={({ isActive }) =>
                     `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
                     flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
@@ -342,6 +356,19 @@ const AdminSidebar = () => {
                   }
                 >
                   Calendar
+                </NavLink>
+              </li>
+              {/* Budget Request Tab as a navigation link */}
+              <li className="mb-[15px]">
+                <NavLink
+                  to="/admin/budget-requests"
+                  className={({ isActive }) =>
+                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
+                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                  }
+                >
+                  {!collapsed &&<span>Budget Request</span>}
                 </NavLink>
               </li>
             </ul>
@@ -389,7 +416,7 @@ const AdminSidebar = () => {
           </NavLink>
         </div>
         <div className="mt-auto mb-[20px] pt-[20px]">
-          <button
+          <button 
             className="flex items-center w-full text-left p-[10px] bg-transparent border-0 text-white cursor-pointer transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]"
             onClick={handleLogout}
           >

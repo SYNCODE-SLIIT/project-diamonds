@@ -14,6 +14,11 @@ const EventAssignment = () => {
       return;
     }
 
+    if (eventId.length < 12 || memberId.length < 12) {
+      setMessage('Event ID and Member ID must be at least 12 characters long');
+      return;
+    }
+
     setIsLoading(true);
     setMessage('');
 
@@ -22,11 +27,16 @@ const EventAssignment = () => {
         eventId,
         memberId
       });
-      
+
       setMessage(res.data.message);
       // Clear inputs after successful assignment
       setEventId('');
       setMemberId('');
+
+      // Timeout to clear success message after 3 seconds
+      setTimeout(() => {
+        setMessage('');
+      }, 3000); // 3000ms = 3 seconds
     } catch (error) {
       setMessage('Error assigning member to event');
     } finally {
