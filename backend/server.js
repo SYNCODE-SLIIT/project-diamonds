@@ -53,19 +53,15 @@ app.use('/uploads', express.static('uploads'));
 connectDB();
 
 // Memebr Application Routes
-import memberApplicationRoutes from '../backend/routes/memberApplicationRoutes.js';
 app.use('/api/member-applications', memberApplicationRoutes);
 
 // Admin Application Routes
-import adminApplicationRoutes from './routes/adminApplicationRoutes.js';
 app.use('/api/admin/applications', adminApplicationRoutes);
 
 // User Routes
 
 app.use('/api/users', userRoutes);
 // chatGroupRoutes
-import chatGroupRoutes from './routes/chatGroupRoutes.js';
-import messageRoutes from './routes/messageRoutes.js';
 app.use('/api/chat-groups', chatGroupRoutes);
 app.use('/api/messages', messageRoutes);
 
