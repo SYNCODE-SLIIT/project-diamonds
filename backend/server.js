@@ -37,6 +37,7 @@ import { fileURLToPath } from "url";
 import refundRoutes from "./routes/refundRoutes.js";
 import merchandiseRoutes from './routes/merchandiseRoutes.js';
 import financeNotificationRoutes from './routes/financeNotificationRoutes.js';
+import chatbotRoutes from './routes/chatbot.js';
 
 // Load environment variables
 dotenv.config();
@@ -113,6 +114,7 @@ app.use("/api/media", managePostRoutes);
 app.use("/api/content-creators", ContentcreatorRoutes);
 app.use("/api/v1/refund", refundRoutes);
 app.use('/api/merchandise', merchandiseRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 // API Endpoints
 app.get('/register/member/application', (req, res) => {
