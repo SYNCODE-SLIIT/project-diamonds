@@ -18,6 +18,7 @@
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.2.0",
     "@material-tailwind/react": "^2.1.10",
+    "@supabase/supabase-js": "^2.49.4",
     "@tailwindcss/vite": "^4.0.17",
     "axios": "^1.8.4",
     "boxicons": "^2.1.4",

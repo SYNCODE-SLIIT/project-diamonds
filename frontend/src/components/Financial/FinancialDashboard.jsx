@@ -126,6 +126,10 @@ const Dashboard = () => {
     [activeTab, currentPage]
   );
 
+  const fetchData = () => {
+    debouncedFetchData(searchTerm, statusFilter);
+  };
+
   useEffect(() => {
     debouncedFetchData(searchTerm, statusFilter);
     return () => debouncedFetchData.cancel();
