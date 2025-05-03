@@ -11,7 +11,7 @@ const PaymentSchema = new mongoose.Schema({
   },
   fileProvider: {
     type: String,
-    enum: ['cloudinary', 's3', null],
+    enum: ['cloudinary', 'supabase', 's3', null],
     default: null
   },
   status: { type: String, default: 'Pending' },

@@ -28,16 +28,77 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import Transaction from '../models/Transaction.js';
+import { uploadToSupabase } from '../utils/supabaseUpload.js';
+import { uploadFile } from '../utils/fileUpload.js';
 
 const router = express.Router();
 
 // Protect all endpoints
 router.use(protect);
 
-// POST endpoints
-router.post('/cb', upload.single('infoFile'), createBudget); // Updated to process file upload for budget
-router.post('/ef', upload.single('receiptFile'), requestRefund);
-router.post('/mp', upload.single('bankSlip'), makePayment);
+// POST endpoints with Supabase and Cloudinary fallback
+router.post('/cb', upload.single('infoFile'), async (req, res, next) => {
+  try {
+    if (req.file) {
+      try {
+        const uploadResult = await uploadToSupabase(req.file, 'budget_files');
+        req.fileUrl = uploadResult.url;
+        req.fileProvider = uploadResult.provider;
+      } catch (supabaseError) {
+        console.warn('Supabase upload failed, falling back to Cloudinary:', supabaseError.message);
+        const uploadResult = await uploadFile(req.file, 'budget_files');
+        req.fileUrl = uploadResult.url;
+        req.fileProvider = uploadResult.provider;
+      }
+    }
+    next();
+  } catch (error) {
+    console.error('Budget file upload error:', error);
+    return res.status(500).json({ message: 'File upload failed', error: error.message });
+  }
+}, createBudget);
+
+router.post('/ef', upload.single('receiptFile'), async (req, res, next) => {
+  try {
+    if (req.file) {
+      try {
+        const uploadResult = await uploadToSupabase(req.file, 'refund_receipts');
+        req.fileUrl = uploadResult.url;
+        req.fileProvider = uploadResult.provider;
+      } catch (supabaseError) {
+        console.warn('Supabase upload failed, falling back to Cloudinary:', supabaseError.message);
+        const uploadResult = await uploadFile(req.file, 'refund_receipts');
+        req.fileUrl = uploadResult.url;
+        req.fileProvider = uploadResult.provider;
+      }
+    }
+    next();
+  } catch (error) {
+    console.error('Refund receipt upload error:', error);
+    return res.status(500).json({ message: 'File upload failed', error: error.message });
+  }
+}, requestRefund);
+
+router.post('/mp', upload.single('bankSlip'), async (req, res, next) => {
+  try {
+    if (req.file) {
+      try {
+        const uploadResult = await uploadToSupabase(req.file, 'bank_slips');
+        req.fileUrl = uploadResult.url;
+        req.fileProvider = uploadResult.provider;
+      } catch (supabaseError) {
+        console.warn('Supabase upload failed, falling back to Cloudinary:', supabaseError.message);
+        const uploadResult = await uploadFile(req.file, 'bank_slips');
+        req.fileUrl = uploadResult.url;
+        req.fileProvider = uploadResult.provider;
+      }
+    }
+    next();
+  } catch (error) {
+    console.error('Bank slip upload error:', error);
+    return res.status(500).json({ message: 'File upload failed', error: error.message });
+  }
+}, makePayment);
 
 // GET endpoints
 router.get('/getp', getAllPaymentsWithUserData);

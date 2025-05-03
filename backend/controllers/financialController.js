@@ -13,6 +13,7 @@ import User from '../models/User.js';
 import cloudinary from '../config/cloudinary.js';
 import { createFinanceNotification } from './financeNotificationController.js';
 import { uploadFile, deleteFile } from '../utils/fileUpload.js';
+import { uploadToSupabase, deleteFromSupabase } from '../utils/supabaseUpload.js';
 
 
 // GET all payments with user data
@@ -99,28 +100,31 @@ export const createBudget = async (req, res) => {
   try {
     const { allocatedBudget, remainingBudget, status, reason } = req.body;
     let infoFileUrl = null;
-
-    // If a file is uploaded, upload it to Cloudinary using resource_type "auto"
+    let fileProvider = null;
     if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        resource_type: req.file.mimetype === 'application/pdf' ? 'raw' : 'image',
-        folder: "budget_files", // Optional: Organize budget files under a specific folder in Cloudinary
-        use_filename: true,     // Optionally keep the original filename
-        unique_filename: false, // Optionally disable Cloudinary's automatic renaming
-      });
-      infoFileUrl = result.secure_url;
+      try {
+        const uploadResult = await uploadToSupabase(req.file, 'budget_files');
+        infoFileUrl = uploadResult.url;
+        fileProvider = uploadResult.provider;
+        console.log('Supabase upload success (budget):', infoFileUrl);
+      } catch (supabaseError) {
+        console.warn('Supabase upload failed (budget), falling back to Cloudinary:', supabaseError.message);
+        const uploadResult = await uploadFile(req.file, 'budget_files');
+        infoFileUrl = uploadResult.url;
+        fileProvider = uploadResult.provider;
+        console.log('Cloudinary upload success (budget):', infoFileUrl);
+      }
     }
-
     const newBudget = new Budget({
       allocatedBudget,
       remainingBudget,
       status,
       reason,
-      infoFile: infoFileUrl, // Save the Cloudinary URL (or null if no file was provided)
+      infoFile: infoFileUrl,
+      fileProvider,
       user: req.user._id,
     });
     await newBudget.save();
-
     const budgetTransaction = new Transaction({
       transactionType: "budget",
       user: req.user._id,
@@ -128,7 +132,6 @@ export const createBudget = async (req, res) => {
       details: { note: "Budget request created" },
     });
     await budgetTransaction.save();
-
     res.status(201).json({
       message: "Budget created successfully",
       budget: newBudget,
@@ -141,25 +144,29 @@ export const createBudget = async (req, res) => {
 
 // Make Payment: auto-create an invoice and record the payment/transaction. 
 export const makePayment = async (req, res) => {
+  console.log('makePayment controller called');
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
-
     const { amount, paymentMethod, paymentFor } = req.body;
     let bankSlipFileUrl = null;
     let fileProvider = null;
-
-    // Upload file if available using the new utility
     if (req.file) {
-      const uploadResult = await uploadFile(req.file, 'bank_slips');
-      bankSlipFileUrl = uploadResult.url;
-      fileProvider = uploadResult.provider;
+      try {
+        const uploadResult = await uploadToSupabase(req.file, 'bank_slips');
+        bankSlipFileUrl = uploadResult.url;
+        fileProvider = uploadResult.provider;
+        console.log('Supabase upload success (payment):', bankSlipFileUrl);
+      } catch (supabaseError) {
+        console.warn('Supabase upload failed (payment), falling back to Cloudinary:', supabaseError.message);
+        const uploadResult = await uploadFile(req.file, 'bank_slips');
+        bankSlipFileUrl = uploadResult.url;
+        fileProvider = uploadResult.provider;
+        console.log('Cloudinary upload success (payment):', bankSlipFileUrl);
+      }
     }
-    
     const user = req.user;
     const invoiceNumber = `INV-${Date.now()}`;
-
-    // Create and save the Invoice document
     const invoice = new Invoice({
       invoiceNumber,
       amount,
@@ -168,15 +175,13 @@ export const makePayment = async (req, res) => {
       user: user._id,
     });
     await invoice.save({ session });
-    
-    // Create and save the Payment document
     const payment = new Payment({
       invoiceId: invoice._id,
       user: user._id,
       amount,
       paymentMethod,
       bankSlipFile: bankSlipFileUrl,
-      fileProvider, // Store the provider information
+      fileProvider,
       status: "Pending",
       paymentFor,
       productId: req.body.productId || undefined,
@@ -185,8 +190,6 @@ export const makePayment = async (req, res) => {
       orderId: req.body.orderId || undefined,
     });
     await payment.save({ session });
-    
-    // Create and save the Transaction document for auditing
     const paymentTransaction = new Transaction({
       transactionType: "payment",
       invoiceId: invoice._id,
@@ -195,21 +198,11 @@ export const makePayment = async (req, res) => {
       details: { note: "Payment processed automatically with invoice creation" },
     });
     await paymentTransaction.save({ session });
-    
-    // Do NOT create an Expense record here.
-    // Expense record creation should only occur when the payment status is changed to "approved"
-    // (for example, in your PATCH update logic).
-    
-    // Commit the transaction and end the session
     await session.commitTransaction();
     session.endSession();
-    
-    // Populate payment for response clarity
     const populatedPayment = await Payment.findById(payment._id)
       .populate("user")
       .lean();
-    
-    // After payment, notify the financial manager
     try {
       const manager = await User.findOne({ role: 'financial_manager' });
       if (manager) {
@@ -222,8 +215,6 @@ export const makePayment = async (req, res) => {
     } catch (notifErr) {
       console.error('Error creating finance notification:', notifErr);
     }
-    
-    // Notify the user who made the payment
     try {
       await createFinanceNotification({
         userId: user._id,
@@ -234,18 +225,14 @@ export const makePayment = async (req, res) => {
     } catch (notifErr) {
       console.error('Error creating user invoice notification:', notifErr);
     }
-    
     res.status(201).json({
       message: "Payment processed successfully",
       invoice,
       payment: populatedPayment,
       transaction: paymentTransaction,
-      // No expense record is returned here.
     });
   } catch (error) {
-    if (req.file && bankSlipFileUrl) {
-      await deleteFile(bankSlipFileUrl).catch(console.error);
-    }
+    console.error('Error in makePayment:', error);
     await session.abortTransaction();
     session.endSession();
     res.status(500).json({ message: "Error processing payment", error: error.message });
@@ -704,26 +691,29 @@ export const requestRefund = async (req, res) => {
     const { refundAmount, reason, invoiceNumber } = req.body;
     let receiptFileUrl = null;
     let fileProvider = null;
-
-    // If a file is uploaded, use the new upload utility
     if (req.file) {
-      const uploadResult = await uploadFile(req.file, 'refund_receipts');
-      receiptFileUrl = uploadResult.url;
-      fileProvider = uploadResult.provider;
+      try {
+        const uploadResult = await uploadToSupabase(req.file, 'refund_receipts');
+        receiptFileUrl = uploadResult.url;
+        fileProvider = uploadResult.provider;
+        console.log('Supabase upload success (refund):', receiptFileUrl);
+      } catch (supabaseError) {
+        console.warn('Supabase upload failed (refund), falling back to Cloudinary:', supabaseError.message);
+        const uploadResult = await uploadFile(req.file, 'refund_receipts');
+        receiptFileUrl = uploadResult.url;
+        fileProvider = uploadResult.provider;
+        console.log('Cloudinary upload success (refund):', receiptFileUrl);
+      }
     }
-
-    // Create a new Refund document
     const refund = new Refund({
       refundAmount,
       reason,
       invoiceNumber,
       receiptFile: receiptFileUrl,
-      fileProvider, // Store the provider information
+      fileProvider,
       user: req.user._id,
     });
     await refund.save();
-
-    // Record the transaction details for the refund request
     const refundTransaction = new Transaction({
       transactionType: "refund",
       user: req.user._id,
@@ -731,17 +721,12 @@ export const requestRefund = async (req, res) => {
       details: { note: "Refund requested" },
     });
     await refundTransaction.save();
-
     res.status(201).json({
       message: "Refund requested successfully",
       refund,
       transaction: refundTransaction,
     });
   } catch (error) {
-    if (req.file && receiptFileUrl) {
-      await deleteFile(receiptFileUrl).catch(console.error);
-    }
-    console.error("Refund error:", error);
     res.status(500).json({
       message: "Error requesting refund",
       error: error.message,
