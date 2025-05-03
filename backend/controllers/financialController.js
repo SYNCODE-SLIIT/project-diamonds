@@ -748,4 +748,160 @@ export const requestRefund = async (req, res) => {
     });
   }
 };
+
+// ANOMALY DETECTION: Get anomalous transactions using multiple detection methods
+export const getAnomalies = async (req, res) => {
+  try {
+    // Fetch all transactions with user data
+    const transactions = await Transaction.find({})
+      .populate('user')
+      .populate('invoiceId')
+      .sort({ date: -1 }); // Sort by date descending
+
+    if (!transactions.length) {
+      return res.status(200).json({ success: true, anomalies: [] });
+    }
+
+    const anomalies = [];
+    const now = new Date();
+    const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
+    const oneWeekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+
+    // 1. Amount-based anomalies (Z-score)
+    const amounts = transactions.map(t => t.totalAmount);
+    const mean = amounts.reduce((a, b) => a + b, 0) / amounts.length;
+    const std = Math.sqrt(amounts.map(a => Math.pow(a - mean, 2)).reduce((a, b) => a + b, 0) / amounts.length);
+    const threshold = 2.5;
+
+    // 2. Frequency-based anomalies
+    const userTransactionCounts = {};
+    transactions.forEach(t => {
+      const userId = t.user?._id?.toString();
+      if (userId) {
+        userTransactionCounts[userId] = (userTransactionCounts[userId] || 0) + 1;
+      }
+    });
+
+    // 3. Time-based anomalies (transactions outside business hours)
+    const isBusinessHour = (date) => {
+      const hour = date.getHours();
+      return hour >= 9 && hour <= 17; // 9 AM to 5 PM
+    };
+
+    // 4. User-based anomalies (unusual activity for specific users)
+    const userAverageAmounts = {};
+    transactions.forEach(t => {
+      const userId = t.user?._id?.toString();
+      if (userId) {
+        if (!userAverageAmounts[userId]) {
+          userAverageAmounts[userId] = { total: 0, count: 0 };
+        }
+        userAverageAmounts[userId].total += t.totalAmount;
+        userAverageAmounts[userId].count += 1;
+      }
+    });
+
+    // Calculate user averages
+    Object.keys(userAverageAmounts).forEach(userId => {
+      userAverageAmounts[userId].average = userAverageAmounts[userId].total / userAverageAmounts[userId].count;
+    });
+
+    // Process each transaction
+    transactions.forEach(transaction => {
+      const anomaly = {
+        _id: transaction._id,
+        user: transaction.user,
+        totalAmount: transaction.totalAmount,
+        transactionType: transaction.transactionType,
+        date: transaction.date,
+        details: transaction.details,
+        anomalyTypes: [],
+        severity: 'medium'
+      };
+
+      // Check for amount-based anomaly
+      if (std !== 0) {
+        const z = (transaction.totalAmount - mean) / std;
+        if (Math.abs(z) > threshold) {
+          anomaly.anomalyTypes.push('amount');
+          anomaly.severity = Math.abs(z) > 3.5 ? 'high' : 'medium';
+          anomaly.details = {
+            ...anomaly.details,
+            note: `Unusual amount: ${z > 0 ? 'significantly higher' : 'significantly lower'} than average`
+          };
+        }
+      }
+
+      // Check for frequency-based anomaly
+      const userId = transaction.user?._id?.toString();
+      if (userId && userTransactionCounts[userId] > 10) { // More than 10 transactions
+        const recentTransactions = transactions.filter(t => 
+          t.user?._id?.toString() === userId && 
+          new Date(t.date) > oneDayAgo
+        );
+        if (recentTransactions.length > 5) { // More than 5 transactions in 24 hours
+          anomaly.anomalyTypes.push('frequency');
+          anomaly.severity = 'high';
+          anomaly.details = {
+            ...anomaly.details,
+            note: `High frequency: ${recentTransactions.length} transactions in 24 hours`
+          };
+        }
+      }
+
+      // Check for time-based anomaly
+      if (!isBusinessHour(new Date(transaction.date))) {
+        anomaly.anomalyTypes.push('time');
+        anomaly.details = {
+          ...anomaly.details,
+          note: 'Transaction outside business hours'
+        };
+      }
+
+      // Check for user-based anomaly
+      if (userId && userAverageAmounts[userId]) {
+        const userAvg = userAverageAmounts[userId].average;
+        if (transaction.totalAmount > userAvg * 3) { // 3x user's average
+          anomaly.anomalyTypes.push('user');
+          anomaly.severity = 'high';
+          anomaly.details = {
+            ...anomaly.details,
+            note: `Amount significantly higher than user's average`
+          };
+        }
+      }
+
+      // Add to anomalies if any type detected
+      if (anomaly.anomalyTypes.length > 0) {
+        anomalies.push(anomaly);
+      }
+    });
+
+    // Sort anomalies by severity and date
+    anomalies.sort((a, b) => {
+      const severityOrder = { high: 0, medium: 1, low: 2 };
+      if (severityOrder[a.severity] !== severityOrder[b.severity]) {
+        return severityOrder[a.severity] - severityOrder[b.severity];
+      }
+      return new Date(b.date) - new Date(a.date);
+    });
+
+    return res.status(200).json({ 
+      success: true, 
+      anomalies,
+      stats: {
+        totalTransactions: transactions.length,
+        anomalyCount: anomalies.length,
+        anomalyPercentage: (anomalies.length / transactions.length * 100).toFixed(2)
+      }
+    });
+  } catch (error) {
+    console.error('Error detecting anomalies:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Error detecting anomalies', 
+      error: error.message 
+    });
+  }
+};
  

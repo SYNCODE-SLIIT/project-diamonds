@@ -15,6 +15,7 @@ import Last30DaysExpenses from '../../components/Dashboard/Last30DaysExpenses';
 import RecentIncomeWithChart from '../../components/Dashboard/RecentIncomeWithChart';
 import RecentIncome from '../../components/Dashboard/RecentIncome';
 import { FiBell } from 'react-icons/fi';
+import Chatbot from './Chatbot';
 
 const Dashboard = () => {
   // Make sure the user is authenticated before rendering this page
@@ -26,6 +27,7 @@ const Dashboard = () => {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifLoading, setNotifLoading] = useState(false);
+  const [showChatbot, setShowChatbot] = useState(false);
 
   const fetchDashboardData = async () => {
     if (loading) return;
@@ -90,7 +92,7 @@ const Dashboard = () => {
   };
 
   return (
-    
+    <>
       <div className="my-5 mx-auto">
         {/* Notification Bell */}
         <div className="flex justify-end mb-4">
@@ -203,7 +205,19 @@ const Dashboard = () => {
 
         </div>
       </div>
-  
+      {/* Floating Chatbot Button */}
+      <button
+        className="fixed bottom-6 right-6 z-40 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg w-14 h-14 flex items-center justify-center text-3xl focus:outline-none"
+        onClick={() => setShowChatbot(true)}
+        aria-label="Open Chatbot"
+        style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}
+      >
+        <span role="img" aria-label="Chat">💬</span>
+      </button>
+      {showChatbot && (
+        <Chatbot onClose={() => setShowChatbot(false)} />
+      )}
+    </>
   );
 };
 
