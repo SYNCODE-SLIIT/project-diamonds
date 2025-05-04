@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import EditModal from './EditModal';
 import ViewModal from './ViewModal';
 import OverviewTab from './OverviewTab';
@@ -232,7 +232,6 @@ const Dashboard = () => {
                     <div className="space-y-1 text-gray-700">
                       <div>Amount: <span className="font-medium">RS.{item.amount}</span></div>
                       <div>Method: <span className="font-medium">{item.paymentMethod}</span></div>
-                
                     </div>
                   )}
                   {activeTab === 'budgets' && (
@@ -261,12 +260,14 @@ const Dashboard = () => {
                 </td>
                 <td className="p-4">
                   <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleEdit(item)}
-                      className="bg-gray-600 hover:bg-gray-700 text-white py-1 px-3 rounded shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1"
-                    >
-                      Edit
-                    </button>
+                    {activeTab === 'budgets' && (
+                      <button
+                        onClick={() => handleEdit(item)}
+                        className="bg-gray-600 hover:bg-gray-700 text-white py-1 px-3 rounded shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1"
+                      >
+                        Edit
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDelete(item)}
                       className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1"

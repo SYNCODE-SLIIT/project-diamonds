@@ -9,8 +9,9 @@ import Income from '../models/Income.js';
 import Expense from '../models/Expense.js';
 import Salary from '../models/Salary.js';
 import User from '../models/User.js';
-// import moment from 'moment';
+
 import nodemailer from "nodemailer";
+import cloudinary from '../config/cloudinary.js';
 
 
 // GET all payments with user data
@@ -98,13 +99,22 @@ export const createBudget = async (req, res) => {
     const { allocatedBudget, remainingBudget, status, reason } = req.body;
     // Use Multer's file object if available (same as payment)
     const infoFile = req.file ? req.file.filename : null;
+    let infoFileUrl = null;
+
+    if (req.file) {
+      // Upload the temporary file to Cloudinary
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        resource_type: "auto",
+      });
+      infoFileUrl  = result.secure_url;
+    }
 
     const newBudget = new Budget({
       allocatedBudget,
       remainingBudget,
       status,
       reason,
-      infoFile,
+      infoFile: infoFileUrl,
       user: req.user._id,
     });
     await newBudget.save();
@@ -417,14 +427,12 @@ export const deleteFinancialRecord = async (req, res) => {
 //Edit financial record
 export const updateFinancialRecord = async (req, res) => {
   try {
-    // Destructure recordType and id from the URL parameters
     const { recordType, id } = req.params;
-    // Data to update is provided in the request body
     const updateData = req.body;
 
     let updatedRecord;
 
-    // Choose the correct model based on the recordType shorthand
+
     switch (recordType) {
       case 'p': // Payment
         updatedRecord = await Payment.findByIdAndUpdate(id, updateData, { new: true });
@@ -508,7 +516,7 @@ export const paySalary = async (req, res) => {
     // Create an Income record with the specified icon and source
     const incomeRecord = await Income.create({
       userId: member._id,
-      icon: LuHandCoins,
+      icon: "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f483.png",
       source: "Team Diamond Salary",
       amount: salaryAmount,
     });

@@ -142,10 +142,10 @@ const PackageList = () => {
                 
                 {pkg.price !== null && pkg.price !== undefined && (
                   <p className="text-lg font-bold mt-2 mb-3">
-                    ${Number(pkg.price).toFixed(2)}
+                    Rs.{Number(pkg.price).toFixed(2)}
                     {pkg.travelFees > 0 && (
                       <span className="text-sm font-normal text-gray-600">
-                        &nbsp;+ ${Number(pkg.travelFees).toFixed(2)} travel fee
+                        &nbsp;+ Rs.{Number(pkg.travelFees).toFixed(2)} travel fee
                       </span>
                     )}
                   </p>
