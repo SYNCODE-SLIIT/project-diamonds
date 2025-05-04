@@ -45,3 +45,14 @@ export const markMessageAsRead = async (req, res) => {
     res.status(500).json({ message: 'Error updating message', error: error.message });
   }
 };
+
+// Check if there are new messages since lastCount
+export const checkNewMessages = async (req, res) => {
+  try {
+    const { groupId, lastCount } = req.params;
+    const count = await Message.countDocuments({ chatGroup: groupId });
+    res.status(200).json({ hasNew: count > Number(lastCount), count });
+  } catch (error) {
+    res.status(500).json({ message: 'Error checking new messages', error: error.message });
+  }
+};
