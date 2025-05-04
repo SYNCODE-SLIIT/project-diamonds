@@ -625,6 +625,7 @@ const Dashboard = () => {
                   <div><span className="font-medium">Remaining:</span> RS.{item.remainingBudget}</div>
                   <div><span className="font-medium">Status:</span> {renderStatusBadge(item.status)}</div>
                   <div><span className="font-medium">Reason:</span> {item.reason}</div>
+                  <div><span className="font-medium">Date:</span> {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '-'}</div>
                 </div>
               )}
               {activeTab === 'invoices' && (

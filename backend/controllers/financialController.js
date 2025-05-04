@@ -541,7 +541,11 @@ export const updateFinancialRecord = async (req, res) => {
           message: `No budget record found with id: ${id}`
         });
       }
-      updatedRecord = await Budget.findByIdAndUpdate(id, updateData, { new: true });
+      updatedRecord = await Budget.findByIdAndUpdate(
+        id, 
+        { ...updateData, lastUpdated: new Date() }, 
+        { new: true }
+      );
     } else if (recordType === 'i') { // Invoice
       const invoice = await Invoice.findById(id);
       if (!invoice) {
