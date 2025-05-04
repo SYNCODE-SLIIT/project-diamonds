@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { UserContext } from '../../context/userContext';
 
 const GroupMembers = () => {
+  const { user } = useContext(UserContext);
   const { groupId } = useParams();
   const navigate = useNavigate();
   const [members, setMembers] = useState([]);
@@ -144,12 +146,16 @@ const GroupMembers = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{member.fullName}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{member.email}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button 
-                        onClick={() => handleRemove(member._id)}
-                        className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-300"
-                      >
-                        Remove
-                      </button>
+                      {member._id !== user._id ? (
+                        <button 
+                          onClick={() => handleRemove(member._id)}
+                          className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-300"
+                        >
+                          Remove
+                        </button>
+                      ) : (
+                        <span className="text-gray-500">(Me)</span>
+                      )}
                     </td>
                   </tr>
                 ))}

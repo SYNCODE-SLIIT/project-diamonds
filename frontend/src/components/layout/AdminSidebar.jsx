@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { UserContext } from '../../context/userContext';
 import 'boxicons';
 
 const AdminSidebar = () => {
@@ -8,12 +9,36 @@ const AdminSidebar = () => {
   const [mediaMgmtToggle, setMediaMgmtToggle] = useState(false);
   const [eventMgmtToggle, setEventMgmtToggle] = useState(false);
   const [teamMgmtToggle, setTeamMgmtToggle] = useState(false);
+  const { user } = useContext(UserContext);
+  const [totalUnread, setTotalUnread] = useState(0);
+  const lastTotalRef = useRef(0);
 
   const navigate = useNavigate();
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/login');
   };
+
+  // Poll unread count for Inbox
+  useEffect(() => {
+    let interval;
+    const fetchTotal = async () => {
+      try {
+        const res = await fetch(`http://localhost:4000/api/chat-groups/user/${user._id}`);
+        const data = await res.json();
+        const unread = (data.groups || []).reduce((sum, g) => sum + (g.unreadCount || 0), 0);
+        if (unread !== lastTotalRef.current) {
+          setTotalUnread(unread);
+          lastTotalRef.current = unread;
+        }
+      } catch {}
+    };
+    if (user && user._id) {
+      fetchTotal();
+      interval = setInterval(fetchTotal, 3000);
+    }
+    return () => clearInterval(interval);
+  }, [user]);
 
   return (
     <div
@@ -374,6 +399,11 @@ const AdminSidebar = () => {
             {!collapsed && (
               <span className="ml-[10px] transition-opacity duration-300 ease">
                 Inbox
+              </span>
+            )}
+            {!collapsed && totalUnread > 0 && (
+              <span className="ml-auto bg-blue-500 text-white px-2 py-1 rounded-full text-xs">
+                {totalUnread}
               </span>
             )}
           </NavLink>

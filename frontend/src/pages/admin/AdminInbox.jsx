@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/userContext';
 
@@ -8,23 +8,46 @@ const AdminInbox = () => {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
+  const lastCountsRef = useRef([]);
+
+  // Fetch initial groups and store unread counts
+  const fetchGroupsInit = async () => {
+    if (!user?._id) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`http://localhost:4000/api/chat-groups/user/${user._id}`);
+      const data = await res.json();
+      const gs = data.groups || [];
+      setGroups(gs);
+      lastCountsRef.current = gs.map(g => `${g._id}:${g.unreadCount}`);
+    } catch (err) {
+      setErrorMsg("Error fetching groups: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Poll only when unread counts change
+  const pollGroups = async () => {
+    if (!user?._id) return;
+    try {
+      const res = await fetch(`http://localhost:4000/api/chat-groups/user/${user._id}`);
+      const data = await res.json();
+      const newGroups = data.groups || [];
+      const newCounts = newGroups.map(g => `${g._id}:${g.unreadCount}`);
+      if (JSON.stringify(newCounts) !== JSON.stringify(lastCountsRef.current)) {
+        setGroups(newGroups);
+        lastCountsRef.current = newCounts;
+      }
+    } catch {
+      // ignore errors
+    }
+  };
 
   useEffect(() => {
-    if (user && user._id) {
-      fetch(`http://localhost:4000/api/chat-groups/user/${user._id}`)
-        .then((res) => {
-          if (!res.ok) throw new Error(`Error: ${res.status}`);
-          return res.json();
-        })
-        .then((data) => {
-          setGroups(data.groups || []);
-          setLoading(false);
-        })
-        .catch((err) => {
-          setErrorMsg("Error fetching groups: " + err.message);
-          setLoading(false);
-        });
-    }
+    fetchGroupsInit();
+    const interval = setInterval(pollGroups, 3000);
+    return () => clearInterval(interval);
   }, [user]);
 
   const handleDeleteGroup = async (groupId) => {
@@ -77,6 +100,9 @@ const AdminInbox = () => {
                   Description
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Unread
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Action
                 </th>
               </tr>
@@ -89,6 +115,15 @@ const AdminInbox = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {group.description}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                    {group.unreadCount > 0 ? (
+                      <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs">
+                        {group.unreadCount}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">0</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
                     <Link 

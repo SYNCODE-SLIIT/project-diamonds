@@ -13,6 +13,7 @@ const HeadmanChatRoom = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const messagesEndRef = useRef(null);
   const lastCountRef = useRef(0);
+  const token = localStorage.getItem('token');
 
   // Fetch chat group details to get the group name
   useEffect(() => {
@@ -33,6 +34,16 @@ const HeadmanChatRoom = () => {
     }
   }, [groupId]);
 
+  // Mark all messages as read on chat open (admin)
+  useEffect(() => {
+    if (groupId && token) {
+      fetch(`http://localhost:4000/api/messages/${groupId}/readAll`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    }
+  }, [groupId, token]);
+
   // Extract fetch logic
   const fetchMessages = async () => {
     if (!groupId) return;
@@ -43,6 +54,13 @@ const HeadmanChatRoom = () => {
       const fetched = data.messages || [];
       setMessages(fetched);
       lastCountRef.current = fetched.length;
+      // mark as read on every fetch
+      if (token) {
+        fetch(`http://localhost:4000/api/messages/${groupId}/readAll`, {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      }
     } catch (err) {
       setErrorMsg("Error fetching messages: " + err.message);
     } finally {

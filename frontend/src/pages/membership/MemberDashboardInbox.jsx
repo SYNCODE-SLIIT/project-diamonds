@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { UserContext } from '../../context/userContext';
 
@@ -7,24 +7,49 @@ const MemberDashboardInbox = () => {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const intervalRef = useRef(null);
+  const lastCountsRef = useRef([]);
+
+  // Fetch and initialize groups and counts
+  const fetchGroupsInit = async () => {
+    if (!user?._id) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`http://localhost:4000/api/chat-groups/user/${user._id}`);
+      const data = await res.json();
+      const gs = data.groups || [];
+      setGroups(gs);
+      // store counts keyed by groupId
+      lastCountsRef.current = gs.map(g => `${g._id}:${g.unreadCount}`);
+    } catch (err) {
+      setErrorMsg('Error fetching groups: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Poll only if counts changed
+  const pollGroups = async () => {
+    if (!user?._id) return;
+    try {
+      const res = await fetch(`http://localhost:4000/api/chat-groups/user/${user._id}`);
+      const data = await res.json();
+      const newGroups = data.groups || [];
+      const newCounts = newGroups.map(g => `${g._id}:${g.unreadCount}`);
+      // if any count changed, update groups
+      if (JSON.stringify(newCounts) !== JSON.stringify(lastCountsRef.current)) {
+        setGroups(newGroups);
+        lastCountsRef.current = newCounts;
+      }
+    } catch {
+      // ignore polling errors
+    }
+  };
 
   useEffect(() => {
-    if (user && user._id) {
-      setLoading(true);
-      fetch(`http://localhost:4000/api/chat-groups/user/${user._id}`)
-        .then((res) => {
-          if (!res.ok) throw new Error(`Error: ${res.status}`);
-          return res.json();
-        })
-        .then((data) => {
-          setGroups(data.groups || []);
-          setLoading(false);
-        })
-        .catch((err) => {
-          setErrorMsg("Error fetching groups: " + err.message);
-          setLoading(false);
-        });
-    }
+    fetchGroupsInit();
+    intervalRef.current = setInterval(pollGroups, 1000);
+    return () => clearInterval(intervalRef.current);
   }, [user]);
 
   return (
