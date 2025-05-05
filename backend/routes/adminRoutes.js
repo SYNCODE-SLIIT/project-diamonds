@@ -1,6 +1,7 @@
 import express from 'express';
 import { assignMemberToEvent } from '../controllers/eventController.js';
 import { createPracticeSession, assignMemberToPracticeSession } from '../controllers/practiceSessionController.js';
+import Member from '../models/MemberApplication.js'; // Update with correct path/model name
 
 const router = express.Router();
 
@@ -29,6 +30,16 @@ router.get('/practice-sessions', async (req, res) => {
     res.json(sessions);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching practice sessions', error });
+  }
+});
+
+// Get all approved members
+router.get('/members/approved', async (req, res) => {
+  try {
+    const approvedMembers = await Member.find({ status: 'approved' }); // or whatever your approval logic is
+    res.json(approvedMembers);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
