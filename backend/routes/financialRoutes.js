@@ -19,7 +19,7 @@ import {
   getPaymentStatus,
   getAnomalies,
 } from '../controllers/financialController.js';
-import { upload } from '../middleware/uploadmiddleware.js';
+import { upload, memoryUpload } from '../middleware/uploadmiddleware.js';
 import Payment from '../models/Payment.js';
 import Invoice from '../models/Invoice.js';
 import PDFDocument from 'pdfkit';
@@ -79,7 +79,7 @@ router.post('/ef', upload.single('receiptFile'), async (req, res, next) => {
   }
 }, requestRefund);
 
-router.post('/mp', upload.single('bankSlip'), async (req, res, next) => {
+router.post('/mp', memoryUpload.single('bankSlip'), async (req, res, next) => {
   try {
     if (req.file) {
       try {

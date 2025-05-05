@@ -182,7 +182,7 @@ export const makePayment = async (req, res) => {
       paymentMethod,
       bankSlipFile: bankSlipFileUrl,
       fileProvider,
-      status: "Pending",
+      status: "pending",
       paymentFor,
       productId: req.body.productId || undefined,
       productName: req.body.productName || undefined,

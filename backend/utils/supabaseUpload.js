@@ -3,8 +3,17 @@ import fs from 'fs';
 
 export const uploadToSupabase = async (file, folder = 'general') => {
   try {
-    // Read file as buffer
-    const fileBuffer = fs.readFileSync(file.path);
+    let fileBuffer;
+    if (file.buffer) {
+      // If file is in memory (from memoryUpload)
+      fileBuffer = file.buffer;
+    } else if (file.path) {
+      // If file is on disk (from disk storage)
+      fileBuffer = fs.readFileSync(file.path);
+    } else {
+      throw new Error('No file buffer or path found');
+    }
+
     const fileName = `${Date.now()}-${file.originalname}`;
     const filePath = `${folder}/${fileName}`;
 
