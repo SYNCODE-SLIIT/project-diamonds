@@ -100,6 +100,8 @@ import CalendarEvents from './pages/CalendarEvents';
 import AdminDashboard from './components/team/AdminDashboard';
 import MyEvents  from './components/event/MyEvents';
 
+import DirectChatRoom from './pages/shared/DirectChatRoom';
+
 const App = () => {
   return (
     <div className="">
@@ -161,6 +163,7 @@ const App = () => {
               <Route path="calender" element={<MemberDashboardCalender />} />
               <Route path="inbox" element={<MemberDashboardInbox />} />
               <Route path="messaging/chat/:groupId" element={<ChatRoom />} />
+              <Route path="direct-chat/:threadId" element={<DirectChatRoom />} />
               <Route path="new-request" element={<MemberDashboardNewRequest />} />
               <Route path="upcoming-events" element={<MemberDashboardUpcomingEvents />} />
               <Route path="calendar-events" element={<CalendarEvents />} />
@@ -179,6 +182,7 @@ const App = () => {
             <Route path="inbox" element={<AdminInbox />} />
             <Route path="profile" element={<AdminProfile />} />
             <Route path="chat/:groupId" element={<HeadmanChatRoom />} />
+            <Route path="direct-chat/:threadId" element={<DirectChatRoom />} />
             <Route path="groups/:groupId/members" element={<GroupMembers />} />
             <Route path="organizers" element={<AdminOrganizersList />} />
             <Route path="services" element={<ServicesList />} />
