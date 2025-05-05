@@ -22,6 +22,7 @@
     "axios": "^1.8.4",
     "boxicons": "^2.1.4",
     "cloudinary": "^1.41.3",
+    "date-fns": "^4.1.0",
     "emoji-picker-react": "^4.12.2",
     "esbuild": "^0.25.1",
     "font-awesome": "^4.7.0",
@@ -33,6 +34,7 @@
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^6.10.0",
     "react": "^19.0.0",
+    "react-big-calendar": "^1.18.0",
     "react-calendar": "^5.1.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.5.2",
@@ -41,6 +43,7 @@
     "react-select": "^5.10.1",
     "react-toastify": "^11.0.5",
     "recharts": "^2.15.1",
+    "sweetalert2": "^11.20.0",
     "tailwindcss": "^4.0.17"
   },
   "devDependencies": {

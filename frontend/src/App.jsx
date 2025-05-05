@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import { Toaster } from 'react-hot-toast';
 import AdminApplicationsCombinedList from './pages/authentication/AdminApplicationsCombinedList';
+import Calendar from './components/Calendar';
 // Content Management Imports
 import AboutUs from './pages/aboutUs';
 import ContentMediaDashboard from "./pages/ContentMediaDashboard";
@@ -95,10 +96,18 @@ import ContentCreatorView from './pages/content/ContentCreatorView';
 import EditContentCreator from './pages/content/EditContentCreator';
 
 
+
 import CalendarEvents from './pages/CalendarEvents';
 
 import AdminDashboard from './components/team/AdminDashboard';
 import MyEvents  from './components/event/MyEvents';
+import EventAssign from './components/team/EventAssign';
+import EventAssignmentRequests from './components/team/EventAssignmentRequests';
+import PracticeAssign from './components/team/PracticeAssign';
+import PracticeAssignments from './components/team/PracticeAssignments';
+
+
+
 
 const App = () => {
   return (
@@ -195,7 +204,16 @@ const App = () => {
           </Route>
        
 
-          {/* <Route path="/admin/dashboard" element={<AdminDashboard />} /> */}
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/event/assign" element={<EventAssign />} />
+          <Route path="/team/assignment-requests" element={<EventAssignmentRequests />} />
+          <Route path="/team/practice" element={<PracticeAssign />} />
+          <Route path="/team/practice-assignments" element={<PracticeAssignments />} />
+          
+          
+        
+       
+  
           {/* Financial Routes */}
 
 
@@ -214,7 +232,10 @@ const App = () => {
 
           <Route path="/upload" element={<UploadMedia />} />
           <Route path="/Cmanager" element={<ContentMediaDashboard />} />
+
           <Route path="/merchandise" element={<Merchandise />} />
+
+
         </Routes>
 
         

@@ -31,8 +31,16 @@ import adminRoutes from './routes/adminRoutes.js';
 
 import ContentcreatorRoutes from './routes/ContentcreatorRoutes.js'; 
 
+
+//team manager
+import assignmentRoutes from './routes/assignmentRoutes.js';
+import eventRoutes from './routes/eventRoutes.js'; 
+
 import path from "path";
 import { fileURLToPath } from "url";
+
+import practiceRoutes from './routes/practiceRoutes.js';
+import practiceRequestRoutes from './routes/practiceRequestRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -78,7 +86,7 @@ app.use('/api/organizers', organizerRoutes);
 // Financial Management Routes
 app.use('/api/finance', financialRoutes);
 
-
+app.use('/api/assignments', assignmentRoutes);
 
 // Mount Routes
 app.use("/api/v1/auth", authRoutes);
@@ -103,6 +111,9 @@ app.use("/api/organizers", organizerRoutes);
 app.use("/api/blogposts", blogPostRoutes);
 app.use("/api/media", managePostRoutes);
 app.use("/api/content-creators", ContentcreatorRoutes);
+app.use('/api/practices', practiceRoutes);
+app.use('/api/practice-requests', practiceRequestRoutes);
+
 // API Endpoints
 app.get('/register/member/application', (req, res) => {
     res.send('API Working');
@@ -110,6 +121,11 @@ app.get('/register/member/application', (req, res) => {
 
 // Serve static files (if needed for media uploads)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+app.use('/api/events', eventRoutes);
+app.use('/api/assignments', assignmentRoutes);
+
+
 
 // API Health Check
 app.get("/", (req, res) => {
