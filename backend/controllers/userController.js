@@ -2,6 +2,8 @@ import MemberApplication from '../models/MemberApplication.js';
 import Organizer from '../models/Organizer.js';
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
+import DirectChat from '../models/DirectChat.js';
+import DirectMessage from '../models/DirectMessage.js';
 
 // GET endpoint: Fetch application details for account creation
 export const getApplicationDetailsForAccountCreation = async (req, res) => {
@@ -215,6 +217,13 @@ export const deleteMember = async (req, res) => {
     // Also delete the corresponding member application if a reference exists
     if (user.profileId) {
       await MemberApplication.findByIdAndDelete(user.profileId);
+    }
+    // Also delete all direct chat threads and messages involving this member
+    const threads = await DirectChat.find({ participants: memberId }).select('_id').lean();
+    const threadIds = threads.map(t => t._id);
+    if (threadIds.length > 0) {
+      await DirectMessage.deleteMany({ thread: { $in: threadIds } });
+      await DirectChat.deleteMany({ _id: { $in: threadIds } });
     }
     return res.status(200).json({ message: "Member and associated application deleted successfully." });
   } catch (error) {
