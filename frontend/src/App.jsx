@@ -41,11 +41,15 @@ import AdminProfile from './pages/authentication/AdminProfile';
 import GroupMembers from './pages/admin/GroupMembers';
 // import AdminInvitedApplicationsList from './pages/authentication/AdminInvitedApplicationsList';
 import FinalizedDetails from './pages/authentication/FinalizedDetails';
-
+ 
 
 import PackageList from './components/event/PackageList';
 import ServicesList from './components/event/AdditionalServicesList';
 
+import EventRequestDashboard from './components/event/EventRequestDashboard';
+import EventsDashboard from './components/event/EventsDashboard';
+
+import EventCalendar from './pages/admin/EventCalender';
 
 // Financial Management Imports
 import FinancialDashboard from './components/Financial/FinancialDashboard';
@@ -79,9 +83,11 @@ import AdminLayout from './components/layout/AdminLayout';
 import UserProvider from './context/userContext';
 
 
+
 import ViewMedia from './pages/content/ViewMedia';
 import EditMedia from './pages/content/EditMedia';
 import ViewAllMedia from './pages/content/ViewAllMedia';
+
 
 
 import ContentCreatorList from './pages/content/ContentCreatorList';
@@ -90,17 +96,15 @@ import ContentCreatorView from './pages/content/ContentCreatorView';
 import EditContentCreator from './pages/content/EditContentCreator';
 
 
+
+import CalendarEvents from './pages/CalendarEvents';
+
 import AdminDashboard from './components/team/AdminDashboard';
-
-
+import MyEvents  from './components/event/MyEvents';
 import EventAssign from './components/team/EventAssign';
 import EventAssignmentRequests from './components/team/EventAssignmentRequests';
 import PracticeAssign from './components/team/PracticeAssign';
 import PracticeAssignments from './components/team/PracticeAssignments';
-
-import CalendarEvents from './pages/CalendarEvents';
-
-
 
 
 
@@ -121,11 +125,10 @@ const App = () => {
 
             <Route path="/media/:id" component={<ViewMedia/>} />
             <Route path="/media/edit/:id" element={<EditMedia />} />
+{/* 
+            <Route path="/media" element={<ViewAllMedia />} /> */}
 
-            <Route path="/media" element={<ViewAllMedia />} 
-            />
-
-          <Route path="/content-creators" element={<ContentCreatorList />} />
+          {/* <Route path="/content-creators" element={<ContentCreatorList />} /> */}
           <Route path="/content-creators/new" element={<ContentCreatorForm />} />
           <Route path="/content-creators/edit/:id" element={<EditContentCreator />} />
           <Route path="/content-creators/view/:id" element={<ContentCreatorView />} />
@@ -149,7 +152,7 @@ const App = () => {
 
               <Route path='/events' element={<EventBookingPage />} />
               <Route path="/event-requests" element={<OrganizerEventRequests />} />
-
+              <Route path="/event-dashboard" element={<MyEvents />} />
               {/* <Route path='/organizer/new-event' element={<OrganizerNewEvent />} />
               <Route path='/organizer/manage-events' element={<OrganizerManageEvents />} /> */}
 
@@ -173,9 +176,13 @@ const App = () => {
           </Route>
 
 
-
-
           <Route path="/admin" element={<AdminLayout />}>
+            <Route path="blog" element={<BlogPosts />} />
+            <Route path="content-creators" element={<ContentCreatorList />} />
+            <Route path="create-blog-post" element={<CreateBlogPost />} />
+            <Route path="media" element={<ViewAllMedia />} />
+            <Route path="event-calendar" element={<EventCalendar />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
             {/* All admin routes are now relative to /admin */}
             <Route path="messaging/create-group" element={<GroupCreation />} />
             <Route path="inbox" element={<AdminInbox />} />
@@ -189,7 +196,8 @@ const App = () => {
             <Route path="applications/:id" element={<AdminApplicationDetails />} />
             <Route path="members" element={<AdminMembersList />} />
             <Route path="packages" element={<PackageList />} />
-            {/* If FinancialDashboard is admin-specific, consider nesting it as well */}
+            <Route path="events" element={<EventsDashboard />} />
+            <Route path="event-requests" element={<EventRequestDashboard />} />
             <Route path="financial" element={<FinancialDashboard />} />
             <Route path="applications/combined" element={<AdminApplicationsCombinedList />} />
             <Route path="finalized/:id" element={<FinalizedDetails />} />
@@ -205,8 +213,7 @@ const App = () => {
           
         
        
-    
-
+  
           {/* Financial Routes */}
 
 
@@ -216,13 +223,18 @@ const App = () => {
           <Route path='/report' element={<FinancialReport />} />
 
           {/* Content Management Routes */}
-          <Route path="/create-blog-post" element={<CreateBlogPost />} />
-          <Route path="/blog" element={<BlogPosts />} />
+          {/* <Route path="/create-blog-post" element={<CreateBlogPost />} /> */}
+
+          {/* <Route path="/blog" element={<BlogPosts />} /> */}
+
           <Route path="/blog/edit/:id" element={<EditBlogPost />} />
           <Route path="/event" element={<Events />} />
+
           <Route path="/upload" element={<UploadMedia />} />
           <Route path="/Cmanager" element={<ContentMediaDashboard />} />
-          <Route path="/merc" element={<Merchandise />} />
+
+          <Route path="/merchandise" element={<Merchandise />} />
+
 
         </Routes>
 

@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Calendar as CalendarIcon, 
   Users, 
   Clock, 
   ChevronRight 
 } from 'lucide-react';
-import { Link } from 'react-router-dom';  // For navigation
+import { Link } from 'react-router-dom';
 
 import EventAssignment from './EventAssignment';
 import PracticeSessionManagement from './PracticeSessionManagement';
@@ -13,6 +13,9 @@ import CalendarView from './CalendarView';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('events');
+  const [members, setMembers] = useState([]);
+  const [membersLoading, setMembersLoading] = useState(true);
+  const [membersError, setMembersError] = useState('');
 
   // Tab configuration for dynamic rendering
   const tabs = [
@@ -35,7 +38,7 @@ const AdminDashboard = () => {
       component: <CalendarView />
     },
     { 
-      key: 'Refund', 
+      key: 'refund', 
       label: 'Refund Request', 
       icon: Clock,  
       component: (
@@ -49,6 +52,26 @@ const AdminDashboard = () => {
       )
     }
   ];
+
+  // Fetch members (only those with role "member")
+  useEffect(() => {
+    fetch('/api/users')
+      .then(res => {
+        if (!res.ok) throw new Error(`Error: ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        // Support both cases: if data is an array or an object with a 'users' property.
+        const allUsers = Array.isArray(data) ? data : data.users || [];
+        const teamMembers = allUsers.filter(user => user.role === 'member');
+        setMembers(teamMembers);
+        setMembersLoading(false);
+      })
+      .catch(err => {
+        setMembersError("Error fetching members: " + err.message);
+        setMembersLoading(false);
+      });
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -85,9 +108,50 @@ const AdminDashboard = () => {
         </div>
 
         {/* Content Area */}
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
           <div className="p-6">
             {tabs.find(tab => tab.key === activeTab)?.component}
+          </div>
+        </div>
+
+        {/* Team Members Section */}
+        <div className="bg-white rounded-xl shadow-md overflow-hidden">
+          <div className="p-6">
+            <h3 className="text-2xl font-bold mb-4">Team Members</h3>
+            {membersLoading ? (
+              <p>Loading members...</p>
+            ) : membersError ? (
+              <p className="text-red-500">{membersError}</p>
+            ) : members.length === 0 ? (
+              <p className="text-gray-500">No members found.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="py-2 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Full Name
+                      </th>
+                      <th className="py-2 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="py-2 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Contact Number
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {members.map(member => (
+                      <tr key={member._id} className="hover:bg-gray-50">
+                        <td className="py-2 px-4 text-sm">{member.fullName}</td>
+                        <td className="py-2 px-4 text-sm">{member.email}</td>
+                        <td className="py-2 px-4 text-sm">{member.contactNumber}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </div>
