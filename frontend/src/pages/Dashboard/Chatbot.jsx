@@ -180,4 +180,87 @@ const Chatbot = ({ onClose }) => {
   );
 };
 
-export default Chatbot; 
+export default Chatbot;
+
+// Add this function to extract suggested questions from the bot response
+const extractSuggestedQuestions = (message) => {
+  // Look for questions at the end of the message that start with numbers or bullet points
+  const lines = message.split('\n');
+  const questions = [];
+  
+  // Check the last few lines for suggested questions
+  for (let i = lines.length - 1; i >= Math.max(0, lines.length - 10); i--) {
+    const line = lines[i].trim();
+    // Match patterns like "1. Question" or "• Question" or "- Question"
+    const match = line.match(/^(?:\d+\.|\•|\-)\s*["'](.+?)["']$/);
+    if (match) {
+      questions.unshift(match[1]); // Add to beginning of array to maintain order
+    }
+  }
+  
+  return questions;
+};
+
+// In your render function, add this after displaying the bot message
+const renderSuggestedQuestions = (message) => {
+  const questions = extractSuggestedQuestions(message);
+  
+  if (questions.length === 0) return null;
+  
+  return (
+    <div className="suggested-questions">
+      <p>Suggested questions:</p>
+      <div className="question-buttons">
+        {questions.map((question, index) => (
+          <button 
+            key={index}
+            className="question-button"
+            onClick={() => handleSendMessage(question)}
+          >
+            {question}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Add this to your CSS
+/*
+.suggested-questions {
+  margin-top: 15px;
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+}
+
+.question-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.question-button {
+  background-color: #f0f7ff;
+  border: 1px solid #cce5ff;
+  border-radius: 16px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.question-button:hover {
+  background-color: #cce5ff;
+}
+*/
+
+// Then in your message display component:
+{message.role === 'assistant' && (
+  <>
+    <div className="message-content">
+      <ReactMarkdown>{message.content}</ReactMarkdown>
+    </div>
+    {renderSuggestedQuestions(message.content)}
+  </>
+)}
