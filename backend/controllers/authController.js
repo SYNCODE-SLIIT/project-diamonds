@@ -2,12 +2,16 @@
 
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import User from "../models/User.js";
 
-// Generate JWT token
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+// Generate JWT access token with 1h expiry
+const generateToken = (payload) => {
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
 };
+
+// Generate a random string for refresh tokens
+const generateRefreshToken = () => crypto.randomBytes(64).toString('hex');
 
 // Register User
 export const registerUser = async (req, res) => {
@@ -32,11 +36,12 @@ export const registerUser = async (req, res) => {
       profileImageUrl,
     });
 
-    res.status(201).json({
-      id: user._id,
-      user,
-      token: generateToken(user._id),
-    });
+    // Issue tokens
+    const accessToken = generateToken({ id: user._id, role: user.role, email: user.email });
+    const refreshToken = generateRefreshToken();
+    user.refreshTokens.push(refreshToken);
+    await user.save();
+    res.status(201).json({ id: user._id, user, token: accessToken, refreshToken });
   } catch (err) {
     res.status(500).json({ message: "Error registering user", error: err.message });
   }
@@ -57,12 +62,12 @@ export const loginUser = async (req, res) => {
     if (!match) {
       return res.status(401).json({ message: "Invalid credentials." });
     }
-    const token = jwt.sign(
-      { id: user._id, role: user.role, email: user.email },
-      process.env.JWT_SECRET || "defaultsecret",
-      { expiresIn: "1d" }
-    );
-    return res.status(200).json({ token, user });
+    // Issue tokens
+    const accessToken = generateToken({ id: user._id, role: user.role, email: user.email });
+    const refreshToken = generateRefreshToken();
+    user.refreshTokens.push(refreshToken);
+    await user.save();
+    return res.status(200).json({ token: accessToken, refreshToken, user });
   } catch (error) {
     console.error("Login error:", error);
     return res.status(500).json({ message: "Server error during login." });
@@ -80,5 +85,41 @@ export const getUserInfo = async (req, res) => {
     res.status(200).json(user);
   } catch (err) {
     res.status(500).json({ message: "Error retrieving user info", error: err.message });
+  }
+};
+
+// Refresh access token
+export const refreshToken = async (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) return res.status(401).json({ message: 'Refresh token required' });
+  try {
+    const user = await User.findOne({ refreshTokens: refreshToken });
+    if (!user) return res.status(403).json({ message: 'Invalid refresh token' });
+    // Rotate tokens
+    const newAccessToken = generateToken({ id: user._id, role: user.role, email: user.email });
+    const newRefreshToken = generateRefreshToken();
+    // Replace old refresh token
+    user.refreshTokens = user.refreshTokens.filter(t => t !== refreshToken);
+    user.refreshTokens.push(newRefreshToken);
+    await user.save();
+    res.status(200).json({ token: newAccessToken, refreshToken: newRefreshToken });
+  } catch (err) {
+    res.status(500).json({ message: 'Error refreshing token', error: err.message });
+  }
+};
+
+// Logout user (invalidate one refresh token)
+export const logoutUser = async (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) return res.sendStatus(204);
+  try {
+    const user = await User.findOne({ refreshTokens: refreshToken });
+    if (user) {
+      user.refreshTokens = user.refreshTokens.filter(t => t !== refreshToken);
+      await user.save();
+    }
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(500).json({ message: 'Error logging out', error: err.message });
   }
 };

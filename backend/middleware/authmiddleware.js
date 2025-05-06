@@ -4,9 +4,9 @@ import User from "../models/User.js";
 export const protect = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
-    
-    if (!token) {
-      console.log("Authentication failed: No token provided");
+    // Treat literal 'null' or 'undefined' as missing token
+    if (!token || token === 'null' || token === 'undefined') {
+      console.log("Authentication failed: No token provided or invalid token string");
       return res.status(401).json({ message: "Not authorized, no token" });
     }
     
@@ -30,7 +30,10 @@ export const protect = async (req, res, next) => {
     req.user = user;
     next();
   } catch (err) {
-    console.error("Authentication error:", err.message);
-    res.status(401).json({ message: "Not authorized, token failed", error: err.message });
+    // Suppress logging for expected JWT errors (invalid signature, expired, etc.)
+    if (!(err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError' || err.name === 'NotBeforeError')) {
+      console.error("Authentication error:", err.message);
+    }
+    res.status(401).json({ message: "Not authorized, token failed" });
   }
 };
