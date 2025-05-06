@@ -63,6 +63,8 @@ import BudgetForm from './components/Financial/BudgetForm';
 import RefundForm from './components/Financial/RefundForm';
 import PaymentOptions from './components/Financial/PaymentOptions';
 import AnomalyDetection from './components/Financial/AnomalyDetection';
+import PaymentSuccess from './components/Financial/PaymentSuccess';
+import PaymentCancel from './components/Financial/PaymentCancel';
 // public layout and pages
 import PublicLayout from './components/layout/PublicLayout';
 import Home from './pages/home';
@@ -223,6 +225,8 @@ const App = () => {
           <Route path="/upload" element={<UploadMedia />} />
           <Route path="/Cmanager" element={<ContentMediaDashboard />} />
           <Route path="/merchandise" element={<Merchandise />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/payment-cancel" element={<PaymentCancel />} />
         </Routes>
 
         

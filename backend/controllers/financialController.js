@@ -476,9 +476,17 @@ export const updateFinancialRecord = async (req, res) => {
               : payment.paymentFor === 'package'
                 ? 'Package Payment'
                 : 'Other Payment';
+          
+          // Set specific icons based on payment type
+          const expenseIcon = payment.paymentFor === 'merchandise'
+            ? 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f6cd.png'  // Shopping bag emoji for merchandise
+            : payment.paymentFor === 'package'
+              ? 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f9f3.png'  // Package emoji for package
+              : 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4b0.png'; // Money bag emoji for other payments
+
           const expense = new Expense({
             userId: payment.user,
-            icon: payment.bankSlipFile || "default_payment_icon_url",
+            icon: expenseIcon,
             category: expenseCategory,
             amount: payment.amount,
             date: new Date(),

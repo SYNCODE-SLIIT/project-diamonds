@@ -102,77 +102,6 @@ const StripePaymentForm = ({ amount, onSuccess, onError }) => {
   );
 };
 
-const StripeCheckoutButton = ({ amount, productName, userEmail, orderId, quantity, productId, productImage, currency, onClose }) => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const handleCheckout = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const { data } = await axiosInstance.post('/api/stripe/create-checkout-session', {
-        amount: amount * 100, // cents
-        productName,
-        userEmail,
-        orderId,
-        quantity,
-        productId,
-        productImage,
-        currency,
-        successUrl: window.location.origin + '/payment-success',
-        cancelUrl: window.location.origin + '/payment-cancel',
-      });
-      window.location.href = data.url;
-    } catch (err) {
-      setError(err.response?.data?.error || err.message || 'Failed to redirect to Stripe Checkout.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="bg-white shadow-2xl rounded-2xl p-6 max-w-md mx-auto w-full">
-      <div className="flex flex-col items-center mb-6">
-        <img src="/logo192.png" alt="Brand Logo" className="w-16 h-16 mb-2" />
-        <h2 className="text-3xl font-bold text-gray-800 text-center">Stripe Payment</h2>
-        <p className="text-gray-500 text-center mt-1">Pay securely using Stripe</p>
-      </div>
-      {error && (
-        <div className="mt-4 bg-red-50 border-l-4 border-red-500 p-3 rounded flex items-center">
-          <svg className="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-          <p className="text-red-700">{error}</p>
-        </div>
-      )}
-      <button
-        onClick={handleCheckout}
-        disabled={loading}
-        className="w-full bg-gradient-to-r from-purple-600 to-indigo-700 text-white py-3 rounded-xl hover:from-purple-700 hover:to-indigo-800 transition duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-      >
-        {loading ? (
-          <>
-            <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-            </svg>
-            Redirecting...
-          </>
-        ) : (
-          `Pay with Card`
-        )}
-      </button>
-      <div className="mt-6 flex justify-center">
-        <button
-          onClick={onClose}
-          className="text-gray-500 hover:text-gray-700 underline text-sm focus:outline-none"
-          type="button"
-        >
-          Cancel / Close
-        </button>
-      </div>
-    </div>
-  );
-};
-
 const MerchandisePaymentForm = ({ product, onClose }) => {
   const userAuth = typeof useUserAuth === 'function' ? useUserAuth() : {};
   const user = userAuth?.user || null;
@@ -194,6 +123,7 @@ const MerchandisePaymentForm = ({ product, onClose }) => {
   const [referenceId, setReferenceId] = useState('');
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [statusLoading, setStatusLoading] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -337,6 +267,34 @@ const MerchandisePaymentForm = ({ product, onClose }) => {
     }
   };
 
+  useEffect(() => {
+    const redirectToStripe = async () => {
+      setRedirecting(true);
+      try {
+        const { data } = await axiosInstance.post('/api/stripe/create-checkout-session', {
+          amount: selectedPackage.price * 100, // price per item in cents
+          productName: selectedPackage.name,
+          userEmail: form.email,
+          orderId,
+          quantity,
+          productId: selectedPackage._id || selectedPackage.id,
+          productImage: selectedPackage.image || '',
+          currency: 'lkr',
+          successUrl: window.location.origin + '/payment-success',
+          cancelUrl: window.location.origin + '/payment-cancel',
+        });
+        window.location.href = data.url;
+      } catch (err) {
+        setRedirecting(false);
+        // Optionally show an error message
+      }
+    };
+    if (paymentMethod === 'stripe' && !redirecting) {
+      redirectToStripe();
+    }
+    // eslint-disable-next-line
+  }, [paymentMethod]);
+
   // Step 1: Package selection (skip if product is provided)
   if (!product && step === 1) {
     return (
@@ -378,175 +336,182 @@ const MerchandisePaymentForm = ({ product, onClose }) => {
   // Step 2: Payment details
   if (step === 2) {
     return (
-      <div className="max-w-5xl mx-auto bg-white shadow-xl rounded-2xl p-8 mt-8 mb-8">
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Left: Package Details */}
-          <div className="flex-1 flex flex-col items-center md:items-start justify-center">
-            {selectedPackage.image && (
-              <img
-                src={selectedPackage.image}
-                alt={selectedPackage.name}
-                className="w-full max-w-xs md:max-w-sm h-auto rounded-xl border mb-4 object-cover"
-                style={{ maxHeight: '340px', minHeight: '220px', background: '#f3f4f6' }}
-              />
-            )}
-            <div className="text-xs text-gray-500 mb-1">Step 2 of 2</div>
-            <h2 className="text-2xl font-bold mb-1">{selectedPackage.name}</h2>
-            <div className="text-gray-700 text-sm mb-1">{selectedPackage.description}</div>
-            <div className="text-indigo-700 font-bold">LKR {selectedPackage.price?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-            <div className="text-gray-600 flex items-center gap-2">Qty:
-              <input
-                type="number"
-                min={1}
-                value={quantity}
-                onChange={e => setQuantity(Math.max(1, Number(e.target.value)))}
-                className="w-16 border rounded px-2 py-1 ml-2 text-center"
-                style={{ width: '60px' }}
-              />
-            </div>
-            <div className="text-green-700 font-bold mt-1">Total: LKR {(totalAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-            <button
-              className="mt-6 px-6 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 font-semibold"
-              onClick={() => setStep(1)}
-              type="button"
-            >
-              ← Back
-            </button>
-          </div>
-          {/* Right: Payment Form */}
-          <div className="flex-1">
-            <div className="mb-6">
-              <label className="block font-medium mb-2">Payment Method</label>
-              <div className="flex gap-4">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    value="bankslip"
-                    checked={paymentMethod === 'bankslip'}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="mr-2"
-                  />
-                  Bank Slip
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    value="stripe"
-                    checked={paymentMethod === 'stripe'}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="mr-2"
-                  />
-                  Credit Card (Stripe)
-                </label>
+      <div className="max-w-6xl mx-auto bg-white shadow-xl rounded-2xl p-8 mt-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left side - Product Details */}
+          <div className="bg-gray-50 rounded-xl p-6">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-44 h-44 rounded-2xl bg-white shadow-md flex items-center justify-center">
+                <img src={selectedPackage.image} alt={selectedPackage.name} className="w-40 h-40 object-contain" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">{selectedPackage.name}</h3>
+                <p className="text-gray-600 mt-2">{selectedPackage.description}</p>
               </div>
             </div>
-            {paymentMethod === 'bankslip' ? (
-              <form onSubmit={handleSubmit}>
-                <div className="mb-4">
-                  <label className="block font-medium mb-1">Order ID</label>
-                  <input className="w-full border rounded px-3 py-2 bg-gray-100" value={orderId} readOnly />
-                </div>
-                <div className="mb-4">
-                  <label className="block font-medium mb-1">Full Name <span className="text-red-500">*</span></label>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                <span className="text-gray-600">Price</span>
+                <span className="text-lg font-semibold text-gray-900">LKR {selectedPackage.price?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                <span className="text-gray-600">Quantity</span>
+                <div className="flex items-center gap-2">
                   <input
-                    className={`w-full border rounded px-3 py-2 ${errors.fullName ? 'border-red-400' : ''}`}
-                    name="fullName"
-                    placeholder="Enter your full name"
-                    value={form.fullName}
-                    onChange={handleInputChange}
-                    readOnly={!!user}
+                    type="number"
+                    min={1}
+                    value={quantity}
+                    onChange={e => setQuantity(Math.max(1, Number(e.target.value)))}
+                    className="w-20 border rounded px-3 py-2 text-center text-lg font-semibold"
                   />
-                  {errors.fullName && <div className="text-red-500 text-sm mt-1">{errors.fullName}</div>}
                 </div>
-                <div className="mb-4">
-                  <label className="block font-medium mb-1">Contact Number <span className="text-red-500">*</span></label>
-                  <input
-                    className={`w-full border rounded px-3 py-2 ${errors.contact ? 'border-red-400' : ''}`}
-                    name="contact"
-                    placeholder="Enter your contact number here"
-                    value={form.contact}
-                    onChange={handleInputChange}
-                  />
-                  {errors.contact && <div className="text-red-500 text-sm mt-1">{errors.contact}</div>}
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                <span className="text-gray-600">Total</span>
+                <span className="text-xl font-bold text-green-600">LKR {(totalAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right side - Payment Form */}
+          <div className="relative">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label className="block font-bold text-lg mb-3">Payment Method</label>
+                <div className="flex gap-6">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      value="bankslip"
+                      checked={paymentMethod === 'bankslip'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="mr-2 accent-green-600"
+                    />
+                    <span className="text-base">Bank Slip</span>
+                  </label>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      value="stripe"
+                      checked={paymentMethod === 'stripe'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="mr-2 accent-blue-600"
+                    />
+                    <span className="text-base">Card / Online Payment</span>
+                  </label>
                 </div>
-                <div className="mb-4">
-                  <label className="block font-medium mb-1">Email <span className="text-red-500">*</span></label>
-                  <input
-                    className={`w-full border rounded px-3 py-2 ${errors.email ? 'border-red-400' : ''}`}
-                    name="email"
-                    placeholder="Enter your email address"
-                    value={form.email}
-                    onChange={handleInputChange}
-                    readOnly={!!user}
-                  />
-                  {errors.email && <div className="text-red-500 text-sm mt-1">{errors.email}</div>}
-                </div>
-                <div className="mb-4">
-                  <label className="block font-medium mb-1">Upload Bank Slip <span className="text-red-500">*</span></label>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,application/pdf"
-                    onChange={handleSlipChange}
-                    className={`w-full border rounded px-3 py-2 ${errors.slip ? 'border-red-400' : ''}`}
-                  />
-                  <div className="text-xs text-gray-500 mt-1">Max size: 5MB. JPEG, PNG, or PDF only.</div>
-                  {errors.slip && <div className="text-red-500 text-sm mt-1">{errors.slip}</div>}
-                  {form.slipPreview && (
-                    <div className="mt-2">
-                      <div className="text-xs text-gray-600 mb-1">Slip Preview:</div>
-                      <img src={form.slipPreview} alt="Slip Preview" className="h-24 rounded border" />
+              </div>
+
+              <div className="relative min-h-[350px]">
+                <div className={`transition-all duration-500 ${paymentMethod === 'bankslip' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10 absolute pointer-events-none'}`}>
+                  <div className="grid grid-cols-2 gap-x-8 gap-y-5">
+                    <div className="col-span-2">
+                      <label className="block font-medium mb-1">Order ID</label>
+                      <input className="w-full border rounded px-3 py-2 bg-gray-100" value={orderId} readOnly />
                     </div>
-                  )}
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm text-gray-700 mb-1">Note:</label>
-                  <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
-                    Upload a copy of your bank slip showing the transaction for <span className="font-semibold">{selectedPackage.name}</span>. Ensure the beneficiary name matches your order details.
+                    <div>
+                      <label className="block font-medium mb-1">Full Name <span className="text-red-500">*</span></label>
+                      <input
+                        className={`w-full border rounded px-3 py-2 ${errors.fullName ? 'border-red-400' : ''}`}
+                        name="fullName"
+                        placeholder="Enter your full name"
+                        value={form.fullName}
+                        onChange={handleInputChange}
+                        readOnly={!!user}
+                      />
+                      {errors.fullName && <div className="text-red-500 text-sm mt-1">{errors.fullName}</div>}
+                    </div>
+                    <div>
+                      <label className="block font-medium mb-1">Contact Number <span className="text-red-500">*</span></label>
+                      <input
+                        className={`w-full border rounded px-3 py-2 ${errors.contact ? 'border-red-400' : ''}`}
+                        name="contact"
+                        placeholder="Enter your contact number here"
+                        value={form.contact}
+                        onChange={handleInputChange}
+                      />
+                      {errors.contact && <div className="text-red-500 text-sm mt-1">{errors.contact}</div>}
+                    </div>
+                    <div>
+                      <label className="block font-medium mb-1">Email <span className="text-red-500">*</span></label>
+                      <input
+                        className={`w-full border rounded px-3 py-2 ${errors.email ? 'border-red-400' : ''}`}
+                        name="email"
+                        placeholder="Enter your email address"
+                        value={form.email}
+                        onChange={handleInputChange}
+                        readOnly={!!user}
+                      />
+                      {errors.email && <div className="text-red-500 text-sm mt-1">{errors.email}</div>}
+                    </div>
+                    <div>
+                      <label className="block font-medium mb-1">Upload Bank Slip <span className="text-red-500">*</span></label>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,application/pdf"
+                        onChange={handleSlipChange}
+                        className={`w-full border rounded px-3 py-2 ${errors.slip ? 'border-red-400' : ''}`}
+                      />
+                      <div className="text-xs text-gray-500 mt-1">Max size: 5MB. JPEG, PNG, or PDF only.</div>
+                      {errors.slip && <div className="text-red-500 text-sm mt-1">{errors.slip}</div>}
+                      {form.slipPreview && (
+                        <div className="mt-2">
+                          <div className="text-xs text-gray-600 mb-1">Slip Preview:</div>
+                          <img src={form.slipPreview} alt="Slip Preview" className="h-24 rounded border" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-sm text-gray-700 mb-1">Note:</label>
+                      <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                        Upload a copy of your bank slip showing the transaction for <span className="font-semibold">{selectedPackage.name}</span>. Ensure the beneficiary name matches your order details.
+                      </div>
+                    </div>
+                    <div className="col-span-2 flex items-center">
+                      <input
+                        type="checkbox"
+                        name="confirm"
+                        checked={form.confirm}
+                        onChange={handleInputChange}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">I confirm the uploaded slip is valid and matches my payment.</span>
+                    </div>
+                    {errors.confirm && <div className="col-span-2 text-red-500 text-sm mb-2">{errors.confirm}</div>}
+                    <div className="col-span-2">
+                      <button
+                        type="submit"
+                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg mt-2 transition flex items-center justify-center text-lg shadow"
+                        disabled={submitting}
+                      >
+                        {submitting ? (
+                          <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                          </svg>
+                        ) : null}
+                        {submitting ? 'Processing...' : 'Submit Payment'}
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <div className="mb-4 flex items-center">
-                  <input
-                    type="checkbox"
-                    name="confirm"
-                    checked={form.confirm}
-                    onChange={handleInputChange}
-                    className="mr-2"
-                  />
-                  <span className="text-sm">I confirm the uploaded slip is valid and matches my payment.</span>
+              </div>
+            </form>
+
+            {paymentMethod === 'stripe' && (
+              <div className="flex items-center justify-center h-full w-full absolute top-0 left-0 bg-white bg-opacity-80 z-10">
+                <div className="text-lg text-gray-700 font-semibold flex items-center gap-2">
+                  <svg className="animate-spin h-6 w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                  </svg>
+                  Redirecting to secure Stripe payment...
                 </div>
-                {errors.confirm && <div className="text-red-500 text-sm mb-2">{errors.confirm}</div>}
-                <button
-                  type="submit"
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg mt-2 transition flex items-center justify-center"
-                  disabled={submitting}
-                >
-                  {submitting ? (
-                    <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
-                  ) : null}
-                  {submitting ? 'Processing...' : 'Submit Payment'}
-                </button>
-              </form>
-            ) : (
-              <StripeCheckoutButton
-                amount={totalAmount}
-                productName={selectedPackage.name}
-                userEmail={form.email}
-                orderId={orderId}
-                quantity={quantity}
-                productId={selectedPackage._id || selectedPackage.id}
-                productImage={selectedPackage.image || ''}
-                currency={'lkr'}
-                onClose={onClose}
-              />
+              </div>
             )}
           </div>
         </div>
-        <div className="mt-6 flex justify-between text-xs text-gray-500">
-          <span>Step 1: Select Package</span>
-          <span>→</span>
-          <span className="font-semibold text-green-700">Step 2: Payment</span>
-        </div>
-        <div className="mt-4 text-xs text-gray-400">Uploaded slips are only used for payment verification and deleted after 30 days.</div>
+        <div className="mt-4 text-xs text-gray-400 text-center">Uploaded slips are only used for payment verification and deleted after 30 days.</div>
       </div>
     );
   }

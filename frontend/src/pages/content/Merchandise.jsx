@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Modal from '../../components/Modal';
+import MerchandiseModal from './MerchandiseModal';
 import MerchandisePaymentForm from '../../components/Merchandise/MerchandisePaymentForm';
 
 const MerchandiseStore = () => {
@@ -128,11 +128,11 @@ const MerchandiseStore = () => {
         )}
       </div>
       {/* Payment Modal */}
-      <Modal isOpen={buyModalOpen} onClose={() => setBuyModalOpen(false)} title="Buy Merchandise">
+      <MerchandiseModal isOpen={buyModalOpen} onClose={() => setBuyModalOpen(false)} title="Buy Merchandise">
         {selectedProduct && (
           <MerchandisePaymentForm product={selectedProduct} onClose={() => setBuyModalOpen(false)} />
         )}
-      </Modal>
+      </MerchandiseModal>
     </div>
   );
 };

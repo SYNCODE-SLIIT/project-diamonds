@@ -208,7 +208,8 @@ const BankSlipPaymentForm = ({ onClose, userData }) => {
           <img
             src={previewUrl}
             alt="Preview"
-            className="max-h-64 mx-auto rounded shadow"
+            className="max-h-96 max-w-full mx-auto rounded shadow border"
+            style={{ display: 'block', height: 'auto', width: 'auto', maxHeight: '350px', maxWidth: '100%' }}
           />
         )}
       </div>
