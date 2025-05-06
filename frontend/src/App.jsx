@@ -13,7 +13,7 @@ import EditBlogPost from './pages/content/EditBlogPost';
 import Events from './pages/content/Events';
 import UploadMedia from './pages/content/UploadMedia';
 import Merchandise from './pages/content/Merchandise';
-
+import OurFounderPage from './pages/OurFounderPage';
 
 // User Management Imports
 import MemberApplication from './pages/authentication/MemberApplication';
@@ -143,6 +143,7 @@ const App = () => {
               <Route path='/contactUs' element={<Contactus />} />
               <Route path='/organizer-profile' element={<OrganizerProfile />} />
               <Route path='/login' element={<Login />} />
+              <Route path='/our-founder' element={<OurFounderPage />} />
 
               {/* <Route path='/event-request' element={<EventRequestForm />} /> */}
               <Route path='/register/member/application' element={<MemberApplication />} />
