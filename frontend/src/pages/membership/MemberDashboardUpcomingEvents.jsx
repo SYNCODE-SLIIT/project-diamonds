@@ -1,11 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import { UserContext } from '../../context/userContext';
 
-// TODO: Replace this with actual logic to get the logged-in member's ID
+// Get current logged-in member ID from UserContext/localStorage
 const getCurrentMemberId = () => {
-  // Example: return from localStorage, context, or auth
-  return localStorage.getItem('memberId') || 'MEMBER_ID_PLACEHOLDER';
+  try {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      return user.profileId || '';
+    }
+  } catch {}
+  return '';
 };
 
 const MemberDashboardUpcomingEvents = () => {
@@ -21,10 +28,8 @@ const MemberDashboardUpcomingEvents = () => {
     try {
       // Fetch all assignment requests from the team endpoint
       const response = await axios.get('http://localhost:4000/api/assignments/requests');
-      // Filter for the current member
-      const filtered = response.data.filter(
-        req => req.assignedMember === memberId || req.memberId === memberId || (req.member && req.member._id === memberId)
-      );
+      // Filter for the current logged-in member using member._id
+      const filtered = response.data.filter(req => req.member && req.member._id === memberId);
       setAssignmentRequests(filtered);
       setLoading(false);
     } catch (error) {
