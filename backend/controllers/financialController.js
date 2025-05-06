@@ -616,9 +616,24 @@ export const paySalary = async (req, res) => {
     });
     
     // Create an Income record with the specified icon, source, and note/description
+    const getIncomeIcon = (type) => {
+      switch (type?.toLowerCase()) {
+        case 'salary':
+          return 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4b0.png'; // Money bag emoji for salary
+        case 'bonus':
+          return 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f381.png'; // Gift emoji for bonus
+        case 'workshop':
+          return 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f393.png'; // Graduation cap emoji for workshop
+        case 'event payment':
+          return 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f3aa.png'; // Circus tent emoji for event payment
+        default:
+          return 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4b5.png'; // Money emoji for other types
+      }
+    };
+
     const incomeRecord = await Income.create({
       userId: member._id,
-      icon: "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f483.png",
+      icon: getIncomeIcon(incomeType),
       source: incomeType || "Team Diamond Salary",
       amount: salaryAmount,
       description: note || undefined,
