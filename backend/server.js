@@ -3,6 +3,9 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/mongodb.js';
 
+import crypto from 'crypto';
+
+
 import authRoutes from "./routes/authRoutes.js";
 import incomeRoutes from "./routes/incomeRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
@@ -18,14 +21,13 @@ import calendarRoutes from './routes/calendarRoutes.js';
 import additionalServiceRoutes from './routes/additionalServiceRoutes.js';
 import eventRequestRoutes from './routes/eventRequestRoutes.js';
 
-
-import organizerRoutes from './routes/organizerRoutes.js'
+import organizerRoutes from './routes/organizerRoutes.js';
 
 import memberApplicationRoutes from './routes/memberApplicationRoutes.js';
 import adminApplicationRoutes from './routes/adminApplicationRoutes.js';
 import chatGroupRoutes from './routes/chatGroupRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
-
+import directChatRoutes from './routes/directChatRoutes.js';
 
 import adminRoutes from './routes/adminRoutes.js';
 
@@ -38,12 +40,27 @@ import eventRoutes from './routes/eventRoutes.js';
 
 import path from "path";
 import { fileURLToPath } from "url";
+import mongoose from 'mongoose';
+import DirectChat from './models/DirectChat.js';
 
 import practiceRoutes from './routes/practiceRoutes.js';
 import practiceRequestRoutes from './routes/practiceRequestRoutes.js';
 
+import certificateRoutes from './routes/certificateRoutes.js';
+import sponsorshipRoutes from './routes/sponsorshipRoutes.js';
+
+
+
+import merchandiseRoutes from './routes/merchandiseRoutes.js';
+
+import collaborationRoutes from './routes/collaborationRoutes.js'
+
 // Load environment variables
 dotenv.config();
+
+// Generate a new JWT secret on each server start to invalidate existing tokens on restart
+const dynamicSecret = crypto.randomBytes(64).toString('hex');
+process.env.JWT_SECRET = dynamicSecret;
 
 // Resolve __dirname for ES module compatibility
 const __filename = fileURLToPath(import.meta.url);
@@ -57,6 +74,9 @@ const port = process.env.PORT || 4000;
 app.use(express.json());
 app.use(cors());
 app.use('/uploads', express.static('uploads'));
+
+// Add multer error handling middleware
+app.use(handleMulterError);
 
 // Connect to MongoDB
 connectDB();
@@ -74,10 +94,8 @@ app.use('/api/users', userRoutes);
 // chatGroupRoutes
 app.use('/api/chat-groups', chatGroupRoutes);
 app.use('/api/messages', messageRoutes);
-
+app.use('/api/direct-chats', directChatRoutes);
 app.use('/api/admin', adminRoutes);
-
-
 
 app.use('/api/organizers', organizerRoutes);
 
@@ -85,6 +103,8 @@ app.use('/api/organizers', organizerRoutes);
 
 // Financial Management Routes
 app.use('/api/finance', financialRoutes);
+app.use('/api/finance/notifications', financeNotificationRoutes);
+
 
 app.use('/api/assignments', assignmentRoutes);
 
@@ -111,8 +131,13 @@ app.use("/api/organizers", organizerRoutes);
 app.use("/api/blogposts", blogPostRoutes);
 app.use("/api/media", managePostRoutes);
 app.use("/api/content-creators", ContentcreatorRoutes);
+
 app.use('/api/practices', practiceRoutes);
 app.use('/api/practice-requests', practiceRequestRoutes);
+
+
+app.use('/api/merchandise', merchandiseRoutes);
+
 
 // API Endpoints
 app.get('/register/member/application', (req, res) => {
@@ -131,6 +156,15 @@ app.use('/api/assignments', assignmentRoutes);
 app.get("/", (req, res) => {
     res.send("API is running...");
 });
+
+app.use('/api', collaborationRoutes);
+
+app.use('/api', certificateRoutes);
+
+app.use('/api', sponsorshipRoutes);
+
+
+
 
 // Start Server
 app.listen(port, () => console.log(`Server running on port ${port}`));

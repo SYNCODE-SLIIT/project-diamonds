@@ -4,7 +4,6 @@ const router = express.Router();
 import { 
     getApplicationDetailsForAccountCreation, 
     createUserFromApplication, 
-    loginUser,
     getUserProfile,
     updateUserProfile,
     deleteUser,
@@ -16,6 +15,8 @@ import {
     getAllOrganizers,
     deleteOrganizer
   } from '../controllers/userController.js';
+import { loginUser } from '../controllers/authController.js';
+
 // GET /api/users/create?applicationId=xxx -> Returns fullName and email from the MemberApplication
 router.get('/create', getApplicationDetailsForAccountCreation);
 

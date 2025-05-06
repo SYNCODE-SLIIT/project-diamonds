@@ -13,7 +13,7 @@ import EditBlogPost from './pages/content/EditBlogPost';
 import Events from './pages/content/Events';
 import UploadMedia from './pages/content/UploadMedia';
 import Merchandise from './pages/content/Merchandise';
-
+import OurFounderPage from './pages/OurFounderPage';
 
 // User Management Imports
 import MemberApplication from './pages/authentication/MemberApplication';
@@ -57,6 +57,7 @@ import Income from './pages/Dashboard/Income';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Expense from './pages/Dashboard/Expense';
 import RecentTransactionPage from './pages/Dashboard/RecentTransaction';
+import RefundHistory from './pages/Dashboard/RefundHistory';
 
 import FinancialReport from './components/Financial/FinancialReport';
 import BudgetForm from './components/Financial/BudgetForm';
@@ -101,6 +102,7 @@ import CalendarEvents from './pages/CalendarEvents';
 
 import AdminDashboard from './components/team/AdminDashboard';
 import MyEvents  from './components/event/MyEvents';
+
 import EventAssign from './components/team/EventAssign';
 import EventAssignmentRequests from './components/team/EventAssignmentRequests';
 import PracticeAssign from './components/team/PracticeAssign';
@@ -108,6 +110,13 @@ import PracticeAssignments from './components/team/PracticeAssignments';
 
 
 
+
+import DirectChatRoom from './pages/shared/DirectChatRoom';
+
+
+
+import MerchandiseAdmin from './pages/admin/MerchandiseAdmin';
+import Collabaration from './pages/content/Collaboration';
 
 const App = () => {
   return (
@@ -141,6 +150,7 @@ const App = () => {
               <Route path='/contactUs' element={<Contactus />} />
               <Route path='/organizer-profile' element={<OrganizerProfile />} />
               <Route path='/login' element={<Login />} />
+              <Route path='/our-founder' element={<OurFounderPage />} />
 
               {/* <Route path='/event-request' element={<EventRequestForm />} /> */}
               <Route path='/register/member/application' element={<MemberApplication />} />
@@ -170,13 +180,16 @@ const App = () => {
               <Route path="calender" element={<MemberDashboardCalender />} />
               <Route path="inbox" element={<MemberDashboardInbox />} />
               <Route path="messaging/chat/:groupId" element={<ChatRoom />} />
+              <Route path="direct-chat/:threadId" element={<DirectChatRoom />} />
               <Route path="new-request" element={<MemberDashboardNewRequest />} />
               <Route path="upcoming-events" element={<MemberDashboardUpcomingEvents />} />
               <Route path="calendar-events" element={<CalendarEvents />} />
+              <Route path="refund-history" element={<RefundHistory />} />
           </Route>
 
 
           <Route path="/admin" element={<AdminLayout />}>
+            <Route path="collaboration" element={<Collabaration />} />
             <Route path="blog" element={<BlogPosts />} />
             <Route path="content-creators" element={<ContentCreatorList />} />
             <Route path="create-blog-post" element={<CreateBlogPost />} />
@@ -188,6 +201,7 @@ const App = () => {
             <Route path="inbox" element={<AdminInbox />} />
             <Route path="profile" element={<AdminProfile />} />
             <Route path="chat/:groupId" element={<HeadmanChatRoom />} />
+            <Route path="direct-chat/:threadId" element={<DirectChatRoom />} />
             <Route path="groups/:groupId/members" element={<GroupMembers />} />
             <Route path="organizers" element={<AdminOrganizersList />} />
             <Route path="services" element={<ServicesList />} />
@@ -201,6 +215,8 @@ const App = () => {
             <Route path="financial" element={<FinancialDashboard />} />
             <Route path="applications/combined" element={<AdminApplicationsCombinedList />} />
             <Route path="finalized/:id" element={<FinalizedDetails />} />
+            <Route path="budget-requests" element={<AdminBudgetRequests />} />
+            <Route path="merchandise" element={<MerchandiseAdmin />} />
           </Route>
        
 

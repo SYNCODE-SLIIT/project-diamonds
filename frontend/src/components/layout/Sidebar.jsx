@@ -1,29 +1,67 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import 'boxicons';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/userContext';
+import { API_PATHS } from '../../utils/apiPaths';
+import axiosInstance from '../../utils/axiosInstance';
 
 const Sidebar = () => {
   const [expenseToggle, setExpenseToggle] = useState(false);
   const [eventsToggle, setEventsToggle] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [totalUnread, setTotalUnread] = useState(0);
+  const [hasRefunds, setHasRefunds] = useState(false);
   const { user, clearUser } = useContext(UserContext);
   const navigate = useNavigate();
+  const lastTotalRef = useRef(0);
 
-  // Fetch chat groups for the logged-in user to calculate total unread messages
+  // Fetch unread count initial and then poll
   useEffect(() => {
+    let interval;
+    const fetchTotal = async () => {
+      try {
+        // Fetch group chat unread counts
+        const groupRes = await fetch(`http://localhost:4000/api/chat-groups/user/${user._id}`);
+        const groupData = await groupRes.json();
+        const unreadGroups = (groupData.groups || []).reduce((sum, g) => sum + (g.unreadCount || 0), 0);
+        // Fetch direct chat unread counts
+        const token = localStorage.getItem('token');
+        const directRes = await fetch(`http://localhost:4000/api/direct-chats/user/${user._id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const directData = await directRes.json();
+        const unreadDirect = (directData.threads || []).reduce((sum, t) => sum + (t.unreadCount || 0), 0);
+        const total = unreadGroups + unreadDirect;
+        if (total !== lastTotalRef.current) {
+          setTotalUnread(total);
+          lastTotalRef.current = total;
+        }
+      } catch (err) {
+        console.error('Error fetching total unread:', err);
+      }
+    };
     if (user && user._id) {
-      fetch(`http://localhost:4000/api/chat-groups/user/${user._id}`)
-        .then((res) => res.json())
-        .then((data) => {
-          const groups = data.groups || [];
-          const unread = groups.reduce((sum, group) => sum + (group.unreadCount || 0), 0);
-          setTotalUnread(unread);
-        })
-        .catch((err) => console.error("Error fetching chat groups for unread count:", err));
+      fetchTotal();
+      interval = setInterval(fetchTotal, 3000);
     }
+    return () => clearInterval(interval);
   }, [user]);
+
+  // Fetch refund data to check if user has any refund requests
+  useEffect(() => {
+    const fetchRefunds = async () => {
+      try {
+        const response = await axiosInstance.get(API_PATHS.REFUND.GET_ALL_REFUNDS);
+        if (response.data && response.data.success) {
+          setHasRefunds(response.data.data.length > 0);
+        }
+      } catch (error) {
+        console.error("Error fetching refunds:", error);
+      }
+    };
+
+    fetchRefunds();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -139,6 +177,20 @@ const Sidebar = () => {
                   Expense
                 </NavLink>
               </li>
+              {hasRefunds && (
+                <li className="mb-[15px]">
+                  <NavLink
+                    to="/member-dashboard/refund-history"
+                    className={({ isActive }) =>
+                      `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                      flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px] 
+                      transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                    }
+                  >
+                    Refund History
+                  </NavLink>
+                </li>
+              )}
             </ul>
           )}
         </li>
