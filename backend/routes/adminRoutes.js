@@ -2,6 +2,7 @@
 import express from 'express';
 import { assignMemberToEvent } from '../controllers/eventController.js';
 import { createPracticeSession, assignMemberToPracticeSession } from '../controllers/practiceSessionController.js';
+import Member from '../models/MemberApplication.js'; // Update with correct path/model name
 
 const router = express.Router();
 
@@ -38,6 +39,7 @@ router.get('/practice-sessions', async (req, res) => {
   }
 });
 
+
 router.get('/events/organizer/:id', async (req, res) => {
   try {
     const Event = (await import('../models/Event.js')).default;
@@ -49,4 +51,5 @@ router.get('/events/organizer/:id', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch organizer events', error });
   }
 });
+
 export default router;

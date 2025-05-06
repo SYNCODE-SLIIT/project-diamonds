@@ -1,7 +1,7 @@
 // File: /backend/routes/chatGroupRoutes.js
 import express from 'express';
 const router = express.Router();
-import { createChatGroup, updateChatGroupMembers, deleteChatGroup, getChatGroupsForUser, getAllChatGroups, getGroupMembers, addMembersToGroup, removeMemberFromGroup } from '../controllers/chatGroupController.js';
+import { createChatGroup, updateChatGroupMembers, deleteChatGroup, getChatGroupsForUser, getAllChatGroups, getGroupMembers, addMembersToGroup, removeMemberFromGroup, getChatGroupById } from '../controllers/chatGroupController.js';
 
 // Create a new chat group (manager only)
 router.post('/', createChatGroup);
@@ -15,8 +15,10 @@ router.delete('/:groupId', deleteChatGroup);
 // Get all groups for a user
 router.get('/user/:userId', getChatGroupsForUser);
 
-
 router.get('/all', getAllChatGroups);
+
+// Get details of a single chat group
+router.get('/:groupId', getChatGroupById);
 
 router.get('/:groupId/members', getGroupMembers);
 

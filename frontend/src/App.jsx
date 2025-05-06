@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import { Toaster } from 'react-hot-toast';
 import AdminApplicationsCombinedList from './pages/authentication/AdminApplicationsCombinedList';
+import Calendar from './components/Calendar';
 // Content Management Imports
 import AboutUs from './pages/aboutUs';
 import ContentMediaDashboard from "./pages/ContentMediaDashboard";
@@ -95,10 +96,20 @@ import ContentCreatorView from './pages/content/ContentCreatorView';
 import EditContentCreator from './pages/content/EditContentCreator';
 
 
+
 import CalendarEvents from './pages/CalendarEvents';
 
 import AdminDashboard from './components/team/AdminDashboard';
 import MyEvents  from './components/event/MyEvents';
+import EventAssign from './components/team/EventAssign';
+import EventAssignmentRequests from './components/team/EventAssignmentRequests';
+import PracticeAssign from './components/team/PracticeAssign';
+import PracticeAssignments from './components/team/PracticeAssignments';
+
+
+
+
+import DirectChatRoom from './pages/shared/DirectChatRoom';
 
 const App = () => {
   return (
@@ -162,6 +173,7 @@ const App = () => {
               <Route path="calender" element={<MemberDashboardCalender />} />
               <Route path="inbox" element={<MemberDashboardInbox />} />
               <Route path="messaging/chat/:groupId" element={<ChatRoom />} />
+              <Route path="direct-chat/:threadId" element={<DirectChatRoom />} />
               <Route path="new-request" element={<MemberDashboardNewRequest />} />
               <Route path="upcoming-events" element={<MemberDashboardUpcomingEvents />} />
               <Route path="calendar-events" element={<CalendarEvents />} />
@@ -180,6 +192,7 @@ const App = () => {
             <Route path="inbox" element={<AdminInbox />} />
             <Route path="profile" element={<AdminProfile />} />
             <Route path="chat/:groupId" element={<HeadmanChatRoom />} />
+            <Route path="direct-chat/:threadId" element={<DirectChatRoom />} />
             <Route path="groups/:groupId/members" element={<GroupMembers />} />
             <Route path="organizers" element={<AdminOrganizersList />} />
             <Route path="services" element={<ServicesList />} />
@@ -196,7 +209,16 @@ const App = () => {
           </Route>
        
 
-          {/* <Route path="/admin/dashboard" element={<AdminDashboard />} /> */}
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/event/assign" element={<EventAssign />} />
+          <Route path="/team/assignment-requests" element={<EventAssignmentRequests />} />
+          <Route path="/team/practice" element={<PracticeAssign />} />
+          <Route path="/team/practice-assignments" element={<PracticeAssignments />} />
+          
+          
+        
+       
+  
           {/* Financial Routes */}
 
 
@@ -215,7 +237,10 @@ const App = () => {
 
           <Route path="/upload" element={<UploadMedia />} />
           <Route path="/Cmanager" element={<ContentMediaDashboard />} />
+
           <Route path="/merchandise" element={<Merchandise />} />
+
+
         </Routes>
 
         
