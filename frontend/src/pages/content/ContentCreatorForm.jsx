@@ -79,7 +79,7 @@ const ContentCreatorForm = () => {
         await axiosInstance.post('/api/content-creators', formData);
         alert('Content creator created successfully');
       }
-      navigate('/content-creators');
+      navigate('/admin/content-creators');
     } catch (err) {
       alert('Failed to save content creator');
     }
@@ -231,7 +231,7 @@ const ContentCreatorForm = () => {
           </button>
           <button
             type="button"
-            onClick={() => navigate('/content-creators')}
+            onClick={() => navigate('/admin/content-creators')}
             className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
           >
             Cancel

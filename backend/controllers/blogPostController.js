@@ -1,9 +1,19 @@
 import BlogPost from "../models/BlogPost.js";
+import cloudinary from '../config/cloudinary.js';
 import User from "../models/User.js";
 
 // Create a new blog post
 export const createBlogPost = async (req, res) => {
-  const { title, content, category, featuredImage, publishDate, status, metaDescription } = req.body;
+  const { title, content, category, publishDate, status, metaDescription } = req.body;
+  // Handle uploaded image file
+  let featuredImage = null;
+  if (req.file) {
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'blog_images',
+      resource_type: 'image'
+    });
+    featuredImage = result.secure_url;
+  }
   const userId = req.user.id;
 
   try {
@@ -55,7 +65,7 @@ export const getBlogPostById = async (req, res) => {
 
 // Update a blog post
 export const updateBlogPost = async (req, res) => {
-  const { title, content, category, featuredImage, publishDate, status, metaDescription } = req.body;
+  const { title, content, category, publishDate, status, metaDescription } = req.body;
 
   try {
     const blogPost = await BlogPost.findById(req.params.id);
@@ -63,16 +73,18 @@ export const updateBlogPost = async (req, res) => {
       return res.status(404).json({ message: "Blog post not found" });
     }
 
-    // Ensure the author is updating their own post
-    if (blogPost.author.toString() !== req.user.id) {
-      return res.status(403).json({ message: "You are not authorized to edit this blog post" });
-    }
-
     // Update fields only if new values are provided
     blogPost.title = title ?? blogPost.title;
     blogPost.content = content ?? blogPost.content;
     blogPost.category = category ?? blogPost.category;
-    blogPost.featuredImage = featuredImage ?? blogPost.featuredImage;
+    // If a new image file was uploaded, upload to Cloudinary
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'blog_images',
+        resource_type: 'image'
+      });
+      blogPost.featuredImage = result.secure_url;
+    }
     blogPost.publishDate = publishDate ? new Date(publishDate) : blogPost.publishDate;
     blogPost.status = status ?? blogPost.status;
     blogPost.metaDescription = metaDescription ?? blogPost.metaDescription;

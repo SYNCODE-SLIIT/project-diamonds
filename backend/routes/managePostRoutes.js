@@ -16,12 +16,13 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
 });
 
-// File filter to allow only image files (e.g., png, jpeg)
+// File filter to allow only image or video files
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("image/")) {
+  // Allow images and videos
+  if (file.mimetype.startsWith("image/") || file.mimetype.startsWith("video/")) {
     cb(null, true);
   } else {
-    cb(new Error("Only image files are allowed!"), false);
+    cb(new Error("Invalid file type. Only images and videos are allowed."), false);
   }
 };
 
