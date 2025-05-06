@@ -10,6 +10,8 @@ import toast from 'react-hot-toast';
 import Modal from '../../components/Modal';
 import DeleteAlert from '../../components/DeleteAlert';
 import { LuDownload } from 'react-icons/lu';
+import IncomeDetails from '../../components/Income/IncomeDetails';
+import PaymentDetails from '../../components/Expense/PaymentDetails';
 
 const RecentTransactionPage = () => {
   // Ensure the user is authenticated
@@ -25,6 +27,9 @@ const RecentTransactionPage = () => {
     data: null,
     type: null, // "income" or "expense"
   });
+
+  const [selectedIncome, setSelectedIncome] = useState(null);
+  const [selectedExpense, setSelectedExpense] = useState(null);
 
   // Fetch income and expense data concurrently
   const fetchTransactions = async () => {
@@ -146,65 +151,83 @@ const RecentTransactionPage = () => {
   };
 
   return (
-
-      <div className="my-5 mx-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-semibold">All Transactions</h2>
-          {/* Combined Download Button */}
-          <button className="card-btn" onClick={handleDownloadAllTransactions}>
-            <LuDownload className="text-base" />  Download All Transactions
-          </button>
-                      
-        </div>
-        {loading ? (
-          <p>Loading transactions...</p>
-        ) : (
-          <div className="grid grid-cols-1 gap-6">
-            {/* Income Transactions */}
-            <div className="border border-gray-200 rounded-lg p-4">
-              <h3 className="text-xl font-semibold mb-2">Income Transactions</h3>
-              <IncomeList
-                transactions={incomeData}
-                onDelete={handleIncomeDelete}
-                onDownload={handleDownloadIncomeDetails}
-              />
-            </div>
-            {/* Expense Transactions */}
-            <div className="border border-gray-200 rounded-lg p-4 mt-6">
-              <h3 className="text-xl font-semibold mb-2">Expense Transactions</h3>
-              <ExpenseList
-                transactions={expenseData}
-                onDelete={handleExpenseDelete}
-                onDownload={handleDownloadExpenseDetails}
-              />
-            </div>
+    <div className="my-5 mx-auto">
+      {selectedIncome ? (
+        <IncomeDetails income={selectedIncome} onBack={() => setSelectedIncome(null)} />
+      ) : selectedExpense ? (
+        <PaymentDetails payment={selectedExpense} onBack={() => setSelectedExpense(null)} />
+      ) : (
+        <>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-semibold">All Transactions</h2>
+            {/* Combined Download Button */}
+            <button className="card-btn" onClick={handleDownloadAllTransactions}>
+              <LuDownload className="text-base" />  Download All Transactions
+            </button>
           </div>
-        )}
+          {loading ? (
+            <p>Loading transactions...</p>
+          ) : (
+            <div className="grid grid-cols-1 gap-6">
+              {/* Income Transactions */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <h3 className="text-xl font-semibold mb-2">Income Transactions</h3>
+                <IncomeList
+                  transactions={incomeData}
+                  onDelete={handleIncomeDelete}
+                  onDownload={handleDownloadIncomeDetails}
+                  onViewDetails={(id) => {
+                    const found = incomeData.find((item) => item._id === id);
+                    setSelectedIncome(found || null);
+                  }}
+                />
+              </div>
+              {/* Expense Transactions */}
+              <div className="border border-gray-200 rounded-lg p-4 mt-6">
+                <h3 className="text-xl font-semibold mb-2">Expense Transactions</h3>
+                <ExpenseList
+                  transactions={expenseData}
+                  onDelete={handleExpenseDelete}
+                  onDownload={handleDownloadExpenseDetails}
+                  onViewDetails={(paymentId) => {
+                    const found = expenseData.find((item) => item.paymentId === paymentId);
+                    if (found && found.paymentId) {
+                      // Fetch full payment details for expense
+                      axiosInstance.get(`${API_PATHS.FINANCE.GET_PAYMENT_BY_ID(paymentId)}`)
+                        .then(res => setSelectedExpense(res.data))
+                        .catch(() => toast.error('Failed to fetch payment details'));
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
-        {/* Delete Alert Modal */}
-        <Modal
-          isOpen={openDeleteAlert.show}
-          onClose={() => setOpenDeleteAlert({ show: false, data: null, type: null })}
-          title={openDeleteAlert.type === 'income' ? "Delete Income" : "Delete Expense"}
-        >
-          <DeleteAlert
-            content={
-              openDeleteAlert.type === 'income'
-                ? "Are you sure you want to delete this income detail?"
-                : "Are you sure you want to delete this expense detail?"
+      {/* Delete Alert Modal */}
+      <Modal
+        isOpen={openDeleteAlert.show}
+        onClose={() => setOpenDeleteAlert({ show: false, data: null, type: null })}
+        title={openDeleteAlert.type === 'income' ? "Delete Income" : "Delete Expense"}
+      >
+        <DeleteAlert
+          content={
+            openDeleteAlert.type === 'income'
+              ? "Are you sure you want to delete this income detail?"
+              : "Are you sure you want to delete this expense detail?"
+          }
+          onDelete={() => {
+            if (openDeleteAlert.type === 'income') {
+              deleteIncome(openDeleteAlert.data);
+            } else if (openDeleteAlert.type === 'expense') {
+              deleteExpense(openDeleteAlert.data);
             }
-            onDelete={() => {
-              if (openDeleteAlert.type === 'income') {
-                deleteIncome(openDeleteAlert.data);
-              } else if (openDeleteAlert.type === 'expense') {
-                deleteExpense(openDeleteAlert.data);
-              }
-              setOpenDeleteAlert({ show: false, data: null, type: null });
-            }}
-          />
-        </Modal>
-      </div>
-
+            setOpenDeleteAlert({ show: false, data: null, type: null });
+          }}
+        />
+      </Modal>
+    </div>
   );
 };
 
