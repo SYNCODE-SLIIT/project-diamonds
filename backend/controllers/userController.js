@@ -2,6 +2,9 @@ import MemberApplication from '../models/MemberApplication.js';
 import Organizer from '../models/Organizer.js';
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
+import DirectChat from '../models/DirectChat.js';
+import DirectMessage from '../models/DirectMessage.js';
 
 // GET endpoint: Fetch application details for account creation
 export const getApplicationDetailsForAccountCreation = async (req, res) => {
@@ -50,10 +53,11 @@ export const createUserFromApplication = async (req, res) => {
     }
     
     // Create the new user using data from the application
+    const hashed = await bcrypt.hash(password, 12);
     const newUser = new User({
       fullName: application.fullName,
       email: application.email,
-      passwordHashed: password,  // No encryption for now
+      passwordHashed: hashed,
       role: "member",
       profileId: application._id,
       profileModel: "MemberApplication"
@@ -78,8 +82,9 @@ export const loginUser = async (req, res) => {
         return res.status(401).json({ message: "Invalid credentials." });
       }
       
-      // Since we're not encrypting, we simply compare the plaintext password.
-      if (password !== user.passwordHashed) {
+      // Compare password with bcrypt
+      const match = await bcrypt.compare(password, user.passwordHashed);
+      if (!match) {
         return res.status(401).json({ message: "Invalid credentials." });
       }
       
@@ -160,14 +165,16 @@ export const updatePassword = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
-    // Since password is stored in plaintext for now, compare directly
-    if (oldPassword !== user.passwordHashed) {
+    // Compare current password
+    const match = await bcrypt.compare(oldPassword, user.passwordHashed);
+    if (!match) {
       return res.status(400).json({ message: "Old password is incorrect." });
     }
     if (newPassword.length < 8) {
       return res.status(400).json({ message: "New password must be at least 8 characters long." });
     }
-    user.passwordHashed = newPassword;
+    // Hash new password
+    user.passwordHashed = await bcrypt.hash(newPassword, 12);
     await user.save();
     return res.status(200).json({ message: "Password updated successfully." });
   } catch (error) {
@@ -215,6 +222,13 @@ export const deleteMember = async (req, res) => {
     // Also delete the corresponding member application if a reference exists
     if (user.profileId) {
       await MemberApplication.findByIdAndDelete(user.profileId);
+    }
+    // Also delete all direct chat threads and messages involving this member
+    const threads = await DirectChat.find({ participants: memberId }).select('_id').lean();
+    const threadIds = threads.map(t => t._id);
+    if (threadIds.length > 0) {
+      await DirectMessage.deleteMany({ thread: { $in: threadIds } });
+      await DirectChat.deleteMany({ _id: { $in: threadIds } });
     }
     return res.status(200).json({ message: "Member and associated application deleted successfully." });
   } catch (error) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import 'boxicons';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/userContext';
@@ -10,19 +10,38 @@ const Sidebar = () => {
   const [totalUnread, setTotalUnread] = useState(0);
   const { user, clearUser } = useContext(UserContext);
   const navigate = useNavigate();
+  const lastTotalRef = useRef(0);
 
-  // Fetch chat groups for the logged-in user to calculate total unread messages
+  // Fetch unread count initial and then poll
   useEffect(() => {
+    let interval;
+    const fetchTotal = async () => {
+      try {
+        // Fetch group chat unread counts
+        const groupRes = await fetch(`http://localhost:4000/api/chat-groups/user/${user._id}`);
+        const groupData = await groupRes.json();
+        const unreadGroups = (groupData.groups || []).reduce((sum, g) => sum + (g.unreadCount || 0), 0);
+        // Fetch direct chat unread counts
+        const token = localStorage.getItem('token');
+        const directRes = await fetch(`http://localhost:4000/api/direct-chats/user/${user._id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const directData = await directRes.json();
+        const unreadDirect = (directData.threads || []).reduce((sum, t) => sum + (t.unreadCount || 0), 0);
+        const total = unreadGroups + unreadDirect;
+        if (total !== lastTotalRef.current) {
+          setTotalUnread(total);
+          lastTotalRef.current = total;
+        }
+      } catch (err) {
+        console.error('Error fetching total unread:', err);
+      }
+    };
     if (user && user._id) {
-      fetch(`http://localhost:4000/api/chat-groups/user/${user._id}`)
-        .then((res) => res.json())
-        .then((data) => {
-          const groups = data.groups || [];
-          const unread = groups.reduce((sum, group) => sum + (group.unreadCount || 0), 0);
-          setTotalUnread(unread);
-        })
-        .catch((err) => console.error("Error fetching chat groups for unread count:", err));
+      fetchTotal();
+      interval = setInterval(fetchTotal, 3000);
     }
+    return () => clearInterval(interval);
   }, [user]);
 
   const handleLogout = () => {

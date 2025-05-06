@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "server": "nodemon server.js"
+    "server": "nodemon server.js",
+    "hash-passwords": "node scripts/hashPasswords.js"
   },
   "author": "",
   "license": "ISC",

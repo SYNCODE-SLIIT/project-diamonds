@@ -4,9 +4,9 @@ export const BASE_URL = "http://localhost:4000";
 
 export const API_PATHS = {
   AUTH: {
-    LOGIN: "/api/v1/auth/login",
-    REGISTER: "/api/v1/auth/register",
-    GET_USER_INFO: "/api/v1/auth/getUser",
+    LOGIN: "/api/auth/login",
+    REGISTER: "/api/auth/register",
+    GET_USER_INFO: "/api/auth/getUser",
   },
   DASHBOARD: {
     GET_DATA: "/api/v1/dashboard",
@@ -24,7 +24,7 @@ export const API_PATHS = {
     DOWNLOAD_EXPENSE: `/api/v1/expense/downloadexcel`,
   },
   IMAGE: {
-    UPLOAD_IMAGE: "/api/v1/auth/upload-image",
+    UPLOAD_IMAGE: "/api/auth/upload-image",
   },
   TRANSACTION: {
     DOWNLOAD_ALL: "/api/v1/transaction/downloadall",

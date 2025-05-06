@@ -8,7 +8,8 @@ export const sendMessage = async (req, res) => {
     const newMessage = new Message({
       chatGroup,
       sender,
-      text
+      text,
+      readBy: [sender] // mark sender as having read their own message
     });
     const savedMessage = await newMessage.save();
     res.status(201).json({ message: 'Message sent successfully', savedMessage });
@@ -54,5 +55,20 @@ export const checkNewMessages = async (req, res) => {
     res.status(200).json({ hasNew: count > Number(lastCount), count });
   } catch (error) {
     res.status(500).json({ message: 'Error checking new messages', error: error.message });
+  }
+};
+
+// Mark all messages in a group as read by current user
+export const markAllMessagesAsRead = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const userId = req.user.id;
+    await Message.updateMany(
+      { chatGroup: groupId, readBy: { $ne: userId } },
+      { $addToSet: { readBy: userId } }
+    );
+    res.status(200).json({ message: 'All messages marked as read' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error marking messages as read', error: error.message });
   }
 };

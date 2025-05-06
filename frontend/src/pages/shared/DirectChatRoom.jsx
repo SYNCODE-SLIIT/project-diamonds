@@ -1,62 +1,67 @@
 import React, { useEffect, useState, useContext, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/userContext';
-import { Send, ArrowDown } from 'lucide-react';
+import { Send, ArrowDown, ArrowLeft } from 'lucide-react';
 
-const HeadmanChatRoom = () => {
-  const { groupId } = useParams();
+const DirectChatRoom = () => {
+  const { threadId } = useParams();
+  const navigate = useNavigate();
   const { user } = useContext(UserContext);
-  const [groupName, setGroupName] = useState('Headman Chat Room');
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [otherUser, setOtherUser] = useState({ fullName: 'Chat' });
   const [errorMsg, setErrorMsg] = useState('');
   const messagesEndRef = useRef(null);
   const lastCountRef = useRef(0);
   const token = localStorage.getItem('token');
 
-  // Fetch chat group details to get the group name
+  // Fetch thread info to get other user's name
   useEffect(() => {
-    if (groupId) {
-      fetch(`http://localhost:4000/api/chat-groups/${groupId}`)
-        .then((res) => {
-          if (!res.ok) throw new Error(`Error: ${res.status}`);
-          return res.json();
-        })
-        .then((data) => {
-          if (data.group && data.group.groupName) {
-            setGroupName(data.group.groupName);
-          }
-        })
-        .catch((err) => {
-          console.error("Error fetching group details:", err);
-        });
+    if (threadId && user?._id) {
+      const token = localStorage.getItem('token');
+      fetch(`http://localhost:4000/api/direct-chats/user/${user._id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      .then(res => res.json())
+      .then(data => {
+        const thisThread = (data.threads || []).find(t => t._id === threadId);
+        if (thisThread && thisThread.participants) {
+          const other = thisThread.participants.find(p => p._id !== user._id);
+          if (other) setOtherUser(other);
+        }
+      })
+      .catch(err => console.error("Error fetching thread info:", err));
     }
-  }, [groupId]);
+  }, [threadId, user]);
 
-  // Mark all messages as read on chat open (admin)
+  // Mark all messages as read on thread open
   useEffect(() => {
-    if (groupId && token) {
-      fetch(`http://localhost:4000/api/messages/${groupId}/readAll`, {
+    if (threadId && token) {
+      fetch(`http://localhost:4000/api/direct-chats/${threadId}/read-all`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
     }
-  }, [groupId, token]);
+  }, [threadId, token]);
 
-  // Extract fetch logic
+  // Extract fetch logic for messages
   const fetchMessages = async () => {
-    if (!groupId) return;
+    if (!threadId) return;
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:4000/api/messages/${groupId}`);
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:4000/api/direct-chats/${threadId}/messages`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const data = await res.json();
       const fetched = data.messages || [];
       setMessages(fetched);
       lastCountRef.current = fetched.length;
-      // mark as read on every fetch
+      
+      // Mark as read on each fetch (handles new messages arriving)
       if (token) {
-        fetch(`http://localhost:4000/api/messages/${groupId}/readAll`, {
+        fetch(`http://localhost:4000/api/direct-chats/${threadId}/read-all`, {
           method: 'PUT',
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -68,24 +73,32 @@ const HeadmanChatRoom = () => {
     }
   };
 
+  // Initial load and polling for new messages
   useEffect(() => {
-    if (groupId) {
-      // initial load
+    if (threadId) {
       fetchMessages();
-      // poll only for new messages
+      
+      // Poll for new messages
       const pollNew = async () => {
         try {
+          const token = localStorage.getItem('token');
           const res = await fetch(
-            `http://localhost:4000/api/messages/${groupId}/check/${lastCountRef.current}`
+            `http://localhost:4000/api/direct-chats/${threadId}/messages`,
+            {
+              headers: { 'Authorization': `Bearer ${token}` }
+            }
           );
-          const json = await res.json();
-          if (json.hasNew) fetchMessages();
+          const data = await res.json();
+          if ((data.messages || []).length > lastCountRef.current) {
+            fetchMessages();
+          }
         } catch {}
       };
-      const interval = setInterval(pollNew, 1000);
+      
+      const interval = setInterval(pollNew, 3000);
       return () => clearInterval(interval);
     }
-  }, [groupId]);
+  }, [threadId]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -94,30 +107,28 @@ const HeadmanChatRoom = () => {
     }
   }, [messages]);
 
+  // Send a message
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
-    const payload = {
-      chatGroup: groupId,
-      sender: user._id,
-      text: newMessage.trim()
-    };
-
     try {
-      const res = await fetch('http://localhost:4000/api/messages', {
+      const res = await fetch(`http://localhost:4000/api/direct-chats/${threadId}/messages`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ text: newMessage.trim() })
       });
+      
       const data = await res.json();
-      if (res.ok) {
-        const savedMessage = data.savedMessage;
-        // If sender object is not populated, fill it with current user's details
-        if (!savedMessage.sender.fullName) {
-          savedMessage.sender = { _id: user._id, fullName: user.fullName };
+      if (res.ok && data.savedMessage) {
+        const savedMsg = data.savedMessage;
+        if (!savedMsg.sender.fullName) {
+          savedMsg.sender = { _id: user._id, fullName: user.fullName };
         }
-        setMessages((prev) => [...prev, savedMessage]);
+        setMessages(prev => [...prev, savedMsg]);
         setNewMessage('');
       } else {
         setErrorMsg(data.message || 'Error sending message');
@@ -127,21 +138,18 @@ const HeadmanChatRoom = () => {
     }
   };
 
-  const getSenderName = (msg) => {
-    if (typeof msg.sender === 'object' && msg.sender.fullName) {
-      return msg.sender.fullName;
-    }
-    if (msg.sender === user._id) {
-      return user.fullName;
-    }
-    return msg.sender;
-  };
-
   const isCurrentUser = (msg) => {
     if (typeof msg.sender === 'object' && msg.sender._id) {
       return msg.sender._id === user._id;
     }
     return msg.sender === user._id;
+  };
+
+  const getSenderName = (msg) => {
+    if (typeof msg.sender === 'object' && msg.sender.fullName) {
+      return msg.sender.fullName;
+    }
+    return isCurrentUser(msg) ? user.fullName : otherUser.fullName;
   };
 
   const scrollToBottom = () => {
@@ -152,11 +160,20 @@ const HeadmanChatRoom = () => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-4xl bg-white shadow-md rounded-lg overflow-hidden border border-gray-200">
         {/* Header */}
-        <div className="bg-green-600 p-4 flex justify-between items-center">
-          <h1 className="text-xl font-semibold text-white">{groupName}</h1>
+        <div className="bg-green-600 p-4 flex items-center justify-between">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="text-white hover:bg-green-700 p-2 rounded-md transition-colors flex items-center gap-1"
+          >
+            <ArrowLeft size={18} />
+            <span className="hidden sm:inline">Back</span>
+          </button>
+          <h1 className="text-xl font-semibold text-white flex-1 text-center">
+            Chat with {otherUser.fullName}
+          </h1>
           <button 
             onClick={scrollToBottom}
-            className="p-2 rounded-full bg-green-700 hover:bg-green-800 text-white transition-colors"
+            className="p-2 rounded-md bg-green-700 hover:bg-green-800 text-white transition-colors"
             title="Scroll to latest messages"
           >
             <ArrowDown size={18} />
@@ -240,4 +257,4 @@ const HeadmanChatRoom = () => {
   );
 };
 
-export default HeadmanChatRoom;
+export default DirectChatRoom;
