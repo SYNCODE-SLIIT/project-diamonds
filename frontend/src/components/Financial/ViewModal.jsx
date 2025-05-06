@@ -176,13 +176,13 @@ const ViewModal = ({ item, onClose, activeTab }) => {
 
   // Accent color and icon mapping for groups
   const groupIcons = {
-    basic: <HiOutlineDocumentText className="text-blue-500 w-5 h-5 mr-1" />,
-    financial: <HiOutlineCurrencyDollar className="text-green-500 w-5 h-5 mr-1" />,
-    status: <HiOutlineBadgeCheck className="text-yellow-500 w-5 h-5 mr-1" />,
-    user: <HiOutlineUser className="text-indigo-500 w-5 h-5 mr-1" />,
-    dates: <HiOutlineCalendar className="text-pink-500 w-5 h-5 mr-1" />,
-    identifiers: <HiOutlineDocumentText className="text-gray-500 w-5 h-5 mr-1" />,
-    other: <HiOutlineDocumentText className="text-gray-400 w-5 h-5 mr-1" />,
+    basic: <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4dd.png" alt="Document" className="w-5 h-5 mr-1" />,
+    financial: <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4b0.png" alt="Money" className="w-5 h-5 mr-1" />,
+    status: <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/2705.png" alt="Check" className="w-5 h-5 mr-1" />,
+    user: <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f9d1.png" alt="User" className="w-5 h-5 mr-1" />,
+    dates: <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4c5.png" alt="Calendar" className="w-5 h-5 mr-1" />,
+    identifiers: <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4dc.png" alt="Document" className="w-5 h-5 mr-1" />,
+    other: <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4dd.png" alt="Document" className="w-5 h-5 mr-1" />,
   };
 
   const handleStatusChange = async (e) => {
@@ -413,8 +413,8 @@ const ViewModal = ({ item, onClose, activeTab }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white bg-opacity-50 backdrop-blur-sm rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fadeIn my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-self-center p-4 overflow-y-auto">
+      <div className="relative w-full max-w-4xl bg-white rounded-lg shadow-xl">
         {/* Accent Bar & Header */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 h-2 w-full" />
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white bg-opacity-50">

@@ -140,6 +140,7 @@ export const getAssignmentRequests = async (req, res) => {
           event: assignment.eventID,
           member: ma.memberID,
           assignedBy: ma.assignedBy,
+          status: ma.status,
           createdAt: ma.createdAt
         }))
     );

@@ -19,6 +19,8 @@ const MemberApplicationSchema = new Schema({
   yearsOfExperience: { type: Number },
   availability: [AvailabilitySchema],
   biography: { type: String },
+  // Store Cloudinary URL for profile picture
+  profilePicture: { type: String },
   achievements: [{ type: String }],
   applicationStatus: { 
     type: String, 

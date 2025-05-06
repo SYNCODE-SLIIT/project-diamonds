@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import { Toaster } from 'react-hot-toast';
 import AdminApplicationsCombinedList from './pages/authentication/AdminApplicationsCombinedList';
 import Calendar from './components/Calendar';
+import AdminBudgetRequests from './pages/admin/AdminBudgetRequests';
 // Content Management Imports
 import AboutUs from './pages/aboutUs';
 import ContentMediaDashboard from "./pages/ContentMediaDashboard";
@@ -39,6 +40,7 @@ import ApplicationSubmitted from './pages/authentication/ApplicationSubmitted';
 import AdminInviteApplicant from './pages/authentication/AdminInviteApplicant';
 import AdminProfile from './pages/authentication/AdminProfile';
 import GroupMembers from './pages/admin/GroupMembers';
+import AdminBudgetRequests from './pages/admin/AdminBudgetRequests';
 // import AdminInvitedApplicationsList from './pages/authentication/AdminInvitedApplicationsList';
 import FinalizedDetails from './pages/authentication/FinalizedDetails';
  
@@ -64,6 +66,9 @@ import FinancialReport from './components/Financial/FinancialReport';
 import BudgetForm from './components/Financial/BudgetForm';
 import RefundForm from './components/Financial/RefundForm';
 import PaymentOptions from './components/Financial/PaymentOptions';
+import AnomalyDetection from './components/Financial/AnomalyDetection';
+import PaymentSuccess from './components/Financial/PaymentSuccess';
+import PaymentCancel from './components/Financial/PaymentCancel';
 // public layout and pages
 import PublicLayout from './components/layout/PublicLayout';
 import Home from './pages/home';
@@ -132,6 +137,12 @@ const App = () => {
           <Routes>
           
             <Route path='/financial' element={<FinancialDashboard />} />
+
+            <Route path='/bform' exact element={<BudgetForm/>} />
+            <Route path='/rform' exact element={<RefundForm/>} />
+            <Route path='/pform' exact element={<PaymentOptions />} />
+
+
             <Route path="/media/:id" element={<ViewMedia />} />
             <Route path="/media/edit/:id" element={<EditMedia />} />
 {/* 
@@ -219,6 +230,9 @@ const App = () => {
             <Route path="merchandise" element={<MerchandiseAdmin />} />
             <Route path="certificate-generator" element={<CertificateGenerator />} />
             <Route path="sponsorship" element={<Sponsorship />} />
+
+            <Route path="financial/anomalies" element={<AnomalyDetection />} />
+
           </Route>
        
 
@@ -250,6 +264,8 @@ const App = () => {
 
           <Route path="/merchandise" element={<Merchandise />} />
 
+          <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/payment-cancel" element={<PaymentCancel />} />
 
         </Routes>
 

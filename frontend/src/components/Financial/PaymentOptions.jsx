@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import BankSlipPaymentForm from './BankSlipPaymentForm';
 import PaymentGatewayForm from './PaymentGatewayForm';
+import StripePaymentForm from './StripePaymentForm';
 
 const PaymentOptions = () => {
   const showPaymentGateway = true; // Set to false to hide Payment Gateway option
+  const showStripe = true; // Set to false to hide Stripe option
   
   const [selectedMethod, setSelectedMethod] = useState('bankslip');
 
@@ -15,7 +17,7 @@ const PaymentOptions = () => {
         </div>
         
         <div className="p-6">
-          <div className="flex justify-center space-x-4 mb-6">
+          <div className="flex flex-wrap justify-center gap-4 mb-6">
             <label className="flex items-center cursor-pointer">
               <input
                 type="radio"
@@ -51,11 +53,31 @@ const PaymentOptions = () => {
                 </span>
               </label>
             )}
+
+            {showStripe && (
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="paymentOption"
+                  value="stripe"
+                  checked={selectedMethod === 'stripe'}
+                  onChange={() => setSelectedMethod('stripe')}
+                  className="hidden peer"
+                  id="stripe"
+                />
+                <span className="px-4 py-2 rounded-full border-2 border-gray-300 
+                  peer-checked:border-green-500 peer-checked:bg-green-500 peer-checked:text-white 
+                  transition-all duration-300 ease-in-out">
+                  Stripe
+                </span>
+              </label>
+            )}
           </div>
 
           <div className="mt-4">
             {selectedMethod === 'bankslip' && <BankSlipPaymentForm />}
             {selectedMethod === 'payment_gateway' && showPaymentGateway && <PaymentGatewayForm />}
+            {selectedMethod === 'stripe' && showStripe && <StripePaymentForm amount={1000} onClose={() => setSelectedMethod('bankslip')} />}
           </div>
         </div>
       </div>

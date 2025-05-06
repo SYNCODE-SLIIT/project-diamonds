@@ -1,16 +1,31 @@
 import cloudinary from '../config/cloudinary.js';
+import fs from 'fs';
 
 export const uploadFile = async (file, folder = 'general') => {
   try {
-    // Use 'raw' for PDFs, 'auto' for others
-    const resourceType = file.mimetype === 'application/pdf' ? 'raw' : 'auto';
-    const cloudinaryUpload = await cloudinary.uploader.upload(file.path, {
+    // Use buffer if available, otherwise use path
+    let uploadOptions = {
       folder: folder,
-      resource_type: resourceType,
-    });
+      resource_type: file.mimetype === 'application/pdf' ? 'raw' : 'auto',
+    };
+    let uploadResult;
+    if (file.buffer) {
+      // Use upload_stream for buffer
+      uploadResult = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(uploadOptions, (error, result) => {
+          if (result) resolve(result);
+          else reject(error);
+        });
+        stream.end(file.buffer);
+      });
+    } else if (file.path) {
+      uploadResult = await cloudinary.uploader.upload(file.path, uploadOptions);
+    } else {
+      throw new Error('No file buffer or path found');
+    }
 
     return {
-      url: cloudinaryUpload.secure_url,
+      url: uploadResult.secure_url,
       provider: 'cloudinary'
     };
   } catch (error) {

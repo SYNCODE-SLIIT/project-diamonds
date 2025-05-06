@@ -1,7 +1,7 @@
 //routes/adminRoutes.js
 import express from 'express';
 import { assignMemberToEvent } from '../controllers/eventController.js';
-import { createPracticeSession, assignMemberToPracticeSession } from '../controllers/practiceSessionController.js';
+import { createPracticeSession, assignMemberToPracticeSession, deletePracticeSession } from '../controllers/practiceSessionController.js';
 import Member from '../models/MemberApplication.js'; // Update with correct path/model name
 
 const router = express.Router();
@@ -14,6 +14,9 @@ router.post('/practice-sessions/create', createPracticeSession);
 
 // Admin endpoint to assign member to a practice session
 router.post('/practice-sessions/assign', assignMemberToPracticeSession);
+
+// Delete a practice session by ID
+router.delete('/practice-sessions/:id', deletePracticeSession);
 
 // Additional routes (e.g., fetching events & sessions for calendar view) can be added:
 router.get('/events', async (req, res) => {

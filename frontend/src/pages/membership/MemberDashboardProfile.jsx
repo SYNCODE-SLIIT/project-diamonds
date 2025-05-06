@@ -45,23 +45,23 @@ const MemberDashboardProfile = () => {
     <div className="profile-container">
       <div className="profile-header">
         <h2 className="profile-title">Profile Details</h2>
-          <div className="flex justify-center mb-8">
-           {profileData && profileData.profilePicture ? (
-             <img
-               src={profileData.profilePicture}
-               alt="Profile"
-               className="w-24 h-24 rounded-full object-cover border-4 border-blue-500"
-             />
-           ) : (
-             <div className="w-24 h-24 flex items-center justify-center rounded-full bg-gray-200 border-4 border-blue-500">
-               <box-icon name="user" color="#2a2a5a" size="lg"></box-icon>
-             </div>
-           )}
-         </div>
+          <div className="profile-picture-container">
+            {(profileData?.profilePicture || user.profilePicture) ? (
+              <img
+                src={profileData?.profilePicture || user.profilePicture}
+                alt="Profile"
+                className="profile-picture"
+              />
+            ) : (
+              <div className="profile-icon">
+                <box-icon name="user" color="#2a2a5a" size="lg"></box-icon>
+              </div>
+            )}
+          </div>
       </div>
       
       {profileData && (
-        <div>
+        <div className="profile-section">
           <table className="profile-table">
             <tbody>
               <tr>
@@ -70,7 +70,7 @@ const MemberDashboardProfile = () => {
               </tr>
               <tr>
                 <th>Biography</th>
-                <td>{profileData.biography}</td>
+                <td>{profileData.biography || <span className="no-data">No biography provided</span>}</td>
               </tr>
               <tr>
                 <th>Email</th>
@@ -78,7 +78,7 @@ const MemberDashboardProfile = () => {
               </tr>
               <tr>
                 <th>Contact Number</th>
-                <td>{profileData.contactNumber}</td>
+                <td>{profileData.contactNumber || <span className="no-data">Not provided</span>}</td>
               </tr>
               <tr>
                 <th>Age</th>
@@ -95,7 +95,15 @@ const MemberDashboardProfile = () => {
               <tr>
                 <th>Achievements</th>
                 <td>
-                  {profileData.achievements && profileData.achievements.join(', ')}
+                  {profileData.achievements && profileData.achievements.length > 0 ? (
+                    <div className="achievements-list">
+                      {profileData.achievements.map((achievement, index) => (
+                        <span key={index} className="achievement-badge">{achievement}</span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="no-data">No achievements listed</span>
+                  )}
                 </td>
               </tr>
               <tr>
@@ -110,7 +118,7 @@ const MemberDashboardProfile = () => {
                       ))}
                     </ul>
                   ) : (
-                    "No availabilities provided"
+                    <span className="no-data">No availabilities provided</span>
                   )}
                 </td>
               </tr>
