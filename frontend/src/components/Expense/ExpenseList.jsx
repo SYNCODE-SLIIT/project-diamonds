@@ -20,14 +20,14 @@ const ExpenseList = ({transactions, onDelete, onDownload, onViewDetails}) => {
                     {transactions.map((expense) => (
                     <TransactionInfoCard
                         key={expense._id}
-                        id={expense._id}
+                        id={expense.paymentId}
                         title={expense.category}
                         icon={expense.icon}
                         date={moment(expense.date).format("DD MMM YYYY")}
                         amount={expense.amount}
                         type="expense"
                         onDelete={() => onDelete(expense._id)}
-                        onViewDetails={() => onViewDetails(expense.paymentId)}
+                        onViewDetails={onViewDetails}
                     />
                     ))}
                 </div>

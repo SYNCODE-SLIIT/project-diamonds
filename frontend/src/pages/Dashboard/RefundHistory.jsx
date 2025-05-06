@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 
 const RefundHistory = () => {
   // Make sure the user is authenticated before rendering this page
-  useUserAuth();
+  const { user } = useUserAuth();
 
   const [refunds, setRefunds] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,11 +17,21 @@ const RefundHistory = () => {
 
   // Fetch all refunds for the current user
   const fetchRefunds = async () => {
+    if (!user?._id) {
+      console.log('No user ID available');
+      setRefunds([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await axiosInstance.get('/api/finance/getr');
       if (response.data && response.data.success) {
-        setRefunds(response.data.data);
+        // Filter refunds for current user only
+        const userRefunds = response.data.data.filter(refund => refund.user._id === user._id);
+        console.log('Found refunds for current user:', userRefunds.length);
+        setRefunds(userRefunds);
       }
     } catch (error) {
       console.error("Error fetching refunds:", error);
@@ -33,7 +43,7 @@ const RefundHistory = () => {
 
   useEffect(() => {
     fetchRefunds();
-  }, []);
+  }, [user]);
 
   const getStatusColor = (status) => {
     switch (status) {

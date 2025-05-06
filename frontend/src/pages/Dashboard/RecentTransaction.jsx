@@ -12,6 +12,7 @@ import DeleteAlert from '../../components/DeleteAlert';
 import { LuDownload } from 'react-icons/lu';
 import IncomeDetails from '../../components/Income/IncomeDetails';
 import PaymentDetails from '../../components/Expense/PaymentDetails';
+import RefundForm from '../../components/Expense/RefundForm';
 
 const RecentTransactionPage = () => {
   // Ensure the user is authenticated
@@ -30,6 +31,7 @@ const RecentTransactionPage = () => {
 
   const [selectedIncome, setSelectedIncome] = useState(null);
   const [selectedExpense, setSelectedExpense] = useState(null);
+  const [showRefundForm, setShowRefundForm] = useState(false);
 
   // Fetch income and expense data concurrently
   const fetchTransactions = async () => {
@@ -150,12 +152,31 @@ const RecentTransactionPage = () => {
     setOpenDeleteAlert({ show: true, data: id, type: 'expense' });
   };
 
+  // Handle refund success
+  const handleRefundSuccess = () => {
+    setShowRefundForm(false);
+    setSelectedExpense(null);
+    toast.success("Refund request submitted successfully. You will be notified of the status.");
+  };
+
   return (
     <div className="my-5 mx-auto">
       {selectedIncome ? (
         <IncomeDetails income={selectedIncome} onBack={() => setSelectedIncome(null)} />
       ) : selectedExpense ? (
-        <PaymentDetails payment={selectedExpense} onBack={() => setSelectedExpense(null)} />
+        showRefundForm ? (
+          <RefundForm 
+            payment={selectedExpense} 
+            onBack={() => setShowRefundForm(false)}
+            onSuccess={handleRefundSuccess}
+          />
+        ) : (
+          <PaymentDetails 
+            payment={selectedExpense} 
+            onBack={() => setSelectedExpense(null)}
+            onRequestRefund={() => setShowRefundForm(true)}
+          />
+        )
       ) : (
         <>
           <div className="flex items-center justify-between mb-4">
@@ -177,6 +198,7 @@ const RecentTransactionPage = () => {
                   onDelete={handleIncomeDelete}
                   onDownload={handleDownloadIncomeDetails}
                   onViewDetails={(id) => {
+                    console.log('Income card clicked, id:', id);
                     const found = incomeData.find((item) => item._id === id);
                     setSelectedIncome(found || null);
                   }}
@@ -189,13 +211,24 @@ const RecentTransactionPage = () => {
                   transactions={expenseData}
                   onDelete={handleExpenseDelete}
                   onDownload={handleDownloadExpenseDetails}
-                  onViewDetails={(paymentId) => {
-                    const found = expenseData.find((item) => item.paymentId === paymentId);
+                  onViewDetails={(id) => {
+                    console.log('Expense card clicked, id:', id);
+                    // Try to find by paymentId, fallback to _id
+                    let found = expenseData.find((item) => item.paymentId === id);
+                    if (!found) {
+                      found = expenseData.find((item) => item._id === id);
+                    }
                     if (found && found.paymentId) {
-                      // Fetch full payment details for expense
-                      axiosInstance.get(`${API_PATHS.FINANCE.GET_PAYMENT_BY_ID(paymentId)}`)
-                        .then(res => setSelectedExpense(res.data))
+                      axiosInstance.get(`${API_PATHS.FINANCE.GET_PAYMENT_BY_ID(found.paymentId)}`)
+                        .then(res => {
+                          setSelectedExpense(res.data);
+                        })
                         .catch(() => toast.error('Failed to fetch payment details'));
+                    } else if (found) {
+                      // If no paymentId, just set the found object
+                      setSelectedExpense(found);
+                    } else {
+                      toast.error('Transaction not found');
                     }
                   }}
                 />

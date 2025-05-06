@@ -11,6 +11,7 @@ const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [totalUnread, setTotalUnread] = useState(0);
   const [hasRefunds, setHasRefunds] = useState(false);
+  const refundFetchAttempted = useRef(false);
   const { user, clearUser } = useContext(UserContext);
   const navigate = useNavigate();
   const lastTotalRef = useRef(0);
@@ -50,12 +51,25 @@ const Sidebar = () => {
   // Fetch refund data to check if user has any refund requests
   useEffect(() => {
     const fetchRefunds = async () => {
+      if (!user?._id) {
+        console.log('No user ID, setting hasRefunds to false');
+        setHasRefunds(false);
+        return;
+      }
+
       try {
+        console.log('Fetching refunds for user:', user._id);
         const response = await axiosInstance.get('/api/finance/getr');
-        if (response.data && response.data.success) {
+        console.log('Refund API response:', response.data);
+        
+        if (response.data?.success) {
           const refunds = response.data.data || [];
-          setHasRefunds(refunds.length > 0);
+          // Filter refunds for current user only
+          const userRefunds = refunds.filter(refund => refund.user._id === user._id);
+          console.log('Found refunds for current user:', userRefunds.length);
+          setHasRefunds(userRefunds.length > 0);
         } else {
+          console.log('No success in response, setting hasRefunds to false');
           setHasRefunds(false);
         }
       } catch (error) {
@@ -64,15 +78,28 @@ const Sidebar = () => {
       }
     };
 
-    if (user && user._id) {
+    // Only fetch if we haven't attempted yet
+    if (!refundFetchAttempted.current) {
       fetchRefunds();
     }
+
+    return () => {
+      refundFetchAttempted.current = false;
+    };
   }, [user]);
 
-  // Add a console log to check hasRefunds state
+  // Debug effect to track state changes
   useEffect(() => {
-    console.log('hasRefunds state:', hasRefunds);
-  }, [hasRefunds]);
+    console.log('hasRefunds changed to:', hasRefunds, 'User:', user?._id);
+  }, [hasRefunds, user]);
+
+  // Reset state when component unmounts
+  useEffect(() => {
+    return () => {
+      setHasRefunds(false);
+      refundFetchAttempted.current = false;
+    };
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
