@@ -26,9 +26,18 @@ const AdminInvitedApplicationsList = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
-        {/* Header */}
+        {/* Header with Count */}
         <div className="bg-gray-100 p-6 border-b border-gray-200">
-          <h2 className="text-3xl font-bold text-center text-gray-800">Invited Applications</h2>
+          <h2 className="text-3xl font-bold text-center text-gray-800">
+            Invited Applications
+            {!loading && applications.length > 0 && (
+              <div className="flex justify-center mt-2">
+                <span className="text-lg font-medium bg-red-100 text-red-800 py-1 px-3 rounded-full">
+                  Invited: {applications.length}
+                </span>
+              </div>
+            )}
+          </h2>
         </div>
 
         {/* Loading Spinner */}
