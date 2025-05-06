@@ -245,6 +245,7 @@ const MerchandisePaymentForm = ({ product }) => {
 
         setReferenceId(generateReferenceId());
         setStep(3);
+        }
       } catch (err) {
         setErrors({ ...newErrors, submit: 'Payment failed. Please try again.' });
       } finally {

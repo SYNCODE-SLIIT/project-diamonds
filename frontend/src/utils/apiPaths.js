@@ -30,7 +30,7 @@ export const API_PATHS = {
     DOWNLOAD_ALL: "/api/v1/transaction/downloadall",
   },
   REFUND: {
-    GET_ALL_REFUNDS: "/api/v1/refund/get",
+    GET_ALL_REFUNDS: "/api/finance/getr",
     ADD_REFUND: "/api/finance/ef",
     UPDATE_REFUND: (refundId) => `/api/v1/refund/${refundId}`,
   },

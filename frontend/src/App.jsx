@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import { Toaster } from 'react-hot-toast';
 import AdminApplicationsCombinedList from './pages/authentication/AdminApplicationsCombinedList';
 import Calendar from './components/Calendar';
+import AdminBudgetRequests from './pages/admin/AdminBudgetRequests';
 // Content Management Imports
 import AboutUs from './pages/aboutUs';
 import ContentMediaDashboard from "./pages/ContentMediaDashboard";
