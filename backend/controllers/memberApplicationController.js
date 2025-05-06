@@ -300,3 +300,14 @@ export const deleteApplication = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+// controllers/memberApplicationController.js
+export const getApprovedMembers = async (req, res) => {
+  try {
+    const approvedMembers = await MemberApplication.find({ applicationStatus: 'Approved' });
+    res.status(200).json(approvedMembers);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching approved members', error: error.message });
+  }
+};
+
+
