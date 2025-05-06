@@ -1,5 +1,6 @@
 // File: /backend/controllers/chatGroupController.js
 import ChatGroup from '../models/ChatGroup.js';
+import Message from '../models/Message.js';
 
 // Create a new chat group (manager only)
 export const createChatGroup = async (req, res) => {
@@ -32,7 +33,6 @@ export const updateChatGroupMembers = async (req, res) => {
 };
 
 // Delete a chat group
-// Delete a chat group
 export const deleteChatGroup = async (req, res) => {
   try {
     const { groupId } = req.params;
@@ -48,11 +48,32 @@ export const getChatGroupsForUser = async (req, res) => {
   try {
     const { userId } = req.params;
     const groups = await ChatGroup.find({ members: userId });
-    res.status(200).json({ groups });
+    // Augment each group with unreadCount and lastMessage
+    const enhanced = await Promise.all(groups.map(async (grp) => {
+      const unreadCount = await Message.countDocuments({
+        chatGroup: grp._id,
+        readBy: { $ne: userId }
+      });
+      const lastMsgDoc = await Message.find({ chatGroup: grp._id })
+        .sort({ timestamp: -1 })
+        .limit(1)
+        .populate('sender', 'fullName');
+      const lastMessage = lastMsgDoc.length > 0
+        ? lastMsgDoc[0].text
+        : null;
+      return {
+        _id: grp._id,
+        groupName: grp.groupName,
+        unreadCount,
+        lastMessage
+      };
+    }));
+    res.status(200).json({ groups: enhanced });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching chat groups', error: error.message });
   }
 };
+
 // Get all chat groups (for admin to view all available groups)
 export const getAllChatGroups = async (req, res) => {
   try {
@@ -109,6 +130,19 @@ export const addMembersToGroup = async (req, res) => {
     res.status(200).json({ message: "Members added successfully", group: updatedGroup });
   } catch (error) {
     res.status(500).json({ message: "Error adding members", error: error.message });
+  }
+};
+
+// Get a single chat group by ID
+export const getChatGroupById = async (req, res) => {
+  try {
+    const group = await ChatGroup.findById(req.params.groupId);
+    if (!group) {
+      return res.status(404).json({ message: 'Group not found.' });
+    }
+    res.status(200).json({ group });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching group details', error: error.message });
   }
 };
 

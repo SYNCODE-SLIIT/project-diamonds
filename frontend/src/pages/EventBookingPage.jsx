@@ -6,7 +6,10 @@ import {
   CheckCircle2Icon, 
   BookOpenIcon, 
   InfoIcon, 
-  TrophyIcon 
+  TrophyIcon,
+  PackageIcon,
+  ClockIcon,
+  HeartIcon
 } from 'lucide-react';
 import EventRequestForm from '../components/event/EventRequestForm'; 
 
@@ -117,6 +120,21 @@ const EventBookingPage = () => {
                 icon: <TrophyIcon className="w-12 h-12 text-purple-500" />,
                 title: "Backup Plans",
                 description: "Always have contingency plans for unexpected situations."
+                },
+                { 
+                icon: <PackageIcon className="w-12 h-12 text-red-500" />,
+                title: "Customize Your Package",
+                description: "Use our custom package option if none of our standard packages meets your specific needs."
+                },
+                { 
+                icon: <ClockIcon className="w-12 h-12 text-amber-500" />,
+                title: "Track Your Requests",
+                description: "Monitor your event requests in real-time through the organizer dashboard."
+                },
+                { 
+                icon: <HeartIcon className="w-12 h-12 text-pink-500" />,
+                title: "Additional Services",
+                description: "Enhance your event with our wide range of additional services for a complete experience."
                 }
             ].map((tip, index) => (
                 <div 

@@ -1,5 +1,6 @@
 import Organizer from '../models/Organizer.js';
 import User from '../models/User.js';
+import bcrypt from 'bcrypt';
 
 export const createOrganizerAccount = async (req, res) => {
   const {
@@ -41,11 +42,14 @@ export const createOrganizerAccount = async (req, res) => {
     });
     const savedOrganizer = await newOrganizer.save();
 
+    // Hash the password before creating the User document
+    const hashedPassword = await bcrypt.hash(password, 12);
+
     // Create the User document that references the Organizer profile
     const newUser = new User({
       fullName,
       email,
-      passwordHashed: password, 
+      passwordHashed: hashedPassword,
       role: "organizer",
       profileId: savedOrganizer._id,
       profileModel: "Organizer"

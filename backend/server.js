@@ -2,7 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/mongodb.js';
-import { handleMulterError } from './middleware/uploadmiddleware.js';
+
+import crypto from 'crypto';
+
 
 import authRoutes from "./routes/authRoutes.js";
 import incomeRoutes from "./routes/incomeRoutes.js";
@@ -19,32 +21,46 @@ import calendarRoutes from './routes/calendarRoutes.js';
 import additionalServiceRoutes from './routes/additionalServiceRoutes.js';
 import eventRequestRoutes from './routes/eventRequestRoutes.js';
 
-
-import organizerRoutes from './routes/organizerRoutes.js'
+import organizerRoutes from './routes/organizerRoutes.js';
 
 import memberApplicationRoutes from './routes/memberApplicationRoutes.js';
 import adminApplicationRoutes from './routes/adminApplicationRoutes.js';
 import chatGroupRoutes from './routes/chatGroupRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
-
+import directChatRoutes from './routes/directChatRoutes.js';
 
 import adminRoutes from './routes/adminRoutes.js';
 
 import ContentcreatorRoutes from './routes/ContentcreatorRoutes.js'; 
 
-import certificateRoutes from './routes/certificateRoutes.js';
 
-import sponsorshipRoutes from './routes/sponsorshipRoutes.js';
-
+//team manager
+import assignmentRoutes from './routes/assignmentRoutes.js';
+import eventRoutes from './routes/eventRoutes.js'; 
 
 import path from "path";
 import { fileURLToPath } from "url";
-import refundRoutes from "./routes/refundRoutes.js";
+import mongoose from 'mongoose';
+import DirectChat from './models/DirectChat.js';
+
+import practiceRoutes from './routes/practiceRoutes.js';
+import practiceRequestRoutes from './routes/practiceRequestRoutes.js';
+
+import certificateRoutes from './routes/certificateRoutes.js';
+import sponsorshipRoutes from './routes/sponsorshipRoutes.js';
+
+
+
 import merchandiseRoutes from './routes/merchandiseRoutes.js';
-import financeNotificationRoutes from './routes/financeNotificationRoutes.js';
+
 import collaborationRoutes from './routes/collaborationRoutes.js'
+
 // Load environment variables
 dotenv.config();
+
+// Generate a new JWT secret on each server start to invalidate existing tokens on restart
+const dynamicSecret = crypto.randomBytes(64).toString('hex');
+process.env.JWT_SECRET = dynamicSecret;
 
 // Resolve __dirname for ES module compatibility
 const __filename = fileURLToPath(import.meta.url);
@@ -78,10 +94,8 @@ app.use('/api/users', userRoutes);
 // chatGroupRoutes
 app.use('/api/chat-groups', chatGroupRoutes);
 app.use('/api/messages', messageRoutes);
-
+app.use('/api/direct-chats', directChatRoutes);
 app.use('/api/admin', adminRoutes);
-
-
 
 app.use('/api/organizers', organizerRoutes);
 
@@ -92,6 +106,7 @@ app.use('/api/finance', financialRoutes);
 app.use('/api/finance/notifications', financeNotificationRoutes);
 
 
+app.use('/api/assignments', assignmentRoutes);
 
 // Mount Routes
 app.use("/api/v1/auth", authRoutes);
@@ -116,8 +131,13 @@ app.use("/api/organizers", organizerRoutes);
 app.use("/api/blogposts", blogPostRoutes);
 app.use("/api/media", managePostRoutes);
 app.use("/api/content-creators", ContentcreatorRoutes);
-app.use("/api/v1/refund", refundRoutes);
+
+app.use('/api/practices', practiceRoutes);
+app.use('/api/practice-requests', practiceRequestRoutes);
+
+
 app.use('/api/merchandise', merchandiseRoutes);
+
 
 // API Endpoints
 app.get('/register/member/application', (req, res) => {
@@ -126,6 +146,11 @@ app.get('/register/member/application', (req, res) => {
 
 // Serve static files (if needed for media uploads)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+app.use('/api/events', eventRoutes);
+app.use('/api/assignments', assignmentRoutes);
+
+
 
 // API Health Check
 app.get("/", (req, res) => {
