@@ -2,7 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/mongodb.js';
+
 import crypto from 'crypto';
+
 
 import authRoutes from "./routes/authRoutes.js";
 import incomeRoutes from "./routes/incomeRoutes.js";
@@ -12,6 +14,7 @@ import financialRoutes from './routes/financialRoutes.js';
 import transactionRoutes from "./routes/transactionRoutes.js";
 import packageRoutes from './routes/packageRoutes.js';
 import userRoutes from "./routes/userRoutes.js";
+import stripeRoutes from './routes/stripeRoutes.js';
 
 import blogPostRoutes from "./routes/blogPostRoutes.js";
 import managePostRoutes from "./routes/managePostRoutes.js";
@@ -44,6 +47,20 @@ import DirectChat from './models/DirectChat.js';
 import practiceRoutes from './routes/practiceRoutes.js';
 import practiceRequestRoutes from './routes/practiceRequestRoutes.js';
 
+import certificateRoutes from './routes/certificateRoutes.js';
+import sponsorshipRoutes from './routes/sponsorshipRoutes.js';
+
+
+
+import merchandiseRoutes from './routes/merchandiseRoutes.js';
+
+
+import collaborationRoutes from './routes/collaborationRoutes.js'
+
+import financeNotificationRoutes from './routes/financeNotificationRoutes.js';
+import chatbotRoutes from './routes/chatbot.js';
+
+
 // Load environment variables
 dotenv.config();
 
@@ -63,6 +80,23 @@ const port = process.env.PORT || 4000;
 app.use(express.json());
 app.use(cors());
 app.use('/uploads', express.static('uploads'));
+
+// Define Multer error handling middleware
+const handleMulterError = (err, req, res, next) => {
+  if (err && err.name === 'MulterError') {
+    return res.status(400).json({
+      success: false,
+      message: err.message || 'File upload error occurred'
+    });
+  }
+  next(err);
+};
+
+// Special middleware for Stripe webhooks
+app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
+
+// Add multer error handling middleware
+app.use(handleMulterError);
 
 // Connect to MongoDB
 connectDB();
@@ -89,6 +123,7 @@ app.use('/api/organizers', organizerRoutes);
 
 // Financial Management Routes
 app.use('/api/finance', financialRoutes);
+app.use('/api/finance/notifications', financeNotificationRoutes);
 
 
 app.use('/api/assignments', assignmentRoutes);
@@ -116,8 +151,17 @@ app.use("/api/organizers", organizerRoutes);
 app.use("/api/blogposts", blogPostRoutes);
 app.use("/api/media", managePostRoutes);
 app.use("/api/content-creators", ContentcreatorRoutes);
+
 app.use('/api/practices', practiceRoutes);
 app.use('/api/practice-requests', practiceRequestRoutes);
+
+
+app.use('/api/merchandise', merchandiseRoutes);
+app.use('/api/chatbot', chatbotRoutes);
+
+// Stripe Routes
+app.use('/api/stripe', stripeRoutes);
+
 
 // API Endpoints
 app.get('/register/member/application', (req, res) => {
@@ -136,6 +180,15 @@ app.use('/api/assignments', assignmentRoutes);
 app.get("/", (req, res) => {
     res.send("API is running...");
 });
+
+app.use('/api', collaborationRoutes);
+
+app.use('/api', certificateRoutes);
+
+app.use('/api', sponsorshipRoutes);
+
+
+
 
 // Start Server
 app.listen(port, () => console.log(`Server running on port ${port}`));

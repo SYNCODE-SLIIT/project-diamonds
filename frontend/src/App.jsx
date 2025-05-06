@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import { Toaster } from 'react-hot-toast';
 import AdminApplicationsCombinedList from './pages/authentication/AdminApplicationsCombinedList';
 import Calendar from './components/Calendar';
+import AdminBudgetRequests from './pages/admin/AdminBudgetRequests';
 // Content Management Imports
 import AboutUs from './pages/aboutUs';
 import ContentMediaDashboard from "./pages/ContentMediaDashboard";
@@ -57,11 +58,15 @@ import Income from './pages/Dashboard/Income';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Expense from './pages/Dashboard/Expense';
 import RecentTransactionPage from './pages/Dashboard/RecentTransaction';
+import RefundHistory from './pages/Dashboard/RefundHistory';
 
 import FinancialReport from './components/Financial/FinancialReport';
 import BudgetForm from './components/Financial/BudgetForm';
 import RefundForm from './components/Financial/RefundForm';
 import PaymentOptions from './components/Financial/PaymentOptions';
+import AnomalyDetection from './components/Financial/AnomalyDetection';
+import PaymentSuccess from './components/Financial/PaymentSuccess';
+import PaymentCancel from './components/Financial/PaymentCancel';
 // public layout and pages
 import PublicLayout from './components/layout/PublicLayout';
 import Home from './pages/home';
@@ -101,6 +106,7 @@ import CalendarEvents from './pages/CalendarEvents';
 
 import AdminDashboard from './components/team/AdminDashboard';
 import MyEvents  from './components/event/MyEvents';
+
 import EventAssign from './components/team/EventAssign';
 import EventAssignmentRequests from './components/team/EventAssignmentRequests';
 import PracticeAssign from './components/team/PracticeAssign';
@@ -110,6 +116,11 @@ import PracticeAssignments from './components/team/PracticeAssignments';
 
 
 import DirectChatRoom from './pages/shared/DirectChatRoom';
+
+
+
+import MerchandiseAdmin from './pages/admin/MerchandiseAdmin';
+import Collabaration from './pages/content/Collaboration';
 
 const App = () => {
   return (
@@ -177,10 +188,12 @@ const App = () => {
               <Route path="new-request" element={<MemberDashboardNewRequest />} />
               <Route path="upcoming-events" element={<MemberDashboardUpcomingEvents />} />
               <Route path="calendar-events" element={<CalendarEvents />} />
+              <Route path="refund-history" element={<RefundHistory />} />
           </Route>
 
 
           <Route path="/admin" element={<AdminLayout />}>
+            <Route path="collaboration" element={<Collabaration />} />
             <Route path="blog" element={<BlogPosts />} />
             <Route path="content-creators" element={<ContentCreatorList />} />
             <Route path="create-blog-post" element={<CreateBlogPost />} />
@@ -206,6 +219,9 @@ const App = () => {
             <Route path="financial" element={<FinancialDashboard />} />
             <Route path="applications/combined" element={<AdminApplicationsCombinedList />} />
             <Route path="finalized/:id" element={<FinalizedDetails />} />
+            <Route path="budget-requests" element={<AdminBudgetRequests />} />
+            <Route path="merchandise" element={<MerchandiseAdmin />} />
+            <Route path="financial/anomalies" element={<AnomalyDetection />} />
           </Route>
        
 
@@ -240,6 +256,8 @@ const App = () => {
 
           <Route path="/merchandise" element={<Merchandise />} />
 
+          <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/payment-cancel" element={<PaymentCancel />} />
 
         </Routes>
 

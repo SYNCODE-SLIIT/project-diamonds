@@ -20,14 +20,31 @@ const handleInvoiceStatusChange = (e, invoice) => {
   const handlePaymentStatusChange = (e, payment) => {
     const newStatus = e.target.value;
     if (newStatus === payment.status) return;
+  
     axios
       .patch(`http://localhost:4000/api/finance/p/${payment._id}`, { status: newStatus })
       .then(() => {
         toast.success(`Payment updated to ${newStatus}`);
+        // Update the payments list
         const updatedPayments = dashboardData.payments.map((item) =>
           item._id === payment._id ? { ...item, status: newStatus } : item
         );
-        setDashboardData({ ...dashboardData, payments: updatedPayments });
+  
+        // Update expenses locally: add only if approved, remove if not.
+        let updatedExpenses = dashboardData.expenses || [];
+        if (newStatus === 'approved') {
+          if (!updatedExpenses.find((exp) => exp._id === payment._id)) {
+            updatedExpenses.push({ ...payment, status: newStatus });
+          }
+        } else {
+          updatedExpenses = updatedExpenses.filter((exp) => exp._id !== payment._id);
+        }
+  
+        setDashboardData({
+          ...dashboardData,
+          payments: updatedPayments,
+          expenses: updatedExpenses,
+        });
       })
       .catch((error) => {
         console.error(error);
