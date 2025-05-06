@@ -26,7 +26,7 @@ function generateReferenceId() {
   return 'PAY-' + Math.floor(100 + Math.random() * 900);
 }
 
-const MerchandisePaymentForm = ({ product, onClose }) => {
+const MerchandisePaymentForm = ({ product }) => {
   const userAuth = typeof useUserAuth === 'function' ? useUserAuth() : {};
   const user = userAuth?.user || null;
   const [step, setStep] = useState(product ? 2 : 1);
@@ -138,7 +138,7 @@ const MerchandisePaymentForm = ({ product, onClose }) => {
 
         setReferenceId(generateReferenceId());
         setStep(3);
-      } catch (err) {
+      } catch {
         setErrors({ ...newErrors, submit: 'Payment failed. Please try again.' });
       } finally {
         setSubmitting(false);

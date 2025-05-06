@@ -32,12 +32,17 @@ import adminRoutes from './routes/adminRoutes.js';
 
 import ContentcreatorRoutes from './routes/ContentcreatorRoutes.js'; 
 
+import certificateRoutes from './routes/certificateRoutes.js';
+
+import sponsorshipRoutes from './routes/sponsorshipRoutes.js';
+
+
 import path from "path";
 import { fileURLToPath } from "url";
 import refundRoutes from "./routes/refundRoutes.js";
 import merchandiseRoutes from './routes/merchandiseRoutes.js';
 import financeNotificationRoutes from './routes/financeNotificationRoutes.js';
-
+import collaborationRoutes from './routes/collaborationRoutes.js'
 // Load environment variables
 dotenv.config();
 
@@ -126,6 +131,15 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.get("/", (req, res) => {
     res.send("API is running...");
 });
+
+app.use('/api', collaborationRoutes);
+
+app.use('/api', certificateRoutes);
+
+app.use('/api', sponsorshipRoutes);
+
+
+
 
 // Start Server
 app.listen(port, () => console.log(`Server running on port ${port}`));

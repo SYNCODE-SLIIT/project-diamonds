@@ -102,7 +102,7 @@ import AdminDashboard from './components/team/AdminDashboard';
 import MyEvents  from './components/event/MyEvents';
 import AdminBudgetRequests from './pages/admin/AdminBudgetRequests';
 import MerchandiseAdmin from './pages/admin/MerchandiseAdmin';
-
+import Collabaration from './pages/content/Collaboration';
 const App = () => {
   return (
     <div className="">
@@ -172,6 +172,7 @@ const App = () => {
 
 
           <Route path="/admin" element={<AdminLayout />}>
+            <Route path="collaboration" element={<Collabaration />} />
             <Route path="blog" element={<BlogPosts />} />
             <Route path="content-creators" element={<ContentCreatorList />} />
             <Route path="create-blog-post" element={<CreateBlogPost />} />
