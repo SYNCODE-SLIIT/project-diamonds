@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/mongodb.js';
+import crypto from 'crypto';
 
 import authRoutes from "./routes/authRoutes.js";
 import incomeRoutes from "./routes/incomeRoutes.js";
@@ -45,6 +46,10 @@ import practiceRequestRoutes from './routes/practiceRequestRoutes.js';
 
 // Load environment variables
 dotenv.config();
+
+// Generate a new JWT secret on each server start to invalidate existing tokens on restart
+const dynamicSecret = crypto.randomBytes(64).toString('hex');
+process.env.JWT_SECRET = dynamicSecret;
 
 // Resolve __dirname for ES module compatibility
 const __filename = fileURLToPath(import.meta.url);

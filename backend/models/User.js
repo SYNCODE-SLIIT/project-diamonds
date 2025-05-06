@@ -19,7 +19,8 @@ const UserSchema = new Schema({
     required: function() { return this.role === 'member' || this.role === 'organizer'; }
   },
   createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  updatedAt: { type: Date, default: Date.now },
+  refreshTokens: [{ type: String }]
 });
 
 const User = mongoose.model('User', UserSchema);

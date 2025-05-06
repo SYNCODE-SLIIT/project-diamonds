@@ -23,13 +23,17 @@ const AdminSidebar = () => {
   useEffect(() => {
     let interval;
     const fetchTotal = async () => {
+      // Get auth token and bail if missing or invalid
+      const token = localStorage.getItem('token');
+      if (!token || token === 'null') return;
       try {
-        // Fetch group chat unread counts
-        const groupRes = await fetch(`http://localhost:4000/api/chat-groups/user/${user._id}`);
+        // Fetch group chat unread counts with auth header
+        const groupRes = await fetch(`http://localhost:4000/api/chat-groups/user/${user._id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
         const groupData = await groupRes.json();
         const unreadGroups = (groupData.groups || []).reduce((sum, g) => sum + (g.unreadCount || 0), 0);
         // Fetch direct chat unread counts
-        const token = localStorage.getItem('token');
         const directRes = await fetch(`http://localhost:4000/api/direct-chats/user/${user._id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
