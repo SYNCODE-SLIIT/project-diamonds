@@ -17,8 +17,9 @@ import {
   paySalary,
   getFinancialReport,
   getPaymentStatus,
+  getAnomalies,
 } from '../controllers/financialController.js';
-import { upload } from '../middleware/uploadmiddleware.js';
+import { upload, memoryUpload } from '../middleware/uploadmiddleware.js';
 import Payment from '../models/Payment.js';
 import Invoice from '../models/Invoice.js';
 import PDFDocument from 'pdfkit';
@@ -26,16 +27,78 @@ import { protect } from '../middleware/authMiddleware.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import Transaction from '../models/Transaction.js';
+import { uploadToSupabase } from '../utils/supabaseUpload.js';
+import { uploadFile } from '../utils/fileUpload.js';
 
 const router = express.Router();
 
 // Protect all endpoints
 router.use(protect);
 
-// POST endpoints
-router.post('/cb', upload.single('infoFile'), createBudget); // Updated to process file upload for budget
-router.post('/ef', upload.single('receiptFile'), requestRefund);
-router.post('/mp', upload.single('bankSlip'), makePayment);
+// POST endpoints with Supabase and Cloudinary fallback
+router.post('/cb', upload.single('infoFile'), async (req, res, next) => {
+  try {
+    if (req.file) {
+      try {
+        const uploadResult = await uploadToSupabase(req.file, 'budget_files');
+        req.fileUrl = uploadResult.url;
+        req.fileProvider = uploadResult.provider;
+      } catch (supabaseError) {
+        console.warn('Supabase upload failed, falling back to Cloudinary:', supabaseError.message);
+        const uploadResult = await uploadFile(req.file, 'budget_files');
+        req.fileUrl = uploadResult.url;
+        req.fileProvider = uploadResult.provider;
+      }
+    }
+    next();
+  } catch (error) {
+    console.error('Budget file upload error:', error);
+    return res.status(500).json({ message: 'File upload failed', error: error.message });
+  }
+}, createBudget);
+
+router.post('/ef', upload.single('receiptFile'), async (req, res, next) => {
+  try {
+    if (req.file) {
+      try {
+        const uploadResult = await uploadToSupabase(req.file, 'refund_receipts');
+        req.fileUrl = uploadResult.url;
+        req.fileProvider = uploadResult.provider;
+      } catch (supabaseError) {
+        console.warn('Supabase upload failed, falling back to Cloudinary:', supabaseError.message);
+        const uploadResult = await uploadFile(req.file, 'refund_receipts');
+        req.fileUrl = uploadResult.url;
+        req.fileProvider = uploadResult.provider;
+      }
+    }
+    next();
+  } catch (error) {
+    console.error('Refund receipt upload error:', error);
+    return res.status(500).json({ message: 'File upload failed', error: error.message });
+  }
+}, requestRefund);
+
+router.post('/mp', memoryUpload.single('bankSlip'), async (req, res, next) => {
+  try {
+    if (req.file) {
+      try {
+        const uploadResult = await uploadToSupabase(req.file, 'bank_slips');
+        req.fileUrl = uploadResult.url;
+        req.fileProvider = uploadResult.provider;
+      } catch (supabaseError) {
+        console.warn('Supabase upload failed, falling back to Cloudinary:', supabaseError.message);
+        const uploadResult = await uploadFile(req.file, 'bank_slips');
+        req.fileUrl = uploadResult.url;
+        req.fileProvider = uploadResult.provider;
+      }
+    }
+    next();
+  } catch (error) {
+    console.error('Bank slip upload error:', error);
+    return res.status(500).json({ message: 'File upload failed', error: error.message });
+  }
+}, makePayment);
 
 // GET endpoints
 router.get('/getp', getAllPaymentsWithUserData);
@@ -47,6 +110,7 @@ router.get('/dashboard', getDashboardData);
 router.get('/invoice-report', generateInvoiceReport);
 router.get('/excel-report', generateExcelReport);
 router.get('/report', getFinancialReport);
+router.get('/anomalies', getAnomalies);
 router.get('/getp/:id', async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id).populate('invoiceId');
@@ -176,6 +240,46 @@ router.get('/invoice/:invoiceId/download', protect, async (req, res) => {
   }
 });
 
+// GET transaction details with documents
+router.get('/transaction/:id', async (req, res) => {
+  try {
+    const transaction = await Transaction.findById(req.params.id)
+      .populate('user')
+      .populate('invoiceId');
+    
+    if (!transaction) {
+      return res.status(404).json({ message: 'Transaction not found' });
+    }
+
+    // Get associated payment if exists
+    const payment = await Payment.findOne({ invoiceId: transaction.invoiceId })
+      .populate('user')
+      .lean();
+
+    // Get associated documents
+    const documents = [];
+    if (payment?.bankSlipFile) {
+      documents.push({
+        type: 'Bank Slip',
+        url: payment.bankSlipFile,
+        uploadDate: payment.createdAt
+      });
+    }
+
+    // Combine all data
+    const transactionDetails = {
+      ...transaction.toObject(),
+      payment: payment || null,
+      documents: documents
+    };
+
+    res.json(transactionDetails);
+  } catch (error) {
+    console.error('Error fetching transaction details:', error);
+    res.status(500).json({ message: 'Error fetching transaction details', error: error.message });
+  }
+});
+
 // DELETE
 router.delete('/:recordType/:id', deleteFinancialRecord);
 
@@ -185,5 +289,32 @@ router.patch('/:recordType/:id', updateFinancialRecord);
 // Salary endpoints
 router.get('/salary/members', getAllMembers);
 router.post('/salary/pay', paySalary);
+
+// Resolve anomaly
+router.post('/anomalies/:id/resolve', async (req, res) => {
+  try {
+    const transaction = await Transaction.findById(req.params.id);
+    if (!transaction) {
+      return res.status(404).json({ message: 'Transaction not found' });
+    }
+
+    // Update the transaction with resolved status
+    transaction.anomalyStatus = 'resolved';
+    await transaction.save();
+
+    res.json({ 
+      success: true, 
+      message: 'Anomaly resolved successfully',
+      transaction 
+    });
+  } catch (error) {
+    console.error('Error resolving anomaly:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error resolving anomaly', 
+      error: error.message 
+    });
+  }
+});
 
 export default router;

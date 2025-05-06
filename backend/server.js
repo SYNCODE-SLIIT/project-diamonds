@@ -14,6 +14,7 @@ import financialRoutes from './routes/financialRoutes.js';
 import transactionRoutes from "./routes/transactionRoutes.js";
 import packageRoutes from './routes/packageRoutes.js';
 import userRoutes from "./routes/userRoutes.js";
+import stripeRoutes from './routes/stripeRoutes.js';
 
 import blogPostRoutes from "./routes/blogPostRoutes.js";
 import managePostRoutes from "./routes/managePostRoutes.js";
@@ -53,7 +54,12 @@ import sponsorshipRoutes from './routes/sponsorshipRoutes.js';
 
 import merchandiseRoutes from './routes/merchandiseRoutes.js';
 
+
 import collaborationRoutes from './routes/collaborationRoutes.js'
+
+import financeNotificationRoutes from './routes/financeNotificationRoutes.js';
+import chatbotRoutes from './routes/chatbot.js';
+
 
 // Load environment variables
 dotenv.config();
@@ -74,6 +80,9 @@ const port = process.env.PORT || 4000;
 app.use(express.json());
 app.use(cors());
 app.use('/uploads', express.static('uploads'));
+
+// Special middleware for Stripe webhooks
+app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
 
 // Add multer error handling middleware
 app.use(handleMulterError);
@@ -137,6 +146,10 @@ app.use('/api/practice-requests', practiceRequestRoutes);
 
 
 app.use('/api/merchandise', merchandiseRoutes);
+app.use('/api/chatbot', chatbotRoutes);
+
+// Stripe Routes
+app.use('/api/stripe', stripeRoutes);
 
 
 // API Endpoints

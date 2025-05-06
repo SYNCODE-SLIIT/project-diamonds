@@ -65,6 +65,16 @@ const upload = multer({
   }
 });
 
+// Add memory storage for special routes (like bank slip prediction)
+const memoryUpload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+    files: 1
+  }
+});
+
 // Error handling middleware for multer
 const handleMulterError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
@@ -90,5 +100,5 @@ const handleMulterError = (err, req, res, next) => {
   next();
 };
 
-export { upload, handleMulterError };
+export { upload, memoryUpload, handleMulterError };
 export default upload;
