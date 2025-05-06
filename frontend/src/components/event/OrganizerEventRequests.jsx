@@ -5,8 +5,8 @@ import {
 } from '../../services/eventRequestService';
 import { UserContext } from '../../context/userContext';
 import assets from '../../assets/assets.js';
-import EditEventRequestModal from './EditEventRequestModal';
 import { Calendar, CheckCircle, Clock, FileCheck, Search, Filter, Calendar as CalendarIcon, MapPin, Users, MessageSquare } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const OrganizerEventRequests = () => {
   const { user } = useContext(UserContext);
@@ -14,10 +14,9 @@ const OrganizerEventRequests = () => {
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [requestToEdit, setRequestToEdit] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
+  const navigate = useNavigate();
 
   const organizerID = user?._id;
 
@@ -38,11 +37,6 @@ const OrganizerEventRequests = () => {
       fetchData();
     }
   }, [organizerID]);
-
-  const handleEdit = (request) => {
-    setRequestToEdit(request);
-    setEditModalOpen(true);
-  };
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this request?')) {
@@ -249,7 +243,8 @@ const OrganizerEventRequests = () => {
               {filteredRequests.map((req) => (
                 <div
                   key={req._id}
-                  className="bg-white shadow-lg rounded-xl p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 relative overflow-hidden"
+                  className="bg-white shadow-lg rounded-xl p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 relative overflow-hidden cursor-pointer"
+                  onClick={() => navigate(`/event-requests/${req._id}`)}
                 >
                   {/* Status Indicator */}
                   <div className={`absolute top-0 right-0 w-20 h-20 ${
@@ -307,13 +302,19 @@ const OrganizerEventRequests = () => {
                     {req.status === 'pending' && (
                       <>
                         <button
-                          onClick={() => handleEdit(req)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/event-requests/${req._id}/edit`);
+                          }}
                           className="px-4 py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white rounded-lg hover:from-yellow-500 hover:to-yellow-600 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                         >
                           Edit
                         </button>
                         <button
-                          onClick={() => handleDelete(req._id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(req._id);
+                          }}
                           className="px-4 py-2 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-lg hover:from-red-500 hover:to-red-600 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                         >
                           Delete
@@ -327,22 +328,6 @@ const OrganizerEventRequests = () => {
           )}
         </div>
       </div>
-
-      {/* Edit Modal */}
-      {editModalOpen && requestToEdit && (
-        <EditEventRequestModal
-          request={requestToEdit}
-          onClose={() => {
-            setEditModalOpen(false);
-            setRequestToEdit(null);
-          }}
-          onSuccess={() => {
-            fetchData();
-            setEditModalOpen(false);
-            setRequestToEdit(null);
-          }}
-        />
-      )}
     </div>
   );
 };

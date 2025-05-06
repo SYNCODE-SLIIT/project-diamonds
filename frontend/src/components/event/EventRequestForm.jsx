@@ -248,7 +248,7 @@ const [showCustomModal, setShowCustomModal] = useState(false);
     };
 
     return (
-      <div className="bg-gradient-to-r from-red-900 to-red-700 text-white rounded-t-xl mt-20">
+      <div className="bg-gradient-to-r from-red-900 to-red-700 text-white rounded-xl">
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-between items-center mb-6">
             <div>
@@ -276,7 +276,10 @@ const [showCustomModal, setShowCustomModal] = useState(false);
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex items-center justify-center bg-red-800/80 rounded-full w-8 h-8 shadow-sm">
-                        {getIcon(stepItem.icon, status)}
+                        {status === 'completed' ? 
+                          <CheckIcon className="w-5 h-5 text-white" /> :
+                          <div className="text-white font-medium">{getIcon(stepItem.icon, status)}</div>
+                        }
                       </div>
                       <span className="text-white/90 text-xs font-medium">Step {stepItem.number}</span>
                     </div>
@@ -524,18 +527,19 @@ const [showCustomModal, setShowCustomModal] = useState(false);
     </div>
   )}
 
-        {/* Additional Services and Review & Submit steps remain the same */}
+        {/* Additional Services section with improved styling */}
         {step === 3 && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">Additional Services</h3>
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-gray-700 mb-6">Additional Services</h3>
+            
             <div className="grid md:grid-cols-2 gap-4">
               {services.map(service => (
                 <label 
                   key={service._id} 
-                  className={`border rounded-lg p-4 cursor-pointer 
+                  className={`border rounded-lg p-4 cursor-pointer transition-all hover:shadow-md
                     ${formData.selectedServices.includes(service._id) 
                       ? 'border-blue-500 bg-blue-50' 
-                      : 'border-gray-200'
+                      : 'border-gray-200 hover:border-blue-300'
                     }`}
                 >
                   <div className="flex items-center">
@@ -543,53 +547,135 @@ const [showCustomModal, setShowCustomModal] = useState(false);
                       type="checkbox"
                       checked={formData.selectedServices.includes(service._id)}
                       onChange={() => toggleService(service._id)}
-                      className="mr-3"
+                      className="mr-3 h-5 w-5 text-blue-600 rounded"
                     />
                     <div>
                       <h4 className="font-bold text-gray-800">{service.serviceName}</h4>
-                      <p className="text-sm text-gray-600">Rs.{service.price.toFixed(2)}</p>
+                      <p className="text-sm text-red-600 font-medium">Rs. {service.price.toLocaleString()}</p>
+                      {service.description && (
+                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">{service.description}</p>
+                      )}
+                      {service.category && (
+                        <span className="inline-block mt-2 px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                          {service.category}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </label>
               ))}
             </div>
-            <div className="flex justify-between mt-4">
-              <button onClick={prevStep} className="btn-secondary border p-2 rounded">Previous Step</button>
-              <button onClick={nextStep} className="btn bg-blue-600 text-white px-4 py-2 rounded">Next Step</button>
+            <div className="flex justify-between mt-6">
+              <button onClick={prevStep} className="btn-secondary border p-2 rounded-lg hover:bg-gray-100">Previous Step</button>
+              <button onClick={nextStep} className="btn bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Next Step</button>
             </div>
           </div>
         )}
 
+        {/* Review & Submit with improved styling */}
         {step === 4 && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">Review & Submit</h3>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="grid md:grid-cols-2 gap-3">
-                <p><strong>Event:</strong> {formData.eventName}</p>
-                <p><strong>Location:</strong> {formData.eventLocation}</p>
-                <p><strong>Date:</strong> {formData.eventDate}</p>
-                <p><strong>Guests:</strong> {formData.guestCount}</p>
-                <p><strong>Package:</strong> {
-                  systemPackages.find(p => p._id === formData.selectedPackageID)?.packageName || 'Custom Package'
-                }</p>
-                <p><strong>Estimated Price:</strong> {
-                  formData.selectedPackageID
-                    ? `Rs.${systemPackages.find(p => p._id === formData.selectedPackageID)?.price.toFixed(2)} + additional charges`
-                    : `Custom quote - price will be confirmed by admin`
-                }</p>
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-gray-700 mb-6">Review & Submit</h3>
+            
+            <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
+              <h4 className="text-lg font-medium text-gray-800 mb-4">Event Details</h4>
+              <div className="grid md:grid-cols-2 gap-x-6 gap-y-3">
+                <div>
+                  <p className="text-sm text-gray-500">Event Name</p>
+                  <p className="font-medium text-gray-800">{formData.eventName}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Location</p>
+                  <p className="font-medium text-gray-800">{formData.eventLocation}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Date</p>
+                  <p className="font-medium text-gray-800">{new Date(formData.eventDate).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Guest Count</p>
+                  <p className="font-medium text-gray-800">{formData.guestCount}</p>
+                </div>
               </div>
-              <p className="mt-3"><strong>Additional Services:</strong> {
-                services
-                  .filter(s => formData.selectedServices.includes(s._id))
-                  .map(s => `${s.serviceName} (Rs.${s.price})`)
-                  .join(', ') || 'None'
-              }</p>
+              
+              {formData.remarks && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <p className="text-sm text-gray-500">Remarks</p>
+                  <p className="text-gray-700">{formData.remarks}</p>
+                </div>
+              )}
             </div>
-            <div className="flex justify-between mt-4">
-              <button onClick={prevStep} className="btn-secondary border p-2 rounded">Previous Step</button>
+
+            <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
+              <h4 className="text-lg font-medium text-gray-800 mb-4">Package</h4>
+              {formData.selectedPackageID ? (
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-medium text-gray-800">
+                      {systemPackages.find(p => p._id === formData.selectedPackageID)?.packageName}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {systemPackages.find(p => p._id === formData.selectedPackageID)?.description}
+                    </p>
+                  </div>
+                  <p className="font-bold text-red-600">
+                    Rs. {systemPackages.find(p => p._id === formData.selectedPackageID)?.price.toLocaleString()}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-gray-500 italic">Custom quote - price will be confirmed by admin</p>
+              )}
+            </div>
+
+            {formData.selectedServices.length > 0 && (
+              <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
+                <h4 className="text-lg font-medium text-gray-800 mb-4">Additional Services</h4>
+                <ul className="space-y-3">
+                  {formData.selectedServices.map(serviceId => {
+                    const service = services.find(s => s._id === serviceId);
+                    return service ? (
+                      <li key={serviceId} className="flex justify-between">
+                        <span className="text-gray-800">{service.serviceName}</span>
+                        <span className="font-medium text-red-600">Rs. {service.price.toLocaleString()}</span>
+                      </li>
+                    ) : null;
+                  })}
+                </ul>
+                <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between">
+                  <span className="font-medium text-gray-800">Total Additional Services</span>
+                  <span className="font-bold text-red-600">
+                    Rs. {formData.selectedServices.reduce((sum, serviceId) => {
+                      const service = services.find(s => s._id === serviceId);
+                      return sum + (service?.price || 0);
+                    }, 0).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-gray-100 p-6 rounded-lg border border-gray-300">
+              <div className="flex justify-between items-center">
+                <h4 className="text-lg font-bold text-gray-800">Estimated Total</h4>
+                <p className="text-xl font-bold text-red-600">
+                  Rs. {(
+                    (systemPackages.find(p => p._id === formData.selectedPackageID)?.price || 0) +
+                    formData.selectedServices.reduce((sum, serviceId) => {
+                      const service = services.find(s => s._id === serviceId);
+                      return sum + (service?.price || 0);
+                    }, 0)
+                  ).toLocaleString()}
+                </p>
+              </div>
+              <p className="text-sm text-gray-500 mt-2">
+                Final pricing may vary based on specific requirements and admin approval.
+              </p>
+            </div>
+
+            <div className="flex justify-between mt-6">
+              <button onClick={prevStep} className="btn-secondary border p-2 rounded-lg hover:bg-gray-100">Previous Step</button>
               <button 
                 onClick={handleSubmit} 
-                className="btn bg-green-500 text-white px-4 py-2 rounded" 
+                className="btn bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600" 
                 disabled={submitting}
               >
                 {submitting ? 'Submitting...' : 'Submit Request'}

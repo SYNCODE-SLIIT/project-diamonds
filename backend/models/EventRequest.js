@@ -50,7 +50,7 @@ const EventRequestSchema = new mongoose.Schema({
   },
   remarks: {
     type: String,
-    minlength: 10,
+    minlength: 0,
     maxlength: 500,
   },
   reviewedBy: {
