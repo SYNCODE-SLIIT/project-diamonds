@@ -43,7 +43,7 @@
     "react-select": "^5.10.1",
     "react-toastify": "^11.0.5",
     "recharts": "^2.15.1",
-    "sweetalert2": "^11.20.0",
+    "sweetalert2": "^11.21.0",
     "tailwindcss": "^4.0.17"
   },
   "devDependencies": {
