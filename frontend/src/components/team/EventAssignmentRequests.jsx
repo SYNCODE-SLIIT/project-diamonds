@@ -18,7 +18,9 @@ const EventAssignmentRequests = () => {
       setError(null);
       const response = await axios.get('http://localhost:4000/api/assignments/requests');
       console.log('Fetched requests:', response.data); // Debug log
-      setRequests(response.data);
+      // Filter out any requests without an event or member
+      const validRequests = response.data.filter(req => req.event && req.event.eventName && req.member && req.member._id);
+      setRequests(validRequests);
     } catch (error) {
       console.error('Error fetching assignment requests:', error);
       setError('Failed to fetch assignment requests. Please try again later.');
@@ -92,17 +94,22 @@ const EventAssignmentRequests = () => {
             <div key={request._id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="text-xl font-medium text-gray-800">{request.event.eventName}</h3>
+                  <h3 className="text-xl font-medium text-gray-800">
+                    {request.event?.eventName || 'Unknown Event'}
+                  </h3>
                   <div className="mt-2 space-y-2">
                     <div className="flex items-center text-gray-600">
                       <Calendar className="h-5 w-5 mr-2" />
-                      <span>{new Date(request.event.eventDate).toLocaleDateString()}</span>
+                      <span>{request.event?.eventDate ? new Date(request.event.eventDate).toLocaleDateString() : 'N/A'}</span>
                     </div>
-                    <p className="text-gray-600">Location: {request.event.eventLocation}</p>
-                    <p className="text-gray-600">Guest Count: {request.event.guestCount}</p>
+                    <p className="text-gray-600">Location: {request.event?.eventLocation || 'N/A'}</p>
+                    <p className="text-gray-600">Guest Count: {request.event?.guestCount ?? 'N/A'}</p>
                     <div className="flex items-center text-gray-600">
                       <User className="h-5 w-5 mr-2" />
-                      <span>Assigned by: {request.assignedBy}</span>
+                      <span>Requested by: {request.member?.fullName || 'Unknown Member'}</span>
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <span className="text-sm text-gray-500">Member ID: {request.member?._id || 'N/A'}</span>
                     </div>
                   </div>
                 </div>

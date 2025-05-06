@@ -11,6 +11,7 @@ import incomeRoutes from "./routes/incomeRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import financialRoutes from './routes/financialRoutes.js';
+import financeNotificationRoutes from './routes/financeNotificationRoutes.js';
 import transactionRoutes from "./routes/transactionRoutes.js";
 import packageRoutes from './routes/packageRoutes.js';
 import userRoutes from "./routes/userRoutes.js";
@@ -74,6 +75,21 @@ const port = process.env.PORT || 4000;
 app.use(express.json());
 app.use(cors());
 app.use('/uploads', express.static('uploads'));
+
+// Multer error handling middleware
+const handleMulterError = (err, req, res, next) => {
+  if (err.name === 'MulterError') {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        error: 'File size is too large. Maximum size is 5MB'
+      });
+    }
+    return res.status(400).json({
+      error: err.message
+    });
+  }
+  next(err);
+};
 
 // Add multer error handling middleware
 app.use(handleMulterError);

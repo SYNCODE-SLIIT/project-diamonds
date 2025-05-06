@@ -33,3 +33,19 @@ export const assignMemberToPracticeSession = async (req, res) => {
     res.status(500).json({ message: 'Server error', error });
   }
 };
+
+// Delete a practice session
+export const deletePracticeSession = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const session = await PracticeSession.findById(id);
+    if (!session) {
+      return res.status(404).json({ message: 'Practice session not found' });
+    }
+    await PracticeSession.findByIdAndDelete(id);
+    res.status(200).json({ message: 'Practice session deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting practice session:', error);
+    res.status(500).json({ message: error.message });
+  }
+};

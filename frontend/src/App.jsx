@@ -39,6 +39,7 @@ import ApplicationSubmitted from './pages/authentication/ApplicationSubmitted';
 import AdminInviteApplicant from './pages/authentication/AdminInviteApplicant';
 import AdminProfile from './pages/authentication/AdminProfile';
 import GroupMembers from './pages/admin/GroupMembers';
+import AdminBudgetRequests from './pages/admin/AdminBudgetRequests';
 // import AdminInvitedApplicationsList from './pages/authentication/AdminInvitedApplicationsList';
 import FinalizedDetails from './pages/authentication/FinalizedDetails';
  
@@ -132,7 +133,7 @@ const App = () => {
             <Route path='/rform' exact element={<RefundForm/>} />
             <Route path='/pform' exact element={<PaymentOptions />} />
 
-            <Route path="/media/:id" component={<ViewMedia/>} />
+            <Route path="/media/:id" element={<ViewMedia />} />
             <Route path="/media/edit/:id" element={<EditMedia />} />
 {/* 
             <Route path="/media" element={<ViewAllMedia />} /> */}
