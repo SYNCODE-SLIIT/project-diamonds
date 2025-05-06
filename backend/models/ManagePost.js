@@ -4,8 +4,8 @@ const ManagePostSchema = new mongoose.Schema(
   {
     mediaTitle: { type: String, required: true },
     description: { type: String },
-    // Restrict to images only
-    mediaType: { type: String, enum: ["image"], default: "image", required: true },
+    // Allow images and videos
+    mediaType: { type: String, enum: ["image", "video"], default: "image", required: true },
     category: { type: String, required: true },
     privacy: { type: String, enum: ["public", "private", "restricted"], default: "public" },
     tags: [{ type: String }],

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/userContext';
 import 'boxicons';
+import axiosInstance from '../../utils/axiosInstance';
 import BudgetForm from '../../components/Financial/BudgetForm';
 
 const AdminSidebar = () => {
@@ -33,16 +34,12 @@ const AdminSidebar = () => {
       if (!token || token === 'null') return;
       try {
         // Fetch group chat unread counts with auth header
-        const groupRes = await fetch(`http://localhost:4000/api/chat-groups/user/${user._id}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const groupData = await groupRes.json();
+        const groupRes = await axiosInstance.get(`/api/chat-groups/user/${user._id}`);
+        const groupData = groupRes.data;
         const unreadGroups = (groupData.groups || []).reduce((sum, g) => sum + (g.unreadCount || 0), 0);
         // Fetch direct chat unread counts
-        const directRes = await fetch(`http://localhost:4000/api/direct-chats/user/${user._id}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const directData = await directRes.json();
+        const directRes = await axiosInstance.get(`/api/direct-chats/user/${user._id}`);
+        const directData = directRes.data;
         const unreadDirect = (directData.threads || []).reduce((sum, t) => sum + (t.unreadCount || 0), 0);
         const total = unreadGroups + unreadDirect;
         if (total !== lastTotalRef.current) {
@@ -255,7 +252,30 @@ const AdminSidebar = () => {
                   }
                 >
                   Content
-                  
+                </NavLink>
+              </li>
+              <li className="mb-[15px]">
+                <NavLink
+                  to="/admin/certificate-generator"
+                  className={({ isActive }) =>
+                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
+                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                  }
+                >
+                  Certificate Generator
+                </NavLink>
+              </li>
+              <li className="mb-[15px]">
+                <NavLink
+                  to="/admin/sponsorship"
+                  className={({ isActive }) =>
+                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
+                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                  }
+                >
+                  Sponsorship
                 </NavLink>
               </li>
             </ul>

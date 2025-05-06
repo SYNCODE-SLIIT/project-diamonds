@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -9,10 +9,10 @@ const EditBlogPost = () => {
     title: "",
     content: "",
     category: "",
-    status: "",
-    metaDescription: "",
+    publishDate: "",
     featuredImage: ""
   });
+  const [file, setFile] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -22,7 +22,14 @@ const EditBlogPost = () => {
         const response = await axios.get(`http://localhost:4000/api/blogposts/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setPost(response.data);
+        const data = response.data;
+        setPost({
+          title: data.title || '',
+          content: data.content || '',
+          category: data.category || '',
+          publishDate: data.publishDate ? data.publishDate.slice(0,10) : '',
+          featuredImage: data.featuredImage || ''
+        });
       } catch (err) {
         setError("Error fetching post");
       }
@@ -30,17 +37,26 @@ const EditBlogPost = () => {
     fetchPost();
   }, [id]);
 
+  const handleFileChange = (e) => setFile(e.target.files[0]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append('title', post.title);
+      formData.append('content', post.content);
+      formData.append('category', post.category);
+      formData.append('publishDate', post.publishDate);
+      if (file) formData.append('featuredImage', file);
       const response = await axios.put(
         `http://localhost:4000/api/blogposts/update/${id}`,
-        post,
-        { headers: { Authorization: `Bearer ${token}` } }
+        formData,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
       );
-      console.log("Blog post updated successfully:", response.data);
-      navigate("/blog");
+      console.log("Blog post updated successfully:", response?.data);
+      navigate("/admin/blog");
+      window.location.reload();
     } catch (err) {
       setError("Error updating blog post");
     }
@@ -88,32 +104,22 @@ const EditBlogPost = () => {
           </div>
 
           <div>
-            <label className="block text-gray-700 font-semibold">Status</label>
+            <label className="block text-gray-700 font-semibold">Publish Date</label>
             <input
-              type="text"
-              value={post.status}
-              onChange={(e) => setPost({ ...post, status: e.target.value })}
+              type="date"
+              value={post.publishDate}
+              onChange={(e) => setPost({ ...post, publishDate: e.target.value })}
               className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400"
             />
           </div>
 
           <div>
-            <label className="block text-gray-700 font-semibold">Meta Description</label>
+            <label className="block text-gray-700 font-semibold">Featured Image</label>
             <input
-              type="text"
-              value={post.metaDescription}
-              onChange={(e) => setPost({ ...post, metaDescription: e.target.value })}
-              className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400"
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-700 font-semibold">Featured Image URL</label>
-            <input
-              type="text"
-              value={post.featuredImage}
-              onChange={(e) => setPost({ ...post, featuredImage: e.target.value })}
-              className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400"
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400"
             />
           </div>
 

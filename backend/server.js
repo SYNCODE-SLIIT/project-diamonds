@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/mongodb.js';
+import { handleMulterError } from './middleware/uploadmiddleware.js';
 
 import crypto from 'crypto';
 
@@ -103,8 +104,6 @@ app.use('/api/organizers', organizerRoutes);
 
 // Financial Management Routes
 app.use('/api/finance', financialRoutes);
-app.use('/api/finance/notifications', financeNotificationRoutes);
-
 
 app.use('/api/assignments', assignmentRoutes);
 
