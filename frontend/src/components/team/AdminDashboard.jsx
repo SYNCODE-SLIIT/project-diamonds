@@ -7,8 +7,8 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-import EventAssignment from './EventAssignment';
-import PracticeSessionManagement from './PracticeSessionManagement';
+import EventAssign from './EventAssign';
+import PracticeAssign from './PracticeAssign';
 import CalendarView from './CalendarView';
 
 const AdminDashboard = () => {
@@ -23,13 +23,13 @@ const AdminDashboard = () => {
       key: 'events', 
       label: 'Event Assignment', 
       icon: Users,
-      component: <EventAssignment />
+      component: <EventAssign />
     },
     { 
       key: 'practice', 
       label: 'Practice Sessions', 
       icon: Clock,
-      component: <PracticeSessionManagement />
+      component: <PracticeAssign/>
     },
     { 
       key: 'calendar', 
