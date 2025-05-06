@@ -61,9 +61,6 @@ const RefundHistory = () => {
     <div className="my-5 mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <Link to="/dashboard/expense" className="text-gray-600 hover:text-gray-800">
-            <LuArrowLeft />
-          </Link>
           <h2 className="text-2xl font-semibold">Refund History</h2>
         </div>
       </div>
