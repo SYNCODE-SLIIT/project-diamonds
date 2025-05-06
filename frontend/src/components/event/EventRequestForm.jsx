@@ -3,7 +3,7 @@ import { getPackages } from '../../services/packageService';
 import { getAdditionalServices } from '../../services/additionalServiceService';
 import { submitEventRequest } from '../../services/eventRequestService';
 import { UserContext } from '../../context/userContext';
-import { XIcon, CheckIcon, AlertTriangleIcon, EyeIcon,  PlusIcon} from 'lucide-react';
+import { XIcon, CheckIcon, AlertTriangleIcon, EyeIcon,  PlusIcon, CalendarCheckIcon, BookOpenIcon, Package2Icon } from 'lucide-react';
 import PackageDetailsModal from './PackageDetailsModal.jsx';
 import CustomPackageModal from './CustomPackageModal.jsx';
 
@@ -217,66 +217,90 @@ const [showCustomModal, setShowCustomModal] = useState(false);
 
   const ProgressIndicator = () => {
     const steps = [
-      { number: 1, title: 'Event Details' },
-      { number: 2, title: 'Choose Package' },
-      { number: 3, title: 'Additional Services' },
-      { number: 4, title: 'Review & Submit' }
+      { number: 1, title: 'Enter Event Details', icon: 'calendar' },
+      { number: 2, title: 'Select Package', icon: 'package' },
+      { number: 3, title: 'Add Additional Services', icon: 'plus-circle' },
+      { number: 4, title: 'Confirmation', icon: 'check-circle' }
     ];
 
-    const getStepIndicator = (stepNumber) => {
-      if (stepNumber < step) {
-        return <CheckIcon className="w-6 h-6 text-white" />;
-      }
-      return stepNumber;
+    const getStepStatus = (stepNumber) => {
+      if (stepNumber < step) return 'completed';
+      if (stepNumber === step) return 'current';
+      return 'upcoming';
     };
 
-    const getStepBackground = (stepNumber) => {
-      if (stepNumber < step) {
-        return 'bg-green-500';
+    const getIcon = (iconName, status) => {
+      const iconSize = "w-6 h-6";
+      const iconColor = status === 'upcoming' ? 'text-white/60' : 'text-white';
+      
+      switch(iconName) {
+        case 'calendar':
+          return <CalendarCheckIcon className={`${iconSize} ${iconColor}`} />;
+        case 'package':
+          return <Package2Icon className={`${iconSize} ${iconColor}`} />;
+        case 'plus-circle':
+          return <PlusIcon className={`${iconSize} ${iconColor}`} />;
+        case 'check-circle':
+          return <CheckIcon className={`${iconSize} ${iconColor}`} />;
+        default:
+          return <CheckIcon className={`${iconSize} ${iconColor}`} />;
       }
-      if (stepNumber === step) {
-        return 'bg-blue-500';
-      }
-      return 'bg-gray-300';
     };
 
     return (
-      <div className="bg-gradient-to-r from-red-900 to-red-700 text-white rounded-t-xl mt-20 ">
-        <div className="flex justify-between items-center p-4">
-          <div>
-            <h2 className="text-2xl font-bold">Book a Dance Team</h2>
-            <p className="text-sm text-white/80">Fill in the details to book your dance team</p>
+      <div className="bg-gradient-to-r from-red-900 to-red-700 text-white rounded-t-xl mt-20">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-2xl font-bold">Book a Dance Team</h2>
+              <p className="text-sm text-white/80">Fill in the details to book your dance team</p>
+            </div>
           </div>
-          <div className="text-white cursor-pointer">
-            <XIcon />
-          </div>
-        </div>
-        <div className="container mx-auto px-4 pb-4">
-          <div className="flex items-center justify-between">
-            {steps.slice(0, 3).map((step, index) => (
-              <div 
-                key={step.number} 
-                className="flex items-center space-x-3 relative"
-              >
-                <div 
-                  className={`w-10 h-10 rounded-full flex items-center justify-center 
-                    ${getStepBackground(step.number)} text-white font-bold`}
-                >
-                  {getStepIndicator(step.number)}
-                </div>
-
-                {index < 2 && (
+          
+          <div className="flex justify-between items-center relative">
+            {steps.map((stepItem, index) => {
+              const status = getStepStatus(stepItem.number);
+              
+              return (
+                <div key={stepItem.number} className="flex flex-col items-center z-10 w-1/4">
+                  {/* Step Card */}
                   <div 
-                    className={`absolute left-full h-0.5 w-24 ${
-                      step.number < step 
-                        ? 'bg-white' 
-                        : 'bg-white/20'
-                    }`}
-                    style={{ marginLeft: '20px' }}
-                  />
-                )}
-              </div>
-            ))}
+                    className={`
+                      w-full max-w-[200px] aspect-[3/2] rounded-lg mb-3 p-4 flex flex-col justify-between
+                      ${status === 'current' ? 'bg-white/25 shadow-md' : 
+                        status === 'completed' ? 'bg-white/20' : 'bg-white/10'}
+                      transition-all duration-300 transform
+                      ${status === 'current' ? 'scale-110' : 'scale-100'}
+                      backdrop-blur-sm border border-white/10 hover:border-white/20
+                    `}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center justify-center bg-red-800/80 rounded-full w-8 h-8 shadow-sm">
+                        {getIcon(stepItem.icon, status)}
+                      </div>
+                      <span className="text-white/90 text-xs font-medium">Step {stepItem.number}</span>
+                    </div>
+                    <h3 className="text-white font-semibold text-sm mt-2">{stepItem.title}</h3>
+                  </div>
+                  
+                  {/* Status Label */}
+                  <span className={`text-xs font-medium px-2 py-1 rounded-full 
+                    ${status === 'completed' ? 'bg-green-800/30 text-green-100' : 
+                     status === 'current' ? 'bg-white/20 text-white' : 
+                     'bg-white/10 text-white/70'}`}>
+                    {status === 'completed' ? 'Completed' : 
+                     status === 'current' ? 'In Progress' : 'Pending'}
+                  </span>
+                </div>
+              );
+            })}
+            
+            {/* Connector Lines */}
+            <div className="absolute top-[30%] left-0 w-full h-[2px] flex justify-between z-0">
+              <div className={`w-1/3 h-full ${step > 1 ? 'bg-white' : 'bg-white/30'} transition-colors duration-300`}></div>
+              <div className={`w-1/3 h-full ${step > 2 ? 'bg-white' : 'bg-white/30'} transition-colors duration-300`}></div>
+              <div className={`w-1/3 h-full ${step > 3 ? 'bg-white' : 'bg-white/30'} transition-colors duration-300`}></div>
+            </div>
           </div>
         </div>
       </div>
@@ -284,7 +308,7 @@ const [showCustomModal, setShowCustomModal] = useState(false);
   };
 
   return (
-    <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl">
+    <div className="max-w-6xl mx-auto bg-white shadow-lg rounded-xl">
       <ProgressIndicator />
 
       <div className="p-8">

@@ -29,6 +29,13 @@ import profileCover from './event/profileCover.png';
 import navbar_myevents from './navbar-backgrounds/myevents-background.png';
 import loginCover from './home/loginCover.jpg';
 import event_booking from './home/eventbooking.jpg';
+import founder from './home/founder.png';
+import founder2 from './home/founder2.png';
+import avinaash1 from './home/avinash.jpg';
+import avinaash2 from './home/avinash2.jpg';
+import avinaash3 from './home/avinaash1.jpg';
+import avinaash4 from './home/avinnassh2.jpg';
+
 
 export const assets = {
   logo1,
@@ -61,6 +68,12 @@ export const assets = {
   navbar_myevents,
   loginCover,
   event_booking,
+  founder,
+  founder2,
+  avinaash1,
+  avinaash2,
+  avinaash3,
+  avinaash4,
 };
 
 export default assets;
