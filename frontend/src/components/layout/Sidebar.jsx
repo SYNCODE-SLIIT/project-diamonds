@@ -51,17 +51,28 @@ const Sidebar = () => {
   useEffect(() => {
     const fetchRefunds = async () => {
       try {
-        const response = await axiosInstance.get(API_PATHS.REFUND.GET_ALL_REFUNDS);
+        const response = await axiosInstance.get('/api/finance/getr');
         if (response.data && response.data.success) {
-          setHasRefunds(response.data.data.length > 0);
+          const refunds = response.data.data || [];
+          setHasRefunds(refunds.length > 0);
+        } else {
+          setHasRefunds(false);
         }
       } catch (error) {
         console.error("Error fetching refunds:", error);
+        setHasRefunds(false);
       }
     };
 
-    fetchRefunds();
-  }, []);
+    if (user && user._id) {
+      fetchRefunds();
+    }
+  }, [user]);
+
+  // Add a console log to check hasRefunds state
+  useEffect(() => {
+    console.log('hasRefunds state:', hasRefunds);
+  }, [hasRefunds]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');

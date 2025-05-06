@@ -19,7 +19,7 @@ const RefundHistory = () => {
   const fetchRefunds = async () => {
     setLoading(true);
     try {
-      const response = await axiosInstance.get(API_PATHS.REFUND.GET_ALL_REFUNDS);
+      const response = await axiosInstance.get('/api/finance/getr');
       if (response.data && response.data.success) {
         setRefunds(response.data.data);
       }
