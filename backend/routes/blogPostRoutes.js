@@ -7,7 +7,7 @@ import {
   deleteBlogPost, 
   getPublishedBlogPosts 
 } from "../controllers/blogPostController.js";
-import { protect } from "../middleware/authMiddleware.js"; // Protect routes for authenticated users
+import { protect } from "../middleware/authmiddleware.js"; // Protect routes for authenticated users
 
 const router = express.Router();
 

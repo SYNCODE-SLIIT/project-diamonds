@@ -102,7 +102,7 @@ const StripePaymentForm = ({ amount, onSuccess, onError }) => {
   );
 };
 
-const MerchandisePaymentForm = ({ product, onClose }) => {
+const MerchandisePaymentForm = ({ product }) => {
   const userAuth = typeof useUserAuth === 'function' ? useUserAuth() : {};
   const user = userAuth?.user || null;
   const [step, setStep] = useState(product ? 2 : 1);
@@ -243,9 +243,8 @@ const MerchandisePaymentForm = ({ product, onClose }) => {
             headers: { 'Content-Type': 'multipart/form-data' }
           });
 
-          setReferenceId(generateOrderId());
-          setStep(3);
-        }
+        setReferenceId(generateReferenceId());
+        setStep(3);
       } catch (err) {
         setErrors({ ...newErrors, submit: 'Payment failed. Please try again.' });
       } finally {

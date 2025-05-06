@@ -26,11 +26,13 @@
     "boxicons": "^2.1.4",
     "chart.js": "^4.4.9",
     "cloudinary": "^1.41.3",
+    "date-fns": "^4.1.0",
     "emoji-picker-react": "^4.12.2",
     "esbuild": "^0.25.1",
     "file-saver": "^2.0.5",
     "font-awesome": "^4.7.0",
     "framer-motion": "^12.6.2",
+    "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.483.0",
@@ -39,6 +41,7 @@
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^6.10.0",
     "react": "^19.0.0",
+    "react-big-calendar": "^1.18.0",
     "react-calendar": "^5.1.0",
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.0.0",
@@ -51,8 +54,11 @@
     "react-select": "^5.10.1",
     "react-toastify": "^11.0.5",
     "recharts": "^2.15.1",
-    "tailwindcss": "^4.0.17",
+
+    "sweetalert2": "^11.21.0",
+    "tailwindcss": "^4.0.17"
     "xlsx": "^0.18.5"
+
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

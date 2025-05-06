@@ -1,13 +1,14 @@
 import express from "express";
-import { registerUser, loginUser, getUserInfo } from "../controllers/authController.js";
+import { registerUser, loginUser, getUserInfo, refreshToken, logoutUser } from "../controllers/authController.js";
 import upload from "../middleware/uploadmiddleware.js";
-import { protect } from "../middleware/authMiddleware.js";
-
+import { protect } from "../middleware/authmiddleware.js";
 
 const router = express.Router();
 
-// router.post("/register", registerUser);
-// router.post("/login", loginUser);
+router.post("/register", registerUser);
+router.post("/login", loginUser);
+router.post("/refresh", refreshToken);
+router.post("/logout", logoutUser);
 router.get("/getUser", protect, getUserInfo);
 
 router.post("/upload-image", upload.single("image"), (req, res) => {
