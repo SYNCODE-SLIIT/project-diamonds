@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllPractices, createPractice, getPracticeAssignments, assignMembers } from '../controllers/practiceController.js';
+import { getAllPractices, createPractice, getPracticeAssignments, assignMembers, deletePractice } from '../controllers/practiceController.js';
 
 const router = express.Router();
 
@@ -14,5 +14,8 @@ router.get('/:id/assignments', getPracticeAssignments);
 
 // Assign members to practice
 router.post('/assign', assignMembers);
+
+// Delete a practice
+router.delete('/:id', deletePractice);
 
 export default router; 
