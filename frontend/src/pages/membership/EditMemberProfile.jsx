@@ -79,8 +79,8 @@ const EditMemberProfile = () => {
         const formData = new FormData();
         formData.append('userId', user.profileId);
         formData.append('profilePicture', newProfilePicture);
-        const picResponse = await fetch('http://localhost:4000/api/member-applications/updateProfilePicture', {
-          method: 'POST',
+        const picResponse = await fetch('http://localhost:4000/api/member-applications/profile-picture', {
+          method: 'PUT',
           body: formData
         });
         if (!picResponse.ok) {
