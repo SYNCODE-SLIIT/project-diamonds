@@ -145,8 +145,18 @@ const Dashboard = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleView = (item) => {
-    setSelectedItem(item);
+  const handleView = async (item) => {
+    if (activeTab === 'transactions' || activeTab === 'invoices') {
+      try {
+        const res = await axiosInstance.get(`/api/finance/transaction/${item._id}`);
+        setSelectedItem(res.data);
+      } catch (err) {
+        toast.error('Failed to fetch full details');
+        setSelectedItem(item);
+      }
+    } else {
+      setSelectedItem(item);
+    }
     setIsViewModalOpen(true);
   };
 

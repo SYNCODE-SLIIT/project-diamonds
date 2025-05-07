@@ -9,6 +9,8 @@ import Income from '../models/Income.js';
 import Expense from '../models/Expense.js';
 import Salary from '../models/Salary.js';
 import User from '../models/User.js';
+import Event from '../models/Event.js';
+import Merchandise from '../models/Merchandise.js';
 
 import cloudinary from '../config/cloudinary.js';
 import { createFinanceNotification } from './financeNotificationController.js';
@@ -98,7 +100,17 @@ export const getAllTransactionsWithUserData = async (req, res) => {
 // Create Budget Request and record transaction.
 export const createBudget = async (req, res) => {
   try {
-    const { allocatedBudget, remainingBudget, status, reason } = req.body;
+    const { allocatedBudget, remainingBudget, status, reason, event } = req.body;
+    
+    // Validate event exists and is confirmed
+    const eventDoc = await Event.findById(event);
+    if (!eventDoc) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+    if (eventDoc.status !== "confirmed") {
+      return res.status(400).json({ message: "Budget can only be requested for confirmed events" });
+    }
+
     let infoFileUrl = null;
     let fileProvider = null;
     if (req.file) {
@@ -120,6 +132,7 @@ export const createBudget = async (req, res) => {
       infoFile: infoFileUrl,
       fileProvider,
       user: req.user._id,
+      event: event
     });
     await newBudget.save();
     const budgetTransaction = new Transaction({
@@ -817,8 +830,8 @@ export const getAnomalies = async (req, res) => {
         severity: 'medium'
       };
 
-      // Check for amount-based anomaly
-      if (std !== 0) {
+      // Check for amount-based anomaly, but skip for budget and salary
+      if (std !== 0 && transaction.transactionType !== 'budget' && transaction.transactionType !== 'salary') {
         const z = (transaction.totalAmount - mean) / std;
         if (Math.abs(z) > threshold) {
           anomaly.anomalyTypes.push('amount');
@@ -994,6 +1007,113 @@ export const ticketPayment = async (req, res) => {
     await session.abortTransaction();
     session.endSession();
     res.status(500).json({ message: "Error processing ticket payment", error: error.message });
+  }
+};
+
+// Get confirmed events for budget requests
+export const getConfirmedEvents = async (req, res) => {
+  try {
+    const events = await Event.find({ status: 'confirmed' })
+      .populate('packageID')
+      .populate('additionalServices.serviceID')
+      .sort({ eventDate: 1 }); // Sort by event date ascending
+
+    return res.status(200).json({
+      success: true,
+      data: events
+    });
+  } catch (error) {
+    console.error("Error fetching confirmed events:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching confirmed events",
+      error: error.message
+    });
+  }
+};
+
+// Get a single event by ID (for budget view modal)
+export const getEventById = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id)
+      .populate('packageID')
+      .populate('additionalServices.serviceID');
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+    res.status(200).json({ data: event });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching event', error: error.message });
+  }
+};
+
+// GET transaction details with documents
+export const getTransactionDetails = async (req, res) => {
+  try {
+    // Try to find by transaction _id
+    let transaction = await Transaction.findById(req.params.id)
+      .populate('user')
+      .populate('invoiceId');
+
+    // If not found, try by invoiceId
+    if (!transaction) {
+      transaction = await Transaction.findOne({ invoiceId: req.params.id })
+        .populate('user')
+        .populate('invoiceId');
+    }
+
+    // If still not found, try by payment._id (for direct payment lookups)
+    if (!transaction) {
+      // Find payment by _id, then get its invoiceId
+      const payment = await Payment.findById(req.params.id);
+      if (payment && payment.invoiceId) {
+        transaction = await Transaction.findOne({ invoiceId: payment.invoiceId })
+          .populate('user')
+          .populate('invoiceId');
+      }
+    }
+
+    if (!transaction) {
+      return res.status(404).json({ message: 'Transaction not found' });
+    }
+
+    // Get associated payment if exists
+    const payment = await Payment.findOne({ invoiceId: transaction.invoiceId })
+      .populate('user')
+      .lean();
+
+    // Get associated documents
+    const documents = [];
+    if (payment?.bankSlipFile) {
+      documents.push({
+        type: 'Bank Slip',
+        url: payment.bankSlipFile,
+        uploadDate: payment.createdAt
+      });
+    }
+
+    // Fetch product details if payment is for merchandise
+    let productDetails = null;
+    if (payment?.paymentFor === 'merchandise' && payment.productId) {
+      productDetails = await Merchandise.findById(payment.productId).lean();
+    }
+
+    // Combine all data
+    const transactionDetails = {
+      ...transaction.toObject(),
+      payment: payment || null,
+      invoice: transaction.invoiceId || null,
+      documents,
+      productDetails,
+      invoiceDownloadUrl: transaction.invoiceId
+        ? `/api/finance/invoice/${transaction.invoiceId._id}/download`
+        : null,
+    };
+
+    res.json(transactionDetails);
+  } catch (error) {
+    console.error('Error fetching transaction details:', error);
+    res.status(500).json({ message: 'Error fetching transaction details', error: error.message });
   }
 };
  

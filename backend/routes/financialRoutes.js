@@ -18,6 +18,9 @@ import {
   getFinancialReport,
   getPaymentStatus,
   getAnomalies,
+  getConfirmedEvents,
+  getEventById,
+  getTransactionDetails
 } from '../controllers/financialController.js';
 import { upload, memoryUpload } from '../middleware/uploadmiddleware.js';
 import Payment from '../models/Payment.js';
@@ -292,44 +295,7 @@ router.get('/invoice/:invoiceId/download', protect, async (req, res) => {
 });
 
 // GET transaction details with documents
-router.get('/transaction/:id', async (req, res) => {
-  try {
-    const transaction = await Transaction.findById(req.params.id)
-      .populate('user')
-      .populate('invoiceId');
-    
-    if (!transaction) {
-      return res.status(404).json({ message: 'Transaction not found' });
-    }
-
-    // Get associated payment if exists
-    const payment = await Payment.findOne({ invoiceId: transaction.invoiceId })
-      .populate('user')
-      .lean();
-
-    // Get associated documents
-    const documents = [];
-    if (payment?.bankSlipFile) {
-      documents.push({
-        type: 'Bank Slip',
-        url: payment.bankSlipFile,
-        uploadDate: payment.createdAt
-      });
-    }
-
-    // Combine all data
-    const transactionDetails = {
-      ...transaction.toObject(),
-      payment: payment || null,
-      documents: documents
-    };
-
-    res.json(transactionDetails);
-  } catch (error) {
-    console.error('Error fetching transaction details:', error);
-    res.status(500).json({ message: 'Error fetching transaction details', error: error.message });
-  }
-});
+router.get('/transaction/:id', getTransactionDetails);
 
 // DELETE
 router.delete('/:recordType/:id', deleteFinancialRecord);
@@ -389,5 +355,11 @@ router.post('/tp', memoryUpload.single('bankSlip'), async (req, res, next) => {
     return res.status(500).json({ message: 'File upload failed', error: error.message });
   }
 }, ticketPayment);
+
+// Add the confirmed events route
+router.get('/events/confirmed', getConfirmedEvents);
+
+// Add this route for fetching a single event by ID
+router.get('/event/:id', getEventById);
 
 export default router;

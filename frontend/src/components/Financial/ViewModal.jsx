@@ -14,7 +14,9 @@ import {
   HiOutlineEye,
   HiOutlineEyeOff,
   HiOutlinePhotograph,
-  HiOutlineDocument
+  HiOutlineDocument,
+  HiOutlineLocationMarker,
+  HiOutlineUserGroup
 } from 'react-icons/hi';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -26,6 +28,7 @@ const ViewModal = ({ item, onClose, activeTab }) => {
   const [expandedSections, setExpandedSections] = useState({});
   const [isDownloading, setIsDownloading] = useState(false);
   const [fileViewer, setFileViewer] = useState({ isOpen: false, url: '', type: '' });
+  const [eventInfo, setEventInfo] = useState(null);
 
   // Check for bank slip or attachment when component mounts
   useEffect(() => {
@@ -60,6 +63,21 @@ const ViewModal = ({ item, onClose, activeTab }) => {
     
     findAttachment();
   }, [item]);
+
+  useEffect(() => {
+    const fetchEventInfo = async () => {
+      if (activeTab === 'budgets' && item.event) {
+        try {
+          // Try to get event details from the backend (assuming /api/finance/event/:id returns populated event)
+          const res = await axiosInstance.get(`/api/finance/event/${item.event}`);
+          setEventInfo(res.data.data || res.data);
+        } catch (err) {
+          setEventInfo(null);
+        }
+      }
+    };
+    fetchEventInfo();
+  }, [item, activeTab]);
 
   // Add the missing showFileViewer function
   const showFileViewer = (url, type) => {
@@ -350,9 +368,8 @@ const ViewModal = ({ item, onClose, activeTab }) => {
     setIsDownloading(true);
     try {
       const doc = new jsPDF();
-  
-      // Add title bar with dark blue background
-      doc.setFillColor(31, 41, 55); // Tailwind blue-900
+      // Header
+      doc.setFillColor(31, 41, 55);
       doc.rect(0, 0, doc.internal.pageSize.width, 24, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(18);
@@ -363,10 +380,8 @@ const ViewModal = ({ item, onClose, activeTab }) => {
         16,
         { align: 'center' }
       );
-  
-      // Add date below header, styled and spaced
       doc.setFontSize(10);
-      doc.setTextColor(55, 65, 81); // Tailwind gray-700
+      doc.setTextColor(55, 65, 81);
       doc.setFont(undefined, 'normal');
       doc.text(
         `Generated on: ${new Date().toLocaleString()}`,
@@ -374,83 +389,142 @@ const ViewModal = ({ item, onClose, activeTab }) => {
         28,
         { align: 'center' }
       );
-  
-      let yPos = 36;
-      const groups = getGroupedFields();
-      const groupOrder = ['basic', 'financial', 'status', 'user', 'dates', 'identifiers', 'other'];
-  
-      // Color mapping for PDF (match Tailwind groupColors)
-      const pdfGroupColors = {
-        basic: [219, 234, 254],        // blue-50
-        financial: [220, 252, 231],    // green-50
-        status: [237, 233, 254],       // purple-50
-        user: [254, 249, 195],         // yellow-50
-        dates: [238, 242, 255],        // indigo-50
-        identifiers: [253, 242, 248],  // pink-50
-        other: [249, 250, 251],        // gray-50
-      };
-  
-      groupOrder.forEach(groupName => {
-        if (!groups[groupName] || groups[groupName].length === 0) return;
-  
-        // Section header background
-        const color = pdfGroupColors[groupName] || [249, 250, 251];
-        doc.setFillColor(...color);
-        doc.rect(10, yPos, doc.internal.pageSize.width - 20, 10, 'F');
-  
-        // Section title
+      let yPos = 38;
+      // --- Budget Section ---
+      if (activeTab === 'budgets' || item.allocatedBudget !== undefined) {
         doc.setFontSize(13);
-        doc.setTextColor(31, 41, 55); // dark blue for all headers
         doc.setFont(undefined, 'bold');
-        doc.text(groupTitles[groupName], 14, yPos + 7);
-  
-        yPos += 14;
-        doc.setFontSize(11);
-        doc.setTextColor(55, 65, 81); // gray-700
-        doc.setFont(undefined, 'normal');
-  
-        groups[groupName].forEach(key => {
-          if (yPos > 270) {
-            doc.addPage();
-            yPos = 20;
+        doc.text('Budget Details', 14, yPos); yPos += 7;
+        doc.setFontSize(11); doc.setFont(undefined, 'normal');
+        if (item.allocatedBudget !== undefined) { doc.text(`Allocated Budget: RS. ${item.allocatedBudget}`, 16, yPos); yPos += 6; }
+        if (item.currentSpend !== undefined) { doc.text(`Current Spend: RS. ${item.currentSpend}`, 16, yPos); yPos += 6; }
+        if (item.remainingBudget !== undefined) { doc.text(`Remaining Budget: RS. ${item.remainingBudget}`, 16, yPos); yPos += 6; }
+        if (item.status) { doc.text(`Status: ${item.status}`, 16, yPos); yPos += 6; }
+        if (item.reason) { doc.text(`Reason: ${item.reason}`, 16, yPos); yPos += 6; }
+        if (item.infoFile) { doc.text(`Supporting Document: [file available in system]`, 16, yPos); yPos += 6; }
+        yPos += 2;
+        // Event Info (use eventInfo from state if available)
+        const event = eventInfo || item.eventInfo || item.event;
+        if (event) {
+          doc.setFontSize(12); doc.setFont(undefined, 'bold');
+          doc.text('Event Information', 16, yPos); yPos += 6;
+          doc.setFontSize(11); doc.setFont(undefined, 'normal');
+          if (event.eventName) { doc.text(`Event Name: ${event.eventName}`, 18, yPos); yPos += 6; }
+          if (event.eventDate) { doc.text(`Event Date: ${new Date(event.eventDate).toLocaleDateString()}`, 18, yPos); yPos += 6; }
+          if (event.eventLocation) { doc.text(`Location: ${event.eventLocation}`, 18, yPos); yPos += 6; }
+          if (event.guestCount) { doc.text(`Guest Count: ${event.guestCount}`, 18, yPos); yPos += 6; }
+          if (event.packageID && event.packageID.name) { doc.text(`Package: ${event.packageID.name}`, 18, yPos); yPos += 6; }
+          if (event.additionalRequests) { doc.text(`Additional Requests: ${event.additionalRequests}`, 18, yPos); yPos += 6; }
+          if (event.approvedBy) { doc.text(`Approved By: ${event.approvedBy}`, 18, yPos); yPos += 6; }
+          if (event.approvedAt) { doc.text(`Approved At: ${new Date(event.approvedAt).toLocaleString()}`, 18, yPos); yPos += 6; }
+          if (event.additionalServices && event.additionalServices.length > 0) {
+            doc.text('Additional Services:', 18, yPos); yPos += 5;
+            event.additionalServices.forEach((srv, idx) => {
+              const name = srv.serviceID?.serviceName || srv.serviceID?.name || srv.serviceID?.description || srv.serviceID?.category || 'Service';
+              doc.text(`- ${name}`, 20, yPos); yPos += 5;
+            });
           }
-          const value = item[key];
-          let displayValue = '';
-          if (value === null || value === undefined) {
-            displayValue = "—";
-          } else if (typeof value === 'object' && value !== null) {
-            if (Array.isArray(value)) {
-              displayValue = value.join(', ');
-            } else if (key === 'user' && value.email) {
-              displayValue = `${value.fullName || 'User'} (${value.email})`;
-            } else {
-              // For "Additional Information", pretty print each key-value on its own line
-              displayValue = Object.entries(value)
-                .map(([k, v]) => `${formatKey(k)}: ${typeof v === 'object' ? JSON.stringify(v) : v}`)
-                .join('\n');
-            }
-          } else {
-            displayValue = String(value);
-          }
-          const formattedKey = formatKey(key);
-          // For "other"/Additional Information, use multi-line text for objects
-          if (groupName === 'other' && typeof value === 'object' && value !== null && !Array.isArray(value)) {
-            doc.setFont(undefined, 'bold');
-            doc.text(`${formattedKey}:`, 14, yPos);
-            doc.setFont(undefined, 'normal');
-            yPos += 6;
-            const lines = doc.splitTextToSize(displayValue, doc.internal.pageSize.width - 28);
-            doc.text(lines, 18, yPos);
-            yPos += lines.length * 6;
-          } else {
-            doc.text(`${formattedKey}: ${displayValue}`, 14, yPos);
-            yPos += 7;
-          }
-        });
-  
-        yPos += 7;
-      });
-
+          yPos += 2;
+        }
+      }
+      // --- Payment Section ---
+      if (activeTab === 'payments' || item.payment) {
+        const payment = item.payment || item;
+        doc.setFontSize(13);
+        doc.setFont(undefined, 'bold');
+        doc.text('Payment Details', 14, yPos); yPos += 7;
+        doc.setFontSize(11); doc.setFont(undefined, 'normal');
+        if (payment.amount) { doc.text(`Amount: RS. ${payment.amount}`, 16, yPos); yPos += 6; }
+        if (payment.paymentMethod) { doc.text(`Method: ${payment.paymentMethod}`, 16, yPos); yPos += 6; }
+        if (payment.status) { doc.text(`Status: ${payment.status}`, 16, yPos); yPos += 6; }
+        if (payment.productName) { doc.text(`Product: ${payment.productName}`, 16, yPos); yPos += 6; }
+        if (payment.quantity) { doc.text(`Quantity: ${payment.quantity}`, 16, yPos); yPos += 6; }
+        if (payment.orderId) { doc.text(`Order ID: ${payment.orderId}`, 16, yPos); yPos += 6; }
+        if (payment.paymentFor) { doc.text(`Payment For: ${payment.paymentFor}`, 16, yPos); yPos += 6; }
+        if (payment.bankSlipFile) { doc.text(`Bank Slip: [file available in system]`, 16, yPos); yPos += 6; }
+        if (payment.date) { doc.text(`Date: ${new Date(payment.date).toLocaleString()}`, 16, yPos); yPos += 6; }
+        if (payment.createdAt) { doc.text(`Created At: ${new Date(payment.createdAt).toLocaleString()}`, 16, yPos); yPos += 6; }
+        yPos += 2;
+        // User Info
+        if (payment.user) {
+          doc.setFontSize(12); doc.setFont(undefined, 'bold');
+          doc.text('User Information', 16, yPos); yPos += 6;
+          doc.setFontSize(11); doc.setFont(undefined, 'normal');
+          if (payment.user.fullName) { doc.text(`Name: ${payment.user.fullName}`, 18, yPos); yPos += 6; }
+          if (payment.user.email) { doc.text(`Email: ${payment.user.email}`, 18, yPos); yPos += 6; }
+          if (payment.user.phone) { doc.text(`Phone: ${payment.user.phone}`, 18, yPos); yPos += 6; }
+          if (payment.user.role) { doc.text(`Role: ${payment.user.role}`, 18, yPos); yPos += 6; }
+          yPos += 2;
+        }
+      }
+      // --- Refund Section ---
+      if (activeTab === 'refunds' || item.refundAmount !== undefined) {
+        const refund = item;
+        doc.setFontSize(13);
+        doc.setFont(undefined, 'bold');
+        doc.text('Refund Details', 14, yPos); yPos += 7;
+        doc.setFontSize(11); doc.setFont(undefined, 'normal');
+        if (refund.refundAmount !== undefined) { doc.text(`Refund Amount: RS. ${refund.refundAmount}`, 16, yPos); yPos += 6; }
+        if (refund.reason) { doc.text(`Reason: ${refund.reason}`, 16, yPos); yPos += 6; }
+        if (refund.status) { doc.text(`Status: ${refund.status}`, 16, yPos); yPos += 6; }
+        if (refund.invoiceNumber) { doc.text(`Invoice #: ${refund.invoiceNumber}`, 16, yPos); yPos += 6; }
+        if (refund.receiptFile) { doc.text(`Receipt File: [file available in system]`, 16, yPos); yPos += 6; }
+        if (refund.date) { doc.text(`Date: ${new Date(refund.date).toLocaleString()}`, 16, yPos); yPos += 6; }
+        if (refund.createdAt) { doc.text(`Created At: ${new Date(refund.createdAt).toLocaleString()}`, 16, yPos); yPos += 6; }
+        yPos += 2;
+        // User Info
+        if (refund.user) {
+          doc.setFontSize(12); doc.setFont(undefined, 'bold');
+          doc.text('User Information', 16, yPos); yPos += 6;
+          doc.setFontSize(11); doc.setFont(undefined, 'normal');
+          if (refund.user.fullName) { doc.text(`Name: ${refund.user.fullName}`, 18, yPos); yPos += 6; }
+          if (refund.user.email) { doc.text(`Email: ${refund.user.email}`, 18, yPos); yPos += 6; }
+          if (refund.user.phone) { doc.text(`Phone: ${refund.user.phone}`, 18, yPos); yPos += 6; }
+          if (refund.user.role) { doc.text(`Role: ${refund.user.role}`, 18, yPos); yPos += 6; }
+          yPos += 2;
+        }
+      }
+      // --- Transaction Section ---
+      if (activeTab === 'transactions' || item.transactionType) {
+        doc.setFontSize(13);
+        doc.setFont(undefined, 'bold');
+        doc.text('Transaction Details', 14, yPos); yPos += 7;
+        doc.setFontSize(11); doc.setFont(undefined, 'normal');
+        if (item.transactionType) { doc.text(`Type: ${item.transactionType}`, 16, yPos); yPos += 6; }
+        if (item.totalAmount !== undefined) { doc.text(`Total Amount: RS. ${item.totalAmount}`, 16, yPos); yPos += 6; }
+        if (item.status) { doc.text(`Status: ${item.status}`, 16, yPos); yPos += 6; }
+        if (item.date) { doc.text(`Date: ${new Date(item.date).toLocaleString()}`, 16, yPos); yPos += 6; }
+        if (item.details && typeof item.details === 'object') {
+          Object.entries(item.details).forEach(([k, v]) => {
+            doc.text(`${k.charAt(0).toUpperCase() + k.slice(1)}: ${typeof v === 'object' ? JSON.stringify(v) : v}`, 16, yPos); yPos += 6;
+          });
+        }
+        // User Info
+        if (item.user) {
+          doc.setFontSize(12); doc.setFont(undefined, 'bold');
+          doc.text('User Information', 16, yPos); yPos += 6;
+          doc.setFontSize(11); doc.setFont(undefined, 'normal');
+          if (item.user.fullName) { doc.text(`Name: ${item.user.fullName}`, 18, yPos); yPos += 6; }
+          if (item.user.email) { doc.text(`Email: ${item.user.email}`, 18, yPos); yPos += 6; }
+          if (item.user.phone) { doc.text(`Phone: ${item.user.phone}`, 18, yPos); yPos += 6; }
+          if (item.user.role) { doc.text(`Role: ${item.user.role}`, 18, yPos); yPos += 6; }
+          yPos += 2;
+        }
+        // Invoice Info (if present)
+        if (item.invoice) {
+          doc.setFontSize(12); doc.setFont(undefined, 'bold');
+          doc.text('Invoice Information', 16, yPos); yPos += 6;
+          doc.setFontSize(11); doc.setFont(undefined, 'normal');
+          if (item.invoice.invoiceNumber) { doc.text(`Invoice #: ${item.invoice.invoiceNumber}`, 18, yPos); yPos += 6; }
+          if (item.invoice.amount) { doc.text(`Amount: RS. ${item.invoice.amount}`, 18, yPos); yPos += 6; }
+          if (item.invoice.paymentStatus) { doc.text(`Status: ${item.invoice.paymentStatus}`, 18, yPos); yPos += 6; }
+          if (item.invoice.category) { doc.text(`Category: ${item.invoice.category}`, 18, yPos); yPos += 6; }
+          if (item.invoice.dueDate) { doc.text(`Due Date: ${new Date(item.invoice.dueDate).toLocaleDateString()}`, 18, yPos); yPos += 6; }
+          yPos += 2;
+        }
+        yPos += 2;
+      }
+      // Footer
       const pageCount = doc.internal.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
@@ -459,7 +533,6 @@ const ViewModal = ({ item, onClose, activeTab }) => {
         doc.text('Team Diamond Financial Services', 15, doc.internal.pageSize.height - 10);
         doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width - 30, doc.internal.pageSize.height - 10);
       }
-  
       doc.save(`${activeTab}_${item._id}.pdf`);
       setMessage('PDF downloaded successfully');
       setMessageType('success');
@@ -636,6 +709,112 @@ const ViewModal = ({ item, onClose, activeTab }) => {
           </div>
         )}
         
+        {/* Custom Invoice/Transaction Details */}
+        {(activeTab === 'invoices' || activeTab === 'transactions') && (
+          <div className="mb-6 space-y-6">
+            {/* Invoice Image (if available) */}
+            {item.invoice && item.invoice.invoiceImage && (
+              <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <HiOutlinePhotograph className="text-blue-600 w-5 h-5" />
+                  <h3 className="text-lg font-semibold text-gray-800">Invoice Image</h3>
+                </div>
+                <img src={item.invoice.invoiceImage} alt="Invoice" className="max-h-48 rounded-lg border shadow" />
+              </div>
+            )}
+            
+            {/* Payment Details */}
+            {item.payment && (
+              <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <HiOutlineCurrencyDollar className="text-green-600 w-5 h-5" />
+                  <h3 className="text-lg font-semibold text-gray-800">Payment Details</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Amount</span>
+                      <span className="font-semibold text-green-700">RS. {item.payment.amount}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Method</span>
+                      <span className="font-medium text-gray-800">{item.payment.paymentMethod}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Status</span>
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        item.payment.status === 'paid' ? 'bg-green-100 text-green-800' :
+                        item.payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {item.payment.status.charAt(0).toUpperCase() + item.payment.status.slice(1)}
+                      </span>
+                    </div>
+                  </div>
+                  {(item.payment.productName || item.payment.quantity) && (
+                    <div className="space-y-3">
+                      {item.payment.productName && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Product</span>
+                          <span className="font-medium text-gray-800">{item.payment.productName}</span>
+                        </div>
+                      )}
+                      {item.payment.quantity && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Quantity</span>
+                          <span className="font-medium text-gray-800">{item.payment.quantity}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {/* Merchandise Details */}
+            {item.productDetails && (
+              <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <HiOutlineDocumentText className="text-blue-600 w-5 h-5" />
+                  <h3 className="text-lg font-semibold text-gray-800">Merchandise Details</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Name</span>
+                      <span className="font-medium text-gray-800">{item.productDetails.name}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Price</span>
+                      <span className="font-semibold text-blue-700">RS. {item.productDetails.price}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Stock</span>
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        item.productDetails.stock > 10 ? 'bg-green-100 text-green-800' :
+                        item.productDetails.stock > 0 ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {item.productDetails.stock} units
+                      </span>
+                    </div>
+                  </div>
+                  {item.productDetails.image && (
+                    <div className="flex justify-center items-center">
+                      <img 
+                        src={item.productDetails.image} 
+                        alt="Product" 
+                        className="max-h-32 rounded-lg border shadow hover:scale-105 transition-transform duration-300 cursor-pointer" 
+                        onClick={() => handleViewFile(item.productDetails.image, 'image')}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        
         {/* Content */}
         <div className="p-6">
           {/* Display attachment at the top if available */}
@@ -677,6 +856,47 @@ const ViewModal = ({ item, onClose, activeTab }) => {
                   <HiOutlineDownload className="w-4 h-4" />
                   Download
                 </a>
+              </div>
+            </div>
+          )}
+          
+          {/* Render event info for budget requests */}
+          {activeTab === 'budgets' && eventInfo && (
+            <div className="mb-6 p-4 bg-blue-50 rounded-xl flex flex-col items-center">
+              <img
+                src={eventInfo.packageID?.image || 'https://via.placeholder.com/150'}
+                alt={eventInfo.eventName}
+                className="w-24 h-24 object-cover rounded-lg mb-2"
+              />
+              <h3 className="text-xl font-bold text-blue-900">{eventInfo.eventName}</h3>
+              <div className="text-blue-800">
+                <div><HiOutlineCalendar className="inline mr-1" /> {new Date(eventInfo.eventDate).toLocaleDateString()}</div>
+                <div><HiOutlineLocationMarker className="inline mr-1" /> {eventInfo.eventLocation}</div>
+                <div><HiOutlineUserGroup className="inline mr-1" /> {eventInfo.guestCount} Guests</div>
+                {eventInfo.packageID && (
+                  <div className="text-xs text-blue-700">Package: {eventInfo.packageID.name}</div>
+                )}
+                {eventInfo.additionalRequests && eventInfo.additionalRequests.trim() && (
+                  <div className="mt-2 text-xs text-blue-900 bg-blue-100 rounded p-2">Additional Requests: <span className="text-blue-800">{eventInfo.additionalRequests}</span></div>
+                )}
+                {eventInfo.approvedBy && (
+                  <div className="mt-2 text-xs text-blue-700">Approved By: <span className="text-blue-800">{eventInfo.approvedBy}</span></div>
+                )}
+                {eventInfo.approvedAt && (
+                  <div className="text-xs text-blue-700">Approved At: <span className="text-blue-800">{new Date(eventInfo.approvedAt).toLocaleString()}</span></div>
+                )}
+                {eventInfo.additionalServices && eventInfo.additionalServices.length > 0 && (
+                  <div className="mt-2">
+                    <div className="text-xs text-blue-700 mb-1">Additional Services:</div>
+                    <ul className="list-disc list-inside text-blue-800">
+                      {eventInfo.additionalServices.map((srv, idx) => (
+                        <li key={idx}>
+                          {srv.serviceID?.serviceName || srv.serviceID?.name || srv.serviceID?.description || srv.serviceID?.category || 'Service'}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
           )}
