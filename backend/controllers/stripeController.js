@@ -2,7 +2,10 @@ import Stripe from 'stripe';
 import Payment from '../models/Payment.js';
 import { createFinanceNotification } from './financeNotificationController.js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+// Delay Stripe initialization until environment variables are loaded
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY);
+}
 
 // Create a payment intent
 export const createPaymentIntent = async (req, res) => {
@@ -10,6 +13,7 @@ export const createPaymentIntent = async (req, res) => {
     const { amount } = req.body;
 
     // Create a PaymentIntent with the order amount and currency
+    const stripe = getStripe();
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amount * 100, // Convert to cents
       currency: 'lkr',
@@ -68,6 +72,7 @@ export const handleWebhook = async (req, res) => {
   const sig = req.headers['stripe-signature'];
 
   try {
+    const stripe = getStripe();
     const event = stripe.webhooks.constructEvent(
       req.body,
       sig,
@@ -115,6 +120,7 @@ export const handleWebhook = async (req, res) => {
 export const createCheckoutSession = async (req, res) => {
   const { amount, productName, userEmail, successUrl, cancelUrl, orderId, quantity, productId, productImage, currency } = req.body;
   try {
+    const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       customer_email: userEmail, // Pre-fill email if provided

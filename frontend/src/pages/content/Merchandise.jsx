@@ -95,36 +95,25 @@ const MerchandiseStore = () => {
         ) : products.length === 0 ? (
           <div className="text-center text-gray-500 py-8 text-lg font-semibold">No products found.</div>
         ) : (
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="p-2 border">Image</th>
-                <th className="p-2 border">Name</th>
-                <th className="p-2 border">Price</th>
-                <th className="p-2 border">Description</th>
-                <th className="p-2 border">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.map(product => (
-                <tr key={product._id} className="text-center">
-                  <td className="p-2 border">
-                    {product.image ? (
-                      <img src={product.image} alt={product.name} className="w-16 h-16 object-cover mx-auto rounded" />
-                    ) : (
-                      <span className="text-gray-400">No Image</span>
-                    )}
-                  </td>
-                  <td className="p-2 border font-semibold">{product.name}</td>
-                  <td className="p-2 border">${product.price}</td>
-                  <td className="p-2 border">{product.description || '-'}</td>
-                  <td className="p-2 border flex flex-col gap-2 items-center">
-                    <button onClick={() => handleBuy(product)} className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition mb-1">Buy</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {products.map(product => (
+              <div key={product._id} className="bg-white rounded-lg shadow hover:shadow-lg transition p-6 flex flex-col items-center">
+                {product.image ? (
+                  <img src={product.image} alt={product.name} className="w-full h-48 object-cover rounded-md" />
+                ) : (
+                  <div className="w-full h-48 bg-gray-200 flex items-center justify-center rounded-md">
+                    <span className="text-gray-400">No Image</span>
+                  </div>
+                )}
+                <h3 className="text-xl font-bold mt-4 text-center">{product.name}</h3>
+                <p className="text-lg text-green-600 mt-2">${product.price}</p>
+                <p className="text-gray-600 mt-2 text-center">{product.description || '-'}</p>
+                <button onClick={() => handleBuy(product)} className="mt-4 bg-indigo-600 text-white px-6 py-2 rounded-full hover:bg-indigo-700 transition">
+                  Buy Now
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
       {/* Payment Modal */}

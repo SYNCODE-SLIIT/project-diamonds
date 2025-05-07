@@ -23,7 +23,7 @@ const CertificateGenerator = () => {
     modern: {
       backgroundImage: `url(${modernBg})`,
       backgroundSize: 'cover',
-      color: '#fff'
+      color: '#000'
     },
     elegant: {
       backgroundImage: `url(${elegantBg})`,
@@ -80,94 +80,101 @@ const CertificateGenerator = () => {
   }, []);
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-2">Digital Certificate Generator</h2>
-      <input
-        type="text"
-        placeholder="Recipient Name"
-        value={recipientName}
-        onChange={(e) => setRecipientName(e.target.value)}
-        className="border p-2 mb-2 w-full"
-      />
-      <input
-        type="text"
-        placeholder="Event Name"
-        value={eventName}
-        onChange={(e) => setEventName(e.target.value)}
-        className="border p-2 mb-2 w-full"
-      />
-      <select
-        value={selectedTemplate}
-        onChange={(e) => setSelectedTemplate(e.target.value)}
-        className="border p-2 mb-2 w-full"
-      >
-        <option value="classic">Classic</option>
-        <option value="modern">Modern</option>
-        <option value="elegant">Elegant</option>
-        <option value="creative">Creative</option>
-        <option value="formal">Formal</option>
-      </select>
-      <button onClick={handleGenerate} className="bg-blue-500 text-white px-4 py-2 rounded">
-        Generate Certificate
-      </button>
-
-      {showPreview && (
-        <div className="mt-4">
-          <div
-            id="certificate"
-            className="w-[600px] h-[300px] text-center shadow relative overflow-hidden"
-            style={{
-              ...templateStyles[selectedTemplate],
-              padding: '20px'
-            }}
+    <div className="bg-gray-50 min-h-screen py-12 px-4">
+      <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-xl p-8">
+        <h1 className="text-3xl font-bold text-center text-indigo-600 mb-6">Digital Certificate Generator</h1>
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Recipient Name"
+            value={recipientName}
+            onChange={(e) => setRecipientName(e.target.value)}
+            className="border-2 border-gray-200 rounded-lg w-full py-2 px-4 focus:ring-2 focus:ring-indigo-200 transition"
+          />
+          <input
+            type="text"
+            placeholder="Event Name"
+            value={eventName}
+            onChange={(e) => setEventName(e.target.value)}
+            className="border-2 border-gray-200 rounded-lg w-full py-2 px-4 focus:ring-2 focus:ring-indigo-200 transition"
+          />
+          <select
+            value={selectedTemplate}
+            onChange={(e) => setSelectedTemplate(e.target.value)}
+            className="border-2 border-gray-200 rounded-lg w-full py-2 px-4 focus:ring-2 focus:ring-indigo-200 transition"
           >
-            <h1 className="text-2xl font-bold">Certificate of Participation</h1>
-            <p className="mt-6 text-lg">This is to certify that</p>
-            <h2 className="text-xl font-semibold mt-2">{recipientName}</h2>
-            <p className="mt-2">has participated in</p>
-            <h3 className="text-lg font-medium mt-1">{eventName}</h3>
-            <p className="mt-4 text-sm">Issued on: {new Date().toLocaleDateString()}</p>
-          </div>
-          <button onClick={handleDownload} className="mt-4 bg-green-600 text-white px-4 py-2 rounded">
-            Download PDF
+            <option value="classic">Classic</option>
+            <option value="modern">Modern</option>
+            <option value="elegant">Elegant</option>
+            <option value="creative">Creative</option>
+            <option value="formal">Formal</option>
+          </select>
+          <button
+            onClick={handleGenerate}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-semibold transition"
+          >
+            Generate Certificate
           </button>
         </div>
-      )}
-
-      <div className="mt-8">
-        <h3 className="text-lg font-semibold mb-2">Issued Certificates</h3>
-        <table className="w-full border-collapse border">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="p-2 border">#</th>
-              <th className="p-2 border">Recipient</th>
-              <th className="p-2 border">Event</th>
-              <th className="p-2 border">Issued Date</th>
-              <th className="p-2 border">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {certificates.map((cert, idx) => (
-              <tr key={cert._id} className="border-b">
-                <td className="p-2 border text-center">{idx + 1}</td>
-                <td className="p-2 border">{cert.recipientName}</td>
-                <td className="p-2 border">{cert.eventName}</td>
-                <td className="p-2 border">{new Date(cert.issuedDate).toLocaleDateString()}</td>
-                <td className="p-2 border">
-                  <button
-                    onClick={async () => {
-                      if (window.confirm('Delete this certificate?')) {
-                        await fetch(`/api/certificates/${cert._id}`, { method: 'DELETE' });
-                        fetchCertificates();
-                      }
-                    }}
-                    className="bg-red-500 text-white px-2 py-1 rounded"
-                  >Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {showPreview && (
+          <div className="mt-8 flex flex-col items-center">
+            <div
+              id="certificate"
+              className="w-full max-w-3xl aspect-[2/1] bg-contain bg-no-repeat bg-center rounded-lg shadow-2xl p-6 mb-4 flex flex-col items-center justify-center text-center"
+              style={templateStyles[selectedTemplate]}
+            >
+              <h1 className="text-2xl font-bold">Certificate of Participation</h1>
+              <p className="mt-6 text-lg">This is to certify that</p>
+              <h2 className="text-xl font-semibold mt-2">{recipientName}</h2>
+              <p className="mt-2">has participated in</p>
+              <h3 className="text-lg font-medium mt-1">{eventName}</h3>
+              <p className="mt-4 text-sm">Issued on: {new Date().toLocaleDateString()}</p>
+            </div>
+            <button
+              onClick={handleDownload}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full font-medium transition"
+            >
+              Download PDF
+            </button>
+          </div>
+        )}
+        <div className="mt-10">
+          <h2 className="text-2xl font-semibold mb-4 text-center">Issued Certificates</h2>
+          <div className="overflow-x-auto bg-white rounded-lg shadow-md">
+            <table className="w-full table-auto">
+              <thead className="bg-indigo-100">
+                <tr>
+                  <th className="p-2 text-left">#</th>
+                  <th className="p-2 text-left">Recipient</th>
+                  <th className="p-2 text-left">Event</th>
+                  <th className="p-2 text-left">Issued Date</th>
+                  <th className="p-2 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {certificates.map((cert, idx) => (
+                  <tr key={cert._id} className="border-b">
+                    <td className="p-2">{idx + 1}</td>
+                    <td className="p-2">{cert.recipientName}</td>
+                    <td className="p-2">{cert.eventName}</td>
+                    <td className="p-2">{new Date(cert.issuedDate).toLocaleDateString()}</td>
+                    <td className="p-2">
+                      <button
+                        onClick={async () => {
+                          if (window.confirm('Delete this certificate?')) {
+                            await fetch(`/api/certificates/${cert._id}`, { method: 'DELETE' });
+                            fetchCertificates();
+                          }
+                        }}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition"
+                      >Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   );

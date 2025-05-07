@@ -15,7 +15,7 @@ import Events from './pages/content/Events';
 import UploadMedia from './pages/content/UploadMedia';
 import Merchandise from './pages/content/Merchandise';
 import OurFounderPage from './pages/OurFounderPage';
-
+import SocialMediaFeed from './pages/content/SocialMediaFeed';
 // User Management Imports
 import MemberApplication from './pages/authentication/MemberApplication';
 // import AdminApplicationsList from './pages/authentication/AdminApplicationsList';
@@ -40,8 +40,6 @@ import ApplicationSubmitted from './pages/authentication/ApplicationSubmitted';
 import AdminInviteApplicant from './pages/authentication/AdminInviteApplicant';
 import AdminProfile from './pages/authentication/AdminProfile';
 import GroupMembers from './pages/admin/GroupMembers';
-import AdminBudgetRequests from './pages/admin/AdminBudgetRequests';
-// import AdminInvitedApplicationsList from './pages/authentication/AdminInvitedApplicationsList';
 import FinalizedDetails from './pages/authentication/FinalizedDetails';
  
 
@@ -52,7 +50,6 @@ import EventRequestDashboard from './components/event/EventRequestDashboard';
 import EventsDashboard from './components/event/EventsDashboard';
 
 import EventCalendar from './pages/admin/EventCalender';
-import AdminBudgetRequests from './pages/admin/AdminBudgetRequests';
 
 // Financial Management Imports
 import FinancialDashboard from './components/Financial/FinancialDashboard';
@@ -126,6 +123,7 @@ import Collabaration from './pages/content/Collaboration';
 import CertificateGenerator from './pages/content/CertificateGenerator';
 import Sponsorship from './pages/content/Sponsorship';
 import PublicBlogSlideShow from './pages/content/PublicBlogSlideShow';
+import PublicBlogDetail from './pages/content/PublicBlogDetail';
 
 const App = () => {
   return (
@@ -163,6 +161,7 @@ const App = () => {
               <Route path='/login' element={<Login />} />
               <Route path='/our-founder' element={<OurFounderPage />} />
               <Route path='/blogs' element={<PublicBlogSlideShow />} />
+              <Route path='/blogs/:id' element={<PublicBlogDetail />} />
               {/* <Route path='/event-request' element={<EventRequestForm />} /> */}
               <Route path='/register/member/application' element={<MemberApplication />} />
 
@@ -205,6 +204,7 @@ const App = () => {
             <Route path="content-creators" element={<ContentCreatorList />} />
             <Route path="create-blog-post" element={<CreateBlogPost />} />
             <Route path="media" element={<ViewAllMedia />} />
+            <Route path="social-media" element={<SocialMediaFeed />} />
             <Route path="event-calendar" element={<EventCalendar />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             {/* All admin routes are now relative to /admin */}
