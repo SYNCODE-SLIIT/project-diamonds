@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
 import { FaCloudUploadAlt } from "react-icons/fa";
@@ -8,11 +8,9 @@ const UploadMedia = () => {
     mediaTitle: "",
     description: "",
     category: "",
-    privacy: "public",
-    tags: "",
-    // Optionally, include uploadedBy if you are passing a user ID from context
   });
   const [file, setFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -38,16 +36,25 @@ const UploadMedia = () => {
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
-      // Allow only image files (PNG or JPEG)
-      if (selectedFile.type.startsWith("image/")) {
+      // Allow only video files
+      if (selectedFile.type.startsWith("video/")) {
         setFile(selectedFile);
+        // generate preview URL
+        setPreviewUrl(URL.createObjectURL(selectedFile));
         setMessage("");
       } else {
         setFile(null);
-        setMessage("Invalid file type. Please upload an image file (PNG or JPEG).");
+        setMessage("Invalid file type. Please upload a video file.");
       }
     }
   };
+
+  // cleanup blob URL when component unmounts or file changes
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,46 +70,27 @@ const UploadMedia = () => {
     }
 
     if (!file) {
-      setMessage("Please select an image file.");
+      setMessage("Please select a video file.");
       setIsSubmitting(false);
       return;
     }
 
-    // Format tags so that each one starts with a "#"
-    let formattedTags = formData.tags;
-    if (formattedTags) {
-      formattedTags = formattedTags
-        .split(",")
-        .map((tag) => {
-          const trimmedTag = tag.trim();
-          return trimmedTag.startsWith("#") ? trimmedTag : "#" + trimmedTag;
-        })
-        .join(", ");
-    }
-
     try {
       const data = new FormData();
-      // Append all fields except tags
-      Object.keys(formData).forEach((key) => {
-        if (key === "tags") return; // Skip tags for now
-        data.append(key, formData[key]);
-      });
-      // Append formatted tags and file
-      data.append("tags", formattedTags);
+      // Append only the simplified fields
+      data.append("mediaTitle", formData.mediaTitle);
+      data.append("description", formData.description);
+      data.append("category", formData.category);
       data.append("file", file);
 
       await axiosInstance.post("/api/media/createmedia", data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
+      // Navigate to admin media page after successful upload
+      navigate("/admin/media");
       setMessage("Media uploaded successfully!");
-      setFormData({
-        mediaTitle: "",
-        description: "",
-        category: "",
-        privacy: "public",
-        tags: "",
-      });
+      setFormData({ mediaTitle: "", description: "", category: "" });
       setFile(null);
     } catch (error) {
       console.error("Upload error:", error);
@@ -143,38 +131,32 @@ const UploadMedia = () => {
             required
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-300"
           />
-          <select
-            name="privacy"
-            onChange={handleChange}
-            value={formData.privacy}
-            required
-            className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-300"
-          >
-            <option value="public">Public</option>
-            <option value="private">Private</option>
-            <option value="restricted">Restricted</option>
-          </select>
-          <input
-            type="text"
-            name="tags"
-            placeholder="Tags (comma separated)"
-            onChange={handleChange}
-            value={formData.tags}
-            className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-300"
-          />
           <div className="border border-gray-300 p-3 rounded-lg flex items-center justify-center cursor-pointer bg-gray-50 hover:bg-gray-100">
             <label className="flex flex-col items-center">
               <FaCloudUploadAlt className="text-gray-500 text-3xl mb-2" />
-              <span className="text-gray-600">Choose an image file</span>
+              <span className="text-gray-600">Choose a video file</span>
               <input
                 type="file"
-                accept="image/png, image/jpeg"
+                accept="video/*"
                 onChange={handleFileChange}
                 required
                 className="hidden"
               />
             </label>
           </div>
+          {/* Preview selected video */}
+          {previewUrl && (
+            <div className="mt-4">
+              <video
+                controls
+                src={previewUrl}
+                preload="metadata"
+                className="w-full h-48 object-cover"
+              >
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          )}
           <button
             type="submit"
             disabled={isSubmitting}

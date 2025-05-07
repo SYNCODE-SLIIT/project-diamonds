@@ -4,7 +4,8 @@ import {
   getAssignmentsByEvent,
   updateAssignmentStatus,
   getAssignmentRequests,
-  updateRequestStatus
+  updateRequestStatus,
+  getApprovedAssignments
 } from '../controllers/assignmentController.js';
 
 const router = express.Router();
@@ -21,5 +22,8 @@ router.put('/assignments/:assignmentId/member/:memberId/status', updateAssignmen
 // New routes for assignment requests
 router.get('/requests', getAssignmentRequests);
 router.put('/requests/:requestId/status', updateRequestStatus);
+
+// New route for approved assignments
+router.get('/approved', getApprovedAssignments);
 
 export default router;

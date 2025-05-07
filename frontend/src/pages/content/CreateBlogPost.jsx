@@ -10,11 +10,14 @@ const BlogForm = ({ onSubmit }) => {
         title: "",
         content: "",
         category: "",
-        featuredImage: "",
-        authorEmail: "",
+        featuredImage: null,
         publishDate: ""
     });
     const [errors, setErrors] = useState({});
+
+    const handleFileChange = (e) => {
+        setFormData({ ...formData, featuredImage: e.target.files[0] });
+    };
 
     // Validation Function
     const validateForm = () => {
@@ -24,9 +27,6 @@ const BlogForm = ({ onSubmit }) => {
         if (!formData.title) newErrors.title = "Title is required";
         if (!formData.content) newErrors.content = "Content is required";
         if (!formData.category) newErrors.category = "Category is required";
-        if (!formData.authorEmail || !/\S+@\S+\.\S+/.test(formData.authorEmail)) {
-            newErrors.authorEmail = "Valid author email is required";
-        }
         if (!formData.publishDate) newErrors.publishDate = "Publish date is required";
         
         // Date validation: Ensure the date is not in the past
@@ -38,9 +38,7 @@ const BlogForm = ({ onSubmit }) => {
             newErrors.publishDate = "Publish date cannot be in the past";
         }
 
-        if (formData.featuredImage && !/^https?:\/\/.*\.(jpg|jpeg|png|gif)$/i.test(formData.featuredImage)) {
-            newErrors.featuredImage = "Please enter a valid image URL (e.g., .jpg, .png, .gif)";
-        }
+        if (!formData.featuredImage) newErrors.featuredImage = "Featured image is required";
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -65,13 +63,21 @@ const BlogForm = ({ onSubmit }) => {
                 return;
             }
 
+            // Send multipart/form-data
+            const payload = new FormData();
+            payload.append('title', formData.title);
+            payload.append('content', formData.content);
+            payload.append('category', formData.category);
+            payload.append('publishDate', formData.publishDate);
+            payload.append('status', 'published');
+            payload.append('featuredImage', formData.featuredImage);
             const response = await axios.post(
                 "http://localhost:4000/api/blogposts/create",
-                formData,
+                payload,
                 {
                     headers: {
-                        Authorization: `Bearer ${token}`, // Attach token to request
-                        "Content-Type": "application/json"
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'multipart/form-data'
                     }
                 }
             );
@@ -93,7 +99,7 @@ const BlogForm = ({ onSubmit }) => {
     return (
         <div className="max-w-lg mx-auto p-6 bg-white shadow-md rounded-lg">
             <h2 className="text-2xl font-bold mb-4">Create Blog Post</h2>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} encType="multipart/form-data">
                 <div className="mb-4">
                     <input 
                         type="text" 
@@ -130,27 +136,15 @@ const BlogForm = ({ onSubmit }) => {
                 </div>
 
                 <div className="mb-4">
+                    <label className="block mb-2">Featured Image</label>
                     <input 
-                        type="url" 
+                        type="file" 
                         name="featuredImage" 
-                        placeholder="Image URL" 
-                        value={formData.featuredImage} 
-                        onChange={handleChange} 
-                        className="w-full p-4 border rounded-lg shadow-lg" 
+                        accept="image/*"
+                        onChange={handleFileChange} 
+                        className="w-full p-2 border rounded-lg shadow-lg" 
                     />
                     {errors.featuredImage && <p className="text-red-500 text-sm">{errors.featuredImage}</p>}
-                </div>
-
-                <div className="mb-4">
-                    <input 
-                        type="email" 
-                        name="authorEmail" 
-                        placeholder="Author Email" 
-                        value={formData.authorEmail} 
-                        onChange={handleChange} 
-                        className="w-full p-4 border rounded-lg shadow-lg" 
-                    />
-                    {errors.authorEmail && <p className="text-red-500 text-sm">{errors.authorEmail}</p>}
                 </div>
 
                 <div className="mb-4">

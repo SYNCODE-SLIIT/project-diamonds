@@ -5,6 +5,7 @@ import { createOrganizerAccount,
     getOrganizerProfile,
     getAllOrganizers,
     getOrganizerById,
+    getOrganizerByUserId,
     deleteOrganizer
  } from '../controllers/organizerController.js';
 
@@ -13,10 +14,19 @@ import { createOrganizerAccount,
 // POST /api/organizers/create - Create a new organizer account
 router.post('/create', createOrganizerAccount);
 
-// NEW: GET /api/organizers/profile - Retrieve logged-in organizer's profile details
+// GET /api/organizers/profile - Get the logged-in organizer's profile (protected)
 router.get('/profile', protect, getOrganizerProfile);
+
+// GET /api/organizers - Get all organizers
 router.get('/', getAllOrganizers);
+
+// GET /api/organizers/user/:userId - Get organizer by user ID
+router.get('/user/:userId', getOrganizerByUserId);
+
+// GET /api/organizers/:id - Get organizer by ID
 router.get('/:id', getOrganizerById);
 
+// DELETE /api/organizers/:id - Delete an organizer
 router.delete('/:id', deleteOrganizer);
+
 export default router;

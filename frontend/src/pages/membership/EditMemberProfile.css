@@ -17,6 +17,114 @@
     text-align: center;
   }
   
+  /* New profile image section styles */
+  .edit-profile-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .profile-image-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1rem;
+  }
+
+  .profile-image-container {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    border: 3px solid #4a7bfc;
+    box-shadow: 0 4px 12px rgba(74, 123, 252, 0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f0f2f5;
+  }
+
+  .profile-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .profile-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f0f2f5;
+  }
+
+  .profile-image-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 0.5rem;
+  }
+
+  .upload-button, .remove-photo-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .upload-button {
+    background-color: #4a7bfc;
+    color: white;
+    border: none;
+  }
+
+  .upload-button:hover {
+    background-color: #3a63d2;
+  }
+
+  .remove-photo-button {
+    background-color: #ef4444;
+    color: white;
+    border: none;
+  }
+
+  .remove-photo-button:hover {
+    background-color: #dc2626;
+  }
+
+  .hidden-input {
+    display: none;
+  }
+
+  /* Form section styling */
+  .form-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background-color: #f9fafb;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .form-section h3 {
+    font-size: 1.25rem;
+    color: #2a2a5a;
+    margin-bottom: 1.25rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
   /* Form Styles */
   .edit-profile-form {
     display: flex;
@@ -34,6 +142,9 @@
     font-weight: 600;
     color: #374151;
     font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
   
   .form-group input[type="email"],
@@ -95,6 +206,18 @@
     border-radius: 6px;
   }
   
+  .availability-item span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .remove-availability-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .availability-item button {
     background-color: #ef4444;
     color: white;
@@ -108,6 +231,16 @@
   
   .availability-item button:hover {
     background-color: #dc2626;
+  }
+
+  .no-availabilities {
+    padding: 1rem;
+    text-align: center;
+    color: #6b7280;
+    font-style: italic;
+    background-color: white;
+    border-radius: 6px;
+    border: 1px dashed #d1d5db;
   }
   
   /* New Availability Input Section */
@@ -138,6 +271,20 @@
   .new-availability button:hover {
     background-color: #059669;
   }
+
+  .add-availability-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .day-select, .time-input {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: #fff;
+  }
   
   /* Form Actions */
   .form-actions {
@@ -155,6 +302,10 @@
     cursor: pointer;
     transition: all 0.2s ease;
     min-width: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
   }
   
   .save-button {
@@ -211,5 +362,19 @@
     
     .save-button, .cancel-button {
       width: 100%;
+    }
+  }
+
+  /* Responsive adjustments */
+  @media (min-width: 768px) {
+    .profile-image-section {
+      flex-direction: row;
+      gap: 2rem;
+      align-items: center;
+    }
+    
+    .profile-image-controls {
+      flex-direction: column;
+      margin-top: 0;
     }
   }

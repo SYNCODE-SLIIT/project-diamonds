@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 // Configure the transporter (using Ethereal for testing; replace with your SMTP details if needed)
-const transporter = nodemailer.createTransport({
+export const transporter = nodemailer.createTransport({
   host: 'smtp.ethereal.email',
   port: 587,
   auth: {
@@ -82,8 +82,29 @@ Thank you!`,
   }
 };
 
+// Add a generic email sending function
+export const sendGenericEmail = async (to, subject, text, html) => {
+  const mailOptions = {
+    from: '"Dance Team" <no-reply@danceteam.com>',
+    to,
+    subject,
+    text,
+    html: html || `<p>${text}</p>`
+  };
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Generic email sent:', info.messageId);
+    return info;
+  } catch (error) {
+    console.error('Error sending generic email:', error);
+    throw error;
+  }
+};
+
+// Default export after all functions are declared
 export default {
   sendApprovalEmail,
   sendRejectionEmail,
-  sendAuditionInvitationEmail
+  sendAuditionInvitationEmail,
+  sendGenericEmail
 };

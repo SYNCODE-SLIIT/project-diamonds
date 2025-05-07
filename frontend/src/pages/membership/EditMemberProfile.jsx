@@ -2,10 +2,12 @@ import React, { useEffect, useState, useContext } from 'react';
 import { UserContext } from '../../context/userContext';
 import { useNavigate } from 'react-router-dom';
 import { useUserAuth } from '../../hooks/useUserAuth';
+import 'boxicons';
+import axiosInstance from '../../utils/axiosInstance';
 import './EditMemberProfile.css';
 
 const EditMemberProfile = () => {
-  const { user } = useContext(UserContext);
+  const { user, updateUser } = useContext(UserContext);
   const navigate = useNavigate();
   useUserAuth();
 
@@ -13,12 +15,12 @@ const EditMemberProfile = () => {
   const [editedEmail, setEditedEmail] = useState('');
   const [editedContactNumber, setEditedContactNumber] = useState('');
   const [editedAvailabilities, setEditedAvailabilities] = useState([]);
-  // New states for dance style and achievements
   const [editedDanceStyle, setEditedDanceStyle] = useState('');
   const [editedAchievements, setEditedAchievements] = useState('');
   const [newProfilePicture, setNewProfilePicture] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [removePicture, setRemovePicture] = useState(false);
 
-  // Temporary states for new availability input
   const [newDay, setNewDay] = useState('');
   const [newStart, setNewStart] = useState('');
   const [newEnd, setNewEnd] = useState('');
@@ -26,7 +28,22 @@ const EditMemberProfile = () => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Fetch current profile details when component mounts
+  useEffect(() => {
+    if (!newProfilePicture) {
+      return;
+    }
+    
+    const fileReader = new FileReader();
+    fileReader.onload = () => {
+      setPreviewUrl(fileReader.result);
+    };
+    fileReader.readAsDataURL(newProfilePicture);
+
+    return () => {
+      URL.revokeObjectURL(previewUrl);
+    };
+  }, [newProfilePicture]);
+
   useEffect(() => {
     if (user && user.profileId) {
       setLoading(true);
@@ -43,7 +60,6 @@ const EditMemberProfile = () => {
           setEditedEmail(appData.email || '');
           setEditedContactNumber(appData.contactNumber || '');
           setEditedAvailabilities(appData.availability || []);
-          // Set new fields from the application data
           setEditedDanceStyle(appData.danceStyle || '');
           setEditedAchievements(appData.achievements ? appData.achievements.join(', ') : '');
           setLoading(false);
@@ -71,10 +87,22 @@ const EditMemberProfile = () => {
     setEditedAvailabilities(updatedAvail);
   };
 
+  const handleRemovePhoto = () => {
+    // Mark for removal on save and clear preview
+    setRemovePicture(true);
+    setNewProfilePicture(null);
+    setPreviewUrl('');
+    // Clear the displayed picture in local state immediately
+    setProfileData(prev => ({ ...prev, profilePicture: '' }));
+  };
+
   const handleSaveChanges = async (e) => {
     e.preventDefault();
     try {
-      // Upload new profile picture if one is selected
+      if (removePicture && !newProfilePicture) {
+        const idToDelete = profileData._id || user.profileId;
+        await axiosInstance.delete('/api/member-applications/profile-picture', { params: { userId: idToDelete } });
+      }
       if (newProfilePicture) {
         const formData = new FormData();
         formData.append('userId', user.profileId);
@@ -90,7 +118,6 @@ const EditMemberProfile = () => {
         setProfileData((prev) => ({ ...prev, profilePicture: picData.profilePicture }));
       }
 
-      // Update profile details (email, contact number, availability, dance style, achievements)
       const updateResponse = await fetch('http://localhost:4000/api/member-applications/update-profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -118,109 +145,195 @@ const EditMemberProfile = () => {
 
   return (
     <div className="edit-profile-container">
-      <h2>Edit Profile</h2>
+      <div className="edit-profile-header">
+        <h2>Edit Profile</h2>
+        <div className="profile-image-section">
+          <div className="profile-image-container">
+            {previewUrl ? (
+              <img src={previewUrl} alt="Preview" className="profile-image" />
+            ) : (!removePicture && (profileData?.profilePicture || user?.profilePicture)) ? (
+              <img 
+                src={profileData?.profilePicture || user?.profilePicture} 
+                alt="Current Profile" 
+                className="profile-image" 
+              />
+            ) : (
+              <div className="profile-image-placeholder">
+                <box-icon name="user" size="lg" color="#4a7bfc"></box-icon>
+              </div>
+            )}
+          </div>
+          <div className="profile-image-controls">
+            {/* Upload button always visible */}
+            <label htmlFor="profilePicture" className="upload-button">
+              <box-icon name="upload" color="white"></box-icon>
+              <span>Upload Photo</span>
+            </label>
+            <input
+              type="file"
+              id="profilePicture"
+              accept="image/*"
+              onChange={(e) => {
+                setNewProfilePicture(e.target.files[0]);
+                setRemovePicture(false);
+              }}
+              className="hidden-input"
+            />
+            {( (profileData?.profilePicture || newProfilePicture) && !removePicture ) && (
+              <button 
+                type="button" 
+                className="remove-photo-button"
+                onClick={handleRemovePhoto}
+              >
+                <box-icon name="trash" color="white"></box-icon>
+                <span>Remove</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
       <form onSubmit={handleSaveChanges} className="edit-profile-form">
-        <div className="form-group">
-          <label htmlFor="profilePicture">Profile Picture:</label>
-          <input
-            type="file"
-            id="profilePicture"
-            accept="image/*"
-            onChange={(e) => setNewProfilePicture(e.target.files[0])}
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="email">Email:</label>
-          <input
-            type="email"
-            id="email"
-            value={editedEmail}
-            onChange={(e) => setEditedEmail(e.target.value)}
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="contactNumber">Contact Number:</label>
-          <input
-            type="text"
-            id="contactNumber"
-            value={editedContactNumber}
-            onChange={(e) => setEditedContactNumber(e.target.value)}
-          />
-        </div>
-
-        {/* New field for Dance Style */}
-        <div className="form-group">
-          <label htmlFor="danceStyle">Dance Style:</label>
-          <input
-            type="text"
-            id="danceStyle"
-            value={editedDanceStyle}
-            onChange={(e) => setEditedDanceStyle(e.target.value)}
-          />
-        </div>
-
-        {/* New field for Achievements */}
-        <div className="form-group">
-          <label htmlFor="achievements">Achievements (comma separated):</label>
-          <input
-            type="text"
-            id="achievements"
-            value={editedAchievements}
-            onChange={(e) => setEditedAchievements(e.target.value)}
-          />
-        </div>
-
-        <div className="form-group availabilities-group">
-          <label>Availabilities:</label>
-          {editedAvailabilities && editedAvailabilities.length > 0 ? (
-            <ul className="availability-list">
-              {editedAvailabilities.map((item, index) => (
-                <li key={index} className="availability-item">
-                  {item.day}: {item.start} - {item.end} 
-                  <button type="button" onClick={() => handleRemoveAvailability(index)}>Remove</button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No availabilities provided</p>
-          )}
-          <div className="new-availability">
-            <select
-              value={newDay}
-              onChange={(e) => setNewDay(e.target.value)}
-            >
-              <option value="">Select a day</option>
-              <option value="Monday">Monday</option>
-              <option value="Tuesday">Tuesday</option>
-              <option value="Wednesday">Wednesday</option>
-              <option value="Thursday">Thursday</option>
-              <option value="Friday">Friday</option>
-              <option value="Saturday">Saturday</option>
-              <option value="Sunday">Sunday</option>
-            </select>
+        <div className="form-section">
+          <h3>Contact Information</h3>
+          <div className="form-group">
+            <label htmlFor="email">
+              <box-icon name="envelope" color="#4a7bfc" size="sm"></box-icon>
+              Email Address
+            </label>
             <input
-              type="time"
-              placeholder="Start"
-              value={newStart}
-              onChange={(e) => setNewStart(e.target.value)}
+              type="email"
+              id="email"
+              value={editedEmail}
+              onChange={(e) => setEditedEmail(e.target.value)}
+              required
+              placeholder="Your email address"
             />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="contactNumber">
+              <box-icon name="phone" color="#4a7bfc" size="sm"></box-icon>
+              Contact Number
+            </label>
             <input
-              type="time"
-              placeholder="End"
-              value={newEnd}
-              onChange={(e) => setNewEnd(e.target.value)}
+              type="text"
+              id="contactNumber"
+              value={editedContactNumber}
+              onChange={(e) => setEditedContactNumber(e.target.value)}
+              placeholder="Your phone number"
             />
-            <button type="button" onClick={handleAddAvailability}>Add Availability</button>
+          </div>
+        </div>
+
+        <div className="form-section">
+          <h3>Dance Profile</h3>
+          <div className="form-group">
+            <label htmlFor="danceStyle">
+              <box-icon name="music" color="#4a7bfc" size="sm"></box-icon>
+              Dance Style
+            </label>
+            <input
+              type="text"
+              id="danceStyle"
+              value={editedDanceStyle}
+              onChange={(e) => setEditedDanceStyle(e.target.value)}
+              placeholder="e.g. Hip Hop, Contemporary, Ballet"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="achievements">
+              <box-icon name="trophy" color="#4a7bfc" size="sm"></box-icon>
+              Achievements (comma separated)
+            </label>
+            <input
+              type="text"
+              id="achievements"
+              value={editedAchievements}
+              onChange={(e) => setEditedAchievements(e.target.value)}
+              placeholder="e.g. Competition Winner 2023, Certified Instructor"
+            />
+          </div>
+        </div>
+
+        <div className="form-section">
+          <h3>Availability</h3>
+          <div className="form-group availabilities-group">
+            {editedAvailabilities && editedAvailabilities.length > 0 ? (
+              <ul className="availability-list">
+                {editedAvailabilities.map((item, index) => (
+                  <li key={index} className="availability-item">
+                    <span>
+                      <box-icon name="time" color="#4a7bfc" size="sm"></box-icon>
+                      {item.day}: {item.start} - {item.end}
+                    </span>
+                    <button 
+                      type="button" 
+                      onClick={() => handleRemoveAvailability(index)}
+                      className="remove-availability-button"
+                    >
+                      <box-icon name="x" color="white" size="sm"></box-icon>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="no-availabilities">No availabilities provided</p>
+            )}
+            <div className="new-availability">
+              <select
+                value={newDay}
+                onChange={(e) => setNewDay(e.target.value)}
+                className="day-select"
+              >
+                <option value="">Select a day</option>
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday">Friday</option>
+                <option value="Saturday">Saturday</option>
+                <option value="Sunday">Sunday</option>
+              </select>
+              <input
+                type="time"
+                placeholder="Start"
+                value={newStart}
+                onChange={(e) => setNewStart(e.target.value)}
+                className="time-input"
+              />
+              <input
+                type="time"
+                placeholder="End"
+                value={newEnd}
+                onChange={(e) => setNewEnd(e.target.value)}
+                className="time-input"
+              />
+              <button 
+                type="button" 
+                onClick={handleAddAvailability}
+                className="add-availability-button"
+              >
+                <box-icon name="plus" color="white" size="sm"></box-icon>
+                Add
+              </button>
+            </div>
           </div>
         </div>
 
         <div className="form-actions">
-          <button type="submit" className="save-button">Save Changes</button>
-          <button type="button" className="cancel-button" onClick={() => navigate('/member-dashboard/profile')}>
+          <button 
+            type="button" 
+            className="cancel-button"
+            onClick={() => navigate('/member-dashboard/profile')}
+          >
+            <box-icon name="x" color="#4b5563" size="sm"></box-icon>
             Cancel
+          </button>
+          <button type="submit" className="save-button">
+            <box-icon name="check" color="white" size="sm"></box-icon>
+            Save Changes
           </button>
         </div>
       </form>

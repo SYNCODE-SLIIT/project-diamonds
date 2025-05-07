@@ -120,7 +120,9 @@
 }
   
 .edit-button {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
     max-width: 220px;
     margin: 2rem auto 0;
@@ -132,7 +134,7 @@
     font-weight: 600;
     font-size: 1.1rem;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     text-align: center;
     letter-spacing: 0.5px;
     box-shadow: 0 4px 6px rgba(74, 123, 252, 0.25);
@@ -191,4 +193,44 @@
 
 .profile-section {
     margin-bottom: 20px;
+}
+
+/* Button styling */
+.profile-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.profile-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background-color: #4a7bfc;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(74, 123, 252, 0.25);
+}
+
+.profile-button:hover {
+  background-color: #3a63d2;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(74, 123, 252, 0.4);
+}
+
+.profile-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(74, 123, 252, 0.25);
+}
+
+.change-password-button {
+  display: none; /* Hide the old button style */
 }

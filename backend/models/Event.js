@@ -12,6 +12,16 @@ const EventSchema = new mongoose.Schema({
     eventName: { type: String, required: true, trim: true },
     eventDate: { type: Date, required: true },
     eventLocation: { type: String, required: true, trim: true },
+    eventType: { 
+      type: String, 
+      enum: ['public', 'private'], 
+      required: true, 
+      default: 'private' 
+    },
+    eventTime: {
+      startDate: { type: Date, required: true },
+      endDate: { type: Date, required: true }
+    },
     guestCount: { type: Number, required: true, min: 1 },
     status: { 
         type: String, 
@@ -27,6 +37,13 @@ const EventSchema = new mongoose.Schema({
     memberId: { type: mongoose.Schema.Types.ObjectId, ref: 'MemberApplication' },
     status: { type: String, enum: ['Pending', 'Accepted', 'Rejected'], default: 'Pending' },
     reason: { type: String, default: "" }
+  }],
+
+  notes: [{
+    author: { type: String },
+    content: { type: String  },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date }
   }]
 
 }, { timestamps: true });
