@@ -29,4 +29,13 @@ export const API_PATHS = {
   TRANSACTION: {
     DOWNLOAD_ALL: "/api/v1/transaction/downloadall",
   },
+  REFUND: {
+    GET_ALL_REFUNDS: "/api/finance/getr",
+    ADD_REFUND: "/api/finance/ef",
+    UPDATE_REFUND: (refundId) => `/api/v1/refund/${refundId}`,
+  },
+  FINANCE: {
+    GET_ALL_PAYMENTS: "/api/finance/getp",
+    GET_PAYMENT_BY_ID: (paymentId) => `/api/finance/getp/${paymentId}`,
+  },
 };

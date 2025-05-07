@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AlertCircle, CheckCircle2, X, ArrowRight, ArrowLeft } from 'lucide-react';
+import { AlertCircle, CheckCircle2, X, ArrowRight, ArrowLeft, Calendar, Clock, MapPin, User, Mail, Phone, Calendar as CalendarIcon, Music, Clock as ClockIcon, Award, FileText } from 'lucide-react';
+import { differenceInYears } from 'date-fns';
 
 const AdminInviteApplicant = () => {
   const { id } = useParams();
@@ -121,186 +122,307 @@ const AdminInviteApplicant = () => {
   };
 
   if (loading) return (
-    <div className="flex justify-center items-center h-screen">
-      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-blue-500"></div>
+    <div className="flex justify-center items-center min-h-screen bg-gray-50">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600"></div>
     </div>
   );
   
   if (errorMsg) return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md text-center">
-        <AlertCircle className="mx-auto mb-4 text-red-500" size={48} />
-        <div className="text-xl text-gray-800 mb-4">{errorMsg}</div>
-        <button 
-          onClick={() => navigate('/admin/applications/combined')}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
-        >
-          Return to Applications
-        </button>
+    <div className="flex justify-center items-center min-h-screen bg-gray-50 p-4">
+      <div className="max-w-lg w-full bg-white shadow-xl rounded-xl overflow-hidden">
+        <div className="bg-gradient-to-r from-red-500 to-red-600 p-6">
+          <h2 className="text-2xl font-bold text-white text-center">Error</h2>
+        </div>
+        <div className="p-6">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-center flex items-center justify-center">
+            <AlertCircle className="mr-2" />
+            {errorMsg}
+          </div>
+          <div className="mt-6 text-center">
+            <button 
+              onClick={() => navigate('/admin/applications/combined')}
+              className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition duration-300"
+            >
+              Return to Applications
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
-        {/* Progress Indicator */}
-        <div className="flex justify-center mb-8">
-          <div className={`w-12 h-1 mx-2 ${step === 1 ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
-          <div className={`w-12 h-1 mx-2 ${step === 2 ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+    <div className="min-h-screen bg-gray-50 p-4 py-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Back Button */}
+        <div className="mb-6">
+          <button 
+            onClick={() => navigate('/admin/applications/combined')}
+            className="flex items-center text-gray-700 hover:text-blue-600 transition duration-300"
+          >
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            Back to Applications
+          </button>
         </div>
 
-        {/* Step 1: Applicant Review with all details */}
-        {step === 1 && application && (
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Applicant Review</h2>
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { label: 'Full Name', value: application.fullName },
-                { label: 'Email', value: application.email },
-                { label: 'Contact Number', value: application.contactNumber },
-                { 
-                  label: 'Birth Date', 
-                  value: application.birthDate 
-                    ? new Date(application.birthDate).toLocaleDateString() 
-                    : 'N/A' 
-                },
-                { label: 'Dance Style', value: application.danceStyle },
-                { label: 'Years of Experience', value: application.yearsOfExperience }
-              ].map(({ label, value }) => (
-                <div key={label} className="bg-gray-50 p-3 rounded">
-                  <span className="text-sm text-gray-500 block">{label}</span>
-                  <span className="text-gray-800 font-medium">{value}</span>
+        <div className="bg-white shadow-xl rounded-xl overflow-hidden">
+          {/* Header with gradient and steps indicator */}
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-500 p-6">
+            <h2 className="text-2xl font-bold text-center text-white mb-4">
+              {step === 1 ? 'Applicant Review' : 'Audition Invitation'}
+            </h2>
+            
+            {/* Progress Indicator */}
+            <div className="flex justify-center items-center max-w-xs mx-auto">
+              <div className="flex flex-col items-center">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${step === 1 ? 'bg-white text-blue-600' : 'bg-blue-300 text-white'} mb-1`}>
+                  <User size={20} />
                 </div>
-              ))}
-            </div>
-
-            <div className="mt-6">
-              <div className="bg-gray-50 p-4 rounded mb-4">
-                <span className="text-sm text-gray-500 block mb-2">Biography:</span>
-                <p className="text-gray-800">{application.biography}</p>
+                <span className="text-xs text-white">Review</span>
               </div>
-
-              <div className="bg-gray-50 p-4 rounded mb-4">
-                <span className="text-sm text-gray-500 block mb-2">Achievements:</span>
-                <p className="text-gray-800">
-                  {application.achievements && application.achievements.join(', ')}
-                </p>
+              
+              <div className={`h-1 flex-1 mx-2 ${step === 1 ? 'bg-blue-300' : 'bg-white'}`}></div>
+              
+              <div className="flex flex-col items-center">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${step === 2 ? 'bg-white text-blue-600' : 'bg-blue-300 text-white'} mb-1`}>
+                  <Calendar size={20} />
+                </div>
+                <span className="text-xs text-white">Invitation</span>
               </div>
-
-              <div className="bg-gray-50 p-4 rounded">
-                <span className="text-sm text-gray-500 block mb-2">Availabilities:</span>
-                {application.availability && application.availability.length > 0 ? (
-                  <ul className="space-y-1">
-                    {application.availability.map((avail, index) => (
-                      <li key={index} className="text-gray-800">
-                        {avail.day} — {avail.start} to {avail.end}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-gray-500">No availabilities provided.</p>
-                )}
-              </div>
-            </div>
-
-            <div className="flex justify-between mt-8">
-              <button
-                onClick={() => updateStatus("Rejected")}
-                className="flex items-center bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
-              >
-                <X className="mr-2" /> Reject
-              </button>
-              <button
-                onClick={handleProceed}
-                className="flex items-center bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
-              >
-                Proceed to Invitation <ArrowRight className="ml-2" />
-              </button>
             </div>
           </div>
-        )}
 
-        {/* Step 2: Audition Details */}
-        {step === 2 && (
-          <form onSubmit={handleSendInvitation} className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Audition Invitation</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Audition Date
-                </label>
-                <input 
-                  type="date" 
-                  name="auditionDate" 
-                  value={auditionDetails.auditionDate} 
-                  onChange={handleAuditionDetailChange} 
-                  required 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                {auditionErrors.auditionDate && (
-                  <p className="text-red-500 text-sm mt-1">{auditionErrors.auditionDate}</p>
+          <div className="p-6">
+            {/* Step 1: Applicant Review with all details */}
+            {step === 1 && application && (
+              <div className="space-y-8">
+                {/* Applicant Summary Card */}
+                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                  <div className="flex flex-col md:flex-row justify-between items-center md:items-start">
+                    <div className="mb-4 md:mb-0">
+                      <h3 className="text-xl font-bold text-gray-800">{application.fullName}</h3>
+                      <div className="flex items-center text-gray-600 mt-1">
+                        <Mail size={16} className="mr-2" />
+                        <span>{application.email}</span>
+                      </div>
+                      <div className="flex items-center text-gray-600 mt-1">
+                        <Phone size={16} className="mr-2" />
+                        <span>{application.contactNumber}</span>
+                      </div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full flex items-center">
+                        <Music size={14} className="mr-1" />
+                        {application.danceStyle}
+                      </span>
+                      <span className="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full flex items-center">
+                        <ClockIcon size={14} className="mr-1" />
+                        {application.yearsOfExperience} years exp.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Application Details Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Personal Information */}
+                  <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
+                    <h4 className="text-lg font-semibold text-gray-800 flex items-center border-b pb-2 mb-3">
+                      <User className="mr-2 text-blue-600" size={18} />
+                      Personal Information
+                    </h4>
+                    <div className="space-y-3">
+                      <div>
+                        <span className="text-sm text-gray-500 block">Birth Date:</span>
+                        <span className="text-gray-800">
+                          {application.birthDate 
+                            ? new Date(application.birthDate).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })
+                            : 'Not provided'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500 block">Age:</span>
+                        <span className="text-gray-800">
+                          {application.birthDate 
+                            ? `${differenceInYears(new Date(), new Date(application.birthDate))} years` 
+                            : 'Not provided'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Achievements */}
+                  <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
+                    <h4 className="text-lg font-semibold text-gray-800 flex items-center border-b pb-2 mb-3">
+                      <Award className="mr-2 text-blue-600" size={18} />
+                      Achievements
+                    </h4>
+                    {application.achievements && application.achievements.length > 0 ? (
+                      <ul className="list-disc list-inside space-y-1">
+                        {application.achievements.map((achievement, index) => (
+                          <li key={index} className="text-gray-800">{achievement}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-gray-600 italic">No achievements listed</p>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Biography */}
+                <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
+                  <h4 className="text-lg font-semibold text-gray-800 flex items-center border-b pb-2 mb-3">
+                    <FileText className="mr-2 text-blue-600" size={18} />
+                    Biography
+                  </h4>
+                  <p className="text-gray-800 whitespace-pre-line">{application.biography || 'No biography provided.'}</p>
+                </div>
+
+                {/* Availabilities */}
+                <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
+                  <h4 className="text-lg font-semibold text-gray-800 flex items-center border-b pb-2 mb-3">
+                    <CalendarIcon className="mr-2 text-blue-600" size={18} />
+                    Availabilities
+                  </h4>
+                  {application.availability && application.availability.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {application.availability.map((avail, index) => (
+                        <div key={index} className="bg-white p-3 rounded-md border border-gray-200">
+                          <div className="font-medium text-gray-800">{avail.day}</div>
+                          <div className="text-sm text-gray-600 flex items-center">
+                            <Clock size={14} className="mr-1" />
+                            {avail.start} - {avail.end}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-600 italic">No availabilities provided</p>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row justify-between gap-4 pt-6">
+                  <button
+                    onClick={() => updateStatus("Rejected")}
+                    className="flex items-center justify-center bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-lg hover:from-red-600 hover:to-red-700 transition duration-300 shadow-md"
+                  >
+                    <X className="mr-2" size={18} /> Reject Application
+                  </button>
+                  <button
+                    onClick={handleProceed}
+                    className="flex items-center justify-center bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition duration-300 shadow-md"
+                  >
+                    Proceed to Invitation <ArrowRight className="ml-2" size={18} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Audition Details */}
+            {step === 2 && (
+              <form onSubmit={handleSendInvitation} className="space-y-6">
+                <div className="bg-indigo-50 rounded-lg p-4 mb-6 border border-indigo-100">
+                  <p className="text-indigo-800 text-sm">
+                    Setting up an audition for <span className="font-semibold">{application?.fullName}</span>. Please select a date, time, and location for the audition.
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Date Field */}
+                  <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                    <label className="text-gray-700 font-medium mb-2 flex items-center">
+                      <Calendar className="mr-2 text-blue-600" size={18} />
+                      Audition Date
+                    </label>
+                    <input 
+                      type="date" 
+                      name="auditionDate" 
+                      value={auditionDetails.auditionDate} 
+                      onChange={handleAuditionDetailChange} 
+                      required 
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300"
+                    />
+                    {auditionErrors.auditionDate && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center">
+                        <AlertCircle size={14} className="mr-1" />
+                        {auditionErrors.auditionDate}
+                      </p>
+                    )}
+                  </div>
+                  
+                  {/* Time Field */}
+                  <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                    <label className="text-gray-700 font-medium mb-2 flex items-center">
+                      <Clock className="mr-2 text-blue-600" size={18} />
+                      Audition Time
+                    </label>
+                    <input 
+                      type="time" 
+                      name="auditionTime" 
+                      value={auditionDetails.auditionTime} 
+                      onChange={handleAuditionDetailChange} 
+                      required 
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300"
+                    />
+                  </div>
+                  
+                  {/* Location Field */}
+                  <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                    <label className="text-gray-700 font-medium mb-2 flex items-center">
+                      <MapPin className="mr-2 text-blue-600" size={18} />
+                      Location
+                    </label>
+                    <input 
+                      type="text" 
+                      name="location" 
+                      placeholder="Enter audition venue" 
+                      value={auditionDetails.location} 
+                      onChange={handleAuditionDetailChange} 
+                      required 
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300"
+                    />
+                  </div>
+                </div>
+
+                {/* Error and success messages */}
+                {submitError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
+                    <AlertCircle className="mr-3 text-red-500 flex-shrink-0" size={24} />
+                    <span>{submitError}</span>
+                  </div>
                 )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Audition Time
-                </label>
-                <input 
-                  type="time" 
-                  name="auditionTime" 
-                  value={auditionDetails.auditionTime} 
-                  onChange={handleAuditionDetailChange} 
-                  required 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Location
-                </label>
-                <input 
-                  type="text" 
-                  name="location" 
-                  placeholder="Enter audition venue" 
-                  value={auditionDetails.location} 
-                  onChange={handleAuditionDetailChange} 
-                  required 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
+                {submitMsg && (
+                  <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center">
+                    <CheckCircle2 className="mr-3 text-green-500 flex-shrink-0" size={24} />
+                    <span>{submitMsg}</span>
+                  </div>
+                )}
 
-            {submitError && (
-              <div className="bg-red-50 border border-red-300 text-red-800 px-4 py-3 rounded relative flex items-center">
-                <AlertCircle className="mr-3 text-red-500" size={24} />
-                {submitError}
-              </div>
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row justify-between gap-4 pt-6">
+                  <button 
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="flex items-center justify-center bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition duration-300 shadow-sm"
+                  >
+                    <ArrowLeft className="mr-2" size={18} /> Back to Review
+                  </button>
+                  <button 
+                    type="submit"
+                    className="flex items-center justify-center bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 py-3 rounded-lg hover:from-green-600 hover:to-teal-700 transition duration-300 shadow-md"
+                  >
+                    Send Invitation <ArrowRight className="ml-2" size={18} />
+                  </button>
+                </div>
+              </form>
             )}
-            {submitMsg && (
-              <div className="bg-green-50 border border-green-300 text-green-800 px-4 py-3 rounded relative flex items-center">
-                <CheckCircle2 className="mr-3 text-green-500" size={24} />
-                {submitMsg}
-              </div>
-            )}
-
-            <div className="flex justify-between mt-8">
-              <button 
-                type="button"
-                onClick={() => setStep(1)}
-                className="flex items-center bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 transition-colors"
-              >
-                <ArrowLeft className="mr-2" /> Back
-              </button>
-              <button 
-                type="submit"
-                className="flex items-center bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
-              >
-                Send Invitation <ArrowRight className="ml-2" />
-              </button>
-            </div>
-          </form>
-        )}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -2,12 +2,15 @@ import React, { useState, useEffect, useContext, useRef } from 'react';
 import 'boxicons';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/userContext';
+import { API_PATHS } from '../../utils/apiPaths';
+import axiosInstance from '../../utils/axiosInstance';
 
 const Sidebar = () => {
   const [expenseToggle, setExpenseToggle] = useState(false);
   const [eventsToggle, setEventsToggle] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [totalUnread, setTotalUnread] = useState(0);
+  const [hasRefunds, setHasRefunds] = useState(false);
   const { user, clearUser } = useContext(UserContext);
   const navigate = useNavigate();
   const lastTotalRef = useRef(0);
@@ -43,6 +46,33 @@ const Sidebar = () => {
     }
     return () => clearInterval(interval);
   }, [user]);
+
+  // Fetch refund data to check if user has any refund requests
+  useEffect(() => {
+    const fetchRefunds = async () => {
+      try {
+        const response = await axiosInstance.get('/api/finance/getr');
+        if (response.data && response.data.success) {
+          const refunds = response.data.data || [];
+          setHasRefunds(refunds.length > 0);
+        } else {
+          setHasRefunds(false);
+        }
+      } catch (error) {
+        console.error("Error fetching refunds:", error);
+        setHasRefunds(false);
+      }
+    };
+
+    if (user && user._id) {
+      fetchRefunds();
+    }
+  }, [user]);
+
+  // Add a console log to check hasRefunds state
+  useEffect(() => {
+    console.log('hasRefunds state:', hasRefunds);
+  }, [hasRefunds]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -158,6 +188,20 @@ const Sidebar = () => {
                   Expense
                 </NavLink>
               </li>
+              {hasRefunds && (
+                <li className="mb-[15px]">
+                  <NavLink
+                    to="/member-dashboard/refund-history"
+                    className={({ isActive }) =>
+                      `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                      flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px] 
+                      transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                    }
+                  >
+                    Refund History
+                  </NavLink>
+                </li>
+              )}
             </ul>
           )}
         </li>

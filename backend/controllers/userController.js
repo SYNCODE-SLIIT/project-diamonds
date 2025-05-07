@@ -2,9 +2,13 @@ import MemberApplication from '../models/MemberApplication.js';
 import Organizer from '../models/Organizer.js';
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
+
 import bcrypt from 'bcrypt';
 import DirectChat from '../models/DirectChat.js';
 import DirectMessage from '../models/DirectMessage.js';
+
+import { deleteUserFinancialData } from '../utils/deleteUserFinancialData.js';
+
 
 // GET endpoint: Fetch application details for account creation
 export const getApplicationDetailsForAccountCreation = async (req, res) => {
@@ -136,6 +140,8 @@ export const updateUserProfile = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
   try {
+    // Delete all financial data for this user
+    await deleteUserFinancialData(req.user.id);
     const user = await User.findByIdAndDelete(req.user.id);
     if (!user) {
       return res.status(404).json({ message: "User not found." });
@@ -217,6 +223,8 @@ export const deleteMember = async (req, res) => {
     if (user.role !== 'member') {
       return res.status(400).json({ message: "Only members can be deleted from membership management." });
     }
+    // Delete all financial data for this user
+    await deleteUserFinancialData(memberId);
     // Delete the user
     await User.findByIdAndDelete(memberId);
     // Also delete the corresponding member application if a reference exists
@@ -257,6 +265,8 @@ export const deleteOrganizer = async (req, res) => {
     if (user.role !== 'organizer') {
       return res.status(400).json({ message: "Only organizers can be deleted from organizer management." });
     }
+    // Delete all financial data for this user
+    await deleteUserFinancialData(organizerId);
     // Delete the corresponding organizer profile from the Organizer collection if it exists
     if (user.profileId) {
       await Organizer.findByIdAndDelete(user.profileId);

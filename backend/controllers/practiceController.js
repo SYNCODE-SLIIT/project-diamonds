@@ -60,4 +60,19 @@ export const assignMembers = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
+};
+
+// Delete a practice
+export const deletePractice = async (req, res) => {
+  try {
+    const practice = await Practice.findById(req.params.id);
+    if (!practice) {
+      return res.status(404).json({ message: 'Practice not found' });
+    }
+    await Practice.findByIdAndDelete(req.params.id);
+    res.status(200).json({ message: 'Practice deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting practice:', error);
+    res.status(500).json({ message: error.message });
+  }
 }; 

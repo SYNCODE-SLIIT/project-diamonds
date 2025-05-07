@@ -2,6 +2,8 @@ import React, { useState, useEffect, useContext, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/userContext';
 import 'boxicons';
+import axiosInstance from '../../utils/axiosInstance';
+import BudgetForm from '../../components/Financial/BudgetForm';
 
 const AdminSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -9,9 +11,18 @@ const AdminSidebar = () => {
   const [mediaMgmtToggle, setMediaMgmtToggle] = useState(false);
   const [eventMgmtToggle, setEventMgmtToggle] = useState(false);
   const [teamMgmtToggle, setTeamMgmtToggle] = useState(false);
+
+
   const { user } = useContext(UserContext);
   const [totalUnread, setTotalUnread] = useState(0);
   const lastTotalRef = useRef(0);
+
+
+
+
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
+  const [financialMgmtToggle, setFinancialMgmtToggle] = useState(false);
+
 
   const navigate = useNavigate();
   const handleLogout = () => {
@@ -23,17 +34,17 @@ const AdminSidebar = () => {
   useEffect(() => {
     let interval;
     const fetchTotal = async () => {
+      // Get auth token and bail if missing or invalid
+      const token = localStorage.getItem('token');
+      if (!token || token === 'null') return;
       try {
-        // Fetch group chat unread counts
-        const groupRes = await fetch(`http://localhost:4000/api/chat-groups/user/${user._id}`);
-        const groupData = await groupRes.json();
+        // Fetch group chat unread counts with auth header
+        const groupRes = await axiosInstance.get(`/api/chat-groups/user/${user._id}`);
+        const groupData = groupRes.data;
         const unreadGroups = (groupData.groups || []).reduce((sum, g) => sum + (g.unreadCount || 0), 0);
         // Fetch direct chat unread counts
-        const token = localStorage.getItem('token');
-        const directRes = await fetch(`http://localhost:4000/api/direct-chats/user/${user._id}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const directData = await directRes.json();
+        const directRes = await axiosInstance.get(`/api/direct-chats/user/${user._id}`);
+        const directData = directRes.data;
         const unreadDirect = (directData.threads || []).reduce((sum, t) => sum + (t.unreadCount || 0), 0);
         const total = unreadGroups + unreadDirect;
         if (total !== lastTotalRef.current) {
@@ -146,21 +157,57 @@ const AdminSidebar = () => {
 
         {/* Financial Management */}
         <li className="mb-[15px]">
-          <NavLink
-            to="/admin/financial"
-            className={({ isActive }) =>
-              `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
-              flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
-              transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
-            }
+          <div
+            className="flex items-center justify-between cursor-pointer p-[10px] rounded-[8px] transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]"
+            onClick={() => setFinancialMgmtToggle(!financialMgmtToggle)}
           >
-            <box-icon name="dollar" color="#ffffff"></box-icon>
+            <div className="flex items-center">
+              <box-icon name="dollar" color="#ffffff"></box-icon>
+              {!collapsed && (
+                <span className="ml-[10px] transition-opacity duration-300 ease">
+                  Financial Management
+                </span>
+              )}
+            </div>
             {!collapsed && (
-              <span className="ml-[10px] transition-opacity duration-300 ease">
-                Financial Management
-              </span>
+              <div className="ml-[10px]">
+                <box-icon
+                  name={financialMgmtToggle ? "chevron-down" : "chevron-right"}
+                  color="#ffffff"
+                ></box-icon>
+              </div>
             )}
-          </NavLink>
+          </div>
+          {!collapsed && financialMgmtToggle && (
+            <ul className="list-none pl-[20px] transition-all duration-300 ease">
+              <li className="mb-[15px]">
+                <NavLink
+                  to="/admin/financial"
+                  className={({ isActive }) =>
+                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
+                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                  }
+                >
+                  <box-icon name="chart" color="#ffffff"></box-icon>
+                  Dashboard
+                </NavLink>
+              </li>
+              <li className="mb-[15px]">
+                <NavLink
+                  to="/admin/financial/anomalies"
+                  className={({ isActive }) =>
+                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
+                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                  }
+                >
+                  <box-icon name="error" color="#ffffff"></box-icon>
+                  Anomaly Detection
+                </NavLink>
+              </li>
+            </ul>
+          )}
         </li>
 
         {/* Media Management */}
@@ -214,6 +261,30 @@ const AdminSidebar = () => {
               </li>
               <li className="mb-[15px]">
                 <NavLink
+                  to="/admin/social-media"
+                  className={({ isActive }) =>
+                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
+                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                  }
+                >
+                  Social Media Feed
+                </NavLink>
+              </li>
+              <li className="mb-[15px]">
+                <NavLink
+                  to="/admin/merchandise"
+                  className={({ isActive }) =>
+                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
+                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                  }
+                >
+                  Merchandise
+                </NavLink>
+              </li>
+              <li className="mb-[15px]">
+                <NavLink
                   to="/admin/collaboration"
                   className={({ isActive }) =>
                     `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
@@ -238,14 +309,26 @@ const AdminSidebar = () => {
               </li>
               <li className="mb-[15px]">
                 <NavLink
-                  to="/admin/merchandise"
+                  to="/admin/certificate-generator"
                   className={({ isActive }) =>
                     `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
                     flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
                     transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
                   }
                 >
-                  Merchandise
+                  Certificate Generator
+                </NavLink>
+              </li>
+              <li className="mb-[15px]">
+                <NavLink
+                  to="/admin/sponsorship"
+                  className={({ isActive }) =>
+                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
+                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                  }
+                >
+                  Sponsorship
                 </NavLink>
               </li>
             </ul>
@@ -388,6 +471,19 @@ const AdminSidebar = () => {
                   }
                 >
                   Calendar
+                </NavLink>
+              </li>
+              {/* Budget Request Tab as a navigation link */}
+              <li className="mb-[15px]">
+                <NavLink
+                  to="/admin/budget-requests"
+                  className={({ isActive }) =>
+                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
+                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                  }
+                >
+                  {!collapsed &&<span>Budget Request</span>}
                 </NavLink>
               </li>
             </ul>

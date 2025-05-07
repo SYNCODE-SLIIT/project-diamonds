@@ -7,6 +7,10 @@ const AllMedia = () => {
   const [mediaList, setMediaList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  // Search, filter, and sort states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [sortOrder, setSortOrder] = useState("newest");
 
   useEffect(() => {
     const fetchMedia = async () => {
@@ -38,6 +42,25 @@ const AllMedia = () => {
   if (loading) return <div className="text-center mt-10">Loading...</div>;
   if (error) return <div className="text-center mt-10 text-red-600">{error}</div>;
 
+  // Build category list
+  const categories = [
+    "All",
+    ...Array.from(new Set(mediaList.map((m) => m.category)))
+  ];
+  // Filter by search and category
+  const filteredMedia = mediaList.filter((m) =>
+    m.mediaTitle.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    (selectedCategory === "All" || m.category === selectedCategory)
+  );
+  // Sort based on selected order
+  const sortedMedia = [...filteredMedia].sort((a, b) => {
+    if (sortOrder === "newest") return new Date(b.uploadDate) - new Date(a.uploadDate);
+    if (sortOrder === "oldest") return new Date(a.uploadDate) - new Date(b.uploadDate);
+    if (sortOrder === "titleAsc") return a.mediaTitle.localeCompare(b.mediaTitle);
+    if (sortOrder === "titleDesc") return b.mediaTitle.localeCompare(a.mediaTitle);
+    return 0;
+  });
+
   return (
     <div className="container mx-auto p-6 relative">
       {/* Button at the top right corner */}
@@ -49,22 +72,75 @@ const AllMedia = () => {
           Upload Media
         </Link>
       </div>
+      {/* Search, Category Filter, and Sort Controls */}
+      <div className="flex flex-col md:flex-row items-center justify-between mb-6 space-y-4 md:space-y-0 md:space-x-4">
+        <input
+          type="text"
+          placeholder="Search by title"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full md:w-1/3 p-2 border rounded-lg focus:outline-none focus:ring"
+        />
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          className="w-full md:w-1/3 p-2 border rounded-lg focus:outline-none focus:ring"
+        >
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
+        <select
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value)}
+          className="w-full md:w-1/3 p-2 border rounded-lg focus:outline-none focus:ring"
+        >
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="titleAsc">Title A-Z</option>
+          <option value="titleDesc">Title Z-A</option>
+        </select>
+      </div>
       
       <h1 className="text-3xl font-bold mb-6 text-center">Media Gallery</h1>
-      {mediaList.length === 0 ? (
+      {mediaList.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-2xl font-semibold mb-2">Latest Upload</h2>
+          {mediaList[0].mediaType === "video" ? (
+            <video controls preload="metadata" className="w-full h-48 object-cover mb-4">
+              <source src={mediaList[0].file} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          ) : (
+            <img
+              src={mediaList[0].file}
+              alt={mediaList[0].mediaTitle}
+              className="w-full h-48 object-cover mb-4"
+            />
+          )}
+        </div>
+      )}
+      {sortedMedia.length === 0 ? (
         <p className="text-center text-gray-600">No media found.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {mediaList.map((media) => (
+          {sortedMedia.map((media) => (
             <div
               key={media._id}
               className="bg-white shadow-lg rounded-lg overflow-hidden transition-transform transform hover:scale-105"
             >
-              <img
-                src={media.file}
-                alt={media.mediaTitle}
-                className="w-full h-48 object-cover"
-              />
+              {media.mediaType === "video" ? (
+                <video controls preload="metadata" className="w-full h-48 object-cover">
+                  <source src={media.file} />
+                  Your browser does not support the video tag.
+                </video>
+              ) : (
+                <img
+                  src={media.file}
+                  alt={media.mediaTitle}
+                  className="w-full h-48 object-cover"
+                />
+              )}
               <div className="p-4">
                 <h2 className="text-xl font-bold">{media.mediaTitle}</h2>
                 <p className="text-gray-600 text-sm mt-1">{media.description}</p>

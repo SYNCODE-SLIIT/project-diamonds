@@ -2,15 +2,21 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/mongodb.js';
+import { handleMulterError } from './middleware/uploadmiddleware.js';
+
+import crypto from 'crypto';
+
 
 import authRoutes from "./routes/authRoutes.js";
 import incomeRoutes from "./routes/incomeRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import financialRoutes from './routes/financialRoutes.js';
+import financeNotificationRoutes from './routes/financeNotificationRoutes.js';
 import transactionRoutes from "./routes/transactionRoutes.js";
 import packageRoutes from './routes/packageRoutes.js';
 import userRoutes from "./routes/userRoutes.js";
+import stripeRoutes from './routes/stripeRoutes.js';
 
 import blogPostRoutes from "./routes/blogPostRoutes.js";
 import managePostRoutes from "./routes/managePostRoutes.js";
@@ -43,8 +49,26 @@ import DirectChat from './models/DirectChat.js';
 import practiceRoutes from './routes/practiceRoutes.js';
 import practiceRequestRoutes from './routes/practiceRequestRoutes.js';
 
+import certificateRoutes from './routes/certificateRoutes.js';
+import sponsorshipRoutes from './routes/sponsorshipRoutes.js';
+
+
+
+import merchandiseRoutes from './routes/merchandiseRoutes.js';
+
+
+import collaborationRoutes from './routes/collaborationRoutes.js'
+
+
+import chatbotRoutes from './routes/chatbot.js';
+
+
 // Load environment variables
 dotenv.config();
+
+// Generate a new JWT secret on each server start to invalidate existing tokens on restart
+const dynamicSecret = crypto.randomBytes(64).toString('hex');
+process.env.JWT_SECRET = dynamicSecret;
 
 // Resolve __dirname for ES module compatibility
 const __filename = fileURLToPath(import.meta.url);
@@ -58,6 +82,13 @@ const port = process.env.PORT || 4000;
 app.use(express.json());
 app.use(cors());
 app.use('/uploads', express.static('uploads'));
+
+
+// Special middleware for Stripe webhooks
+app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
+
+// Add multer error handling middleware
+app.use(handleMulterError);
 
 // Connect to MongoDB
 connectDB();
@@ -85,7 +116,6 @@ app.use('/api/organizers', organizerRoutes);
 // Financial Management Routes
 app.use('/api/finance', financialRoutes);
 
-
 app.use('/api/assignments', assignmentRoutes);
 
 // Mount Routes
@@ -111,8 +141,17 @@ app.use("/api/organizers", organizerRoutes);
 app.use("/api/blogposts", blogPostRoutes);
 app.use("/api/media", managePostRoutes);
 app.use("/api/content-creators", ContentcreatorRoutes);
+
 app.use('/api/practices', practiceRoutes);
 app.use('/api/practice-requests', practiceRequestRoutes);
+
+
+app.use('/api/merchandise', merchandiseRoutes);
+app.use('/api/chatbot', chatbotRoutes);
+
+// Stripe Routes
+app.use('/api/stripe', stripeRoutes);
+
 
 // API Endpoints
 app.get('/register/member/application', (req, res) => {
@@ -131,6 +170,15 @@ app.use('/api/assignments', assignmentRoutes);
 app.get("/", (req, res) => {
     res.send("API is running...");
 });
+
+app.use('/api', collaborationRoutes);
+
+app.use('/api', certificateRoutes);
+
+app.use('/api', sponsorshipRoutes);
+
+
+
 
 // Start Server
 app.listen(port, () => console.log(`Server running on port ${port}`));
