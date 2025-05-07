@@ -49,59 +49,36 @@ const ContentCreatorList = () => {
         </Link>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full bg-white shadow-md rounded">
-          <thead className="bg-gray-200">
-            <tr>
-              <th className="p-3 text-left">Name</th>
-              <th className="p-3 text-left">Email</th>
-              <th className="p-3 text-left">Specialization</th>
-              <th className="p-3 text-left">Status</th>
-              <th className="p-3 text-left">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {contentCreators.map((creator) => (
-              <tr key={creator._id} className="border-b">
-                <td className="p-3">{creator.personalInfo.fullName}</td>
-                <td className="p-3">{creator.personalInfo.email}</td>
-                <td className="p-3">{creator.creatorDetails.specialization}</td>
-                <td className="p-3">
-                  <span className={`
-                    px-2 py-1 rounded 
-                    ${creator.status === 'Pending' ? 'bg-yellow-200 text-yellow-800' : 
-                      creator.status === 'Active' ? 'bg-green-200 text-green-800' : 
-                      'bg-red-200 text-red-800'}
-                  `}>
-                    {creator.status}
-                  </span>
-                </td>
-                <td className="p-3">
-                  <div className="flex space-x-2">
-                    <Link 
-                      to={`/content-creators/view/${creator._id}`} 
-                      className="text-blue-500 hover:text-blue-700"
-                    >
-                      View
-                    </Link>
-                    <Link 
-                      to={`/content-creators/edit/${creator._id}`} 
-                      className="text-green-500 hover:text-green-700"
-                    >
-                      Edit
-                    </Link>
-                    <button 
-                      onClick={() => handleDelete(creator._id)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Creator Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {contentCreators.map((creator) => (
+          <div key={creator._id} className="bg-white shadow-lg rounded-lg p-6 flex flex-col">
+            <div className="flex items-center mb-4">
+              <div className="h-12 w-12 bg-gray-200 rounded-full flex items-center justify-center text-xl font-bold text-gray-500">
+                {creator.personalInfo.fullName.charAt(0)}
+              </div>
+              <h3 className="ml-4 text-lg font-semibold">{creator.personalInfo.fullName}</h3>
+            </div>
+            <p className="text-gray-600">{creator.personalInfo.email}</p>
+            <p className="text-gray-600 mt-1">Specialization: {creator.creatorDetails.specialization}</p>
+            <span className={`mt-4 inline-block px-2 py-1 text-xs font-medium rounded-full ${
+              creator.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+              creator.status === 'Active' ? 'bg-green-100 text-green-800' :
+              'bg-red-100 text-red-800'
+            }`}>{creator.status}</span>
+            <div className="mt-auto pt-4 flex space-x-2">
+              <Link to={`/content-creators/view/${creator._id}`} className="flex-1 text-center bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition">
+                View
+              </Link>
+              <Link to={`/content-creators/edit/${creator._id}`} className="flex-1 text-center bg-green-500 text-white py-2 rounded hover:bg-green-600 transition">
+                Edit
+              </Link>
+              <button onClick={() => handleDelete(creator._id)} className="flex-1 text-center bg-red-500 text-white py-2 rounded hover:bg-red-600 transition">
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

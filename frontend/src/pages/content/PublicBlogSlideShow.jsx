@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 const PublicBlogSlideShow = () => {
   const [posts, setPosts] = useState([]);
@@ -37,26 +38,27 @@ const PublicBlogSlideShow = () => {
           const date = new Date(post.publishDate);
           const dateStr = date.toLocaleString('default', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase();
           return (
-            <motion.div
-              key={post._id}
-              className="bg-white rounded shadow overflow-hidden"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-            >
-              {post.featuredImage && (
-                <img
-                  src={post.featuredImage}
-                  alt={post.title}
-                  className="w-full h-48 object-cover"
-                />
-              )}
-              <div className="p-4">
-                <p className="text-sm text-gray-500 uppercase">{dateStr}</p>
-                <h3 className="mt-1 text-lg font-semibold text-gray-900">{post.title}</h3>
-              </div>
-            </motion.div>
+            <Link to={`/blogs/${post._id}`} key={post._id} className="block">
+              <motion.div
+                className="bg-white rounded-lg shadow hover:shadow-lg overflow-hidden transition"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+              >
+                {post.featuredImage && (
+                  <img
+                    src={post.featuredImage}
+                    alt={post.title}
+                    className="w-full h-48 object-cover"
+                  />
+                )}
+                <div className="p-4">
+                  <p className="text-sm text-gray-500 uppercase">{dateStr}</p>
+                  <h3 className="mt-1 text-lg font-semibold text-gray-900">{post.title}</h3>
+                </div>
+              </motion.div>
+            </Link>
           );
         })}
       </div>

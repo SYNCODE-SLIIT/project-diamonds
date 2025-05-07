@@ -36,6 +36,8 @@
     "font-awesome": "^4.7.0",
     "framer-motion": "^12.6.2",
     "html2canvas": "^1.4.1",
+    "i": "^0.3.7",
+    "install": "^0.13.0",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.483.0",
@@ -43,6 +45,7 @@
     "multer": "^1.4.5-lts.2",
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^6.10.0",
+    "npm": "^11.3.0",
     "react": "^19.0.0",
     "react-big-calendar": "^1.18.0",
     "react-calendar": "^5.1.0",
@@ -51,10 +54,8 @@
     "react-error-boundary": "^5.0.0",
     "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0",
-
-    "react-loading-skeleton": "^3.1.0",
+    "react-loading-skeleton": "^3.5.0",
     "react-markdown": "^10.1.0",
-
     "react-router-dom": "^7.4.0",
     "react-select": "^5.10.1",
     "react-toastify": "^11.0.5",
