@@ -335,7 +335,7 @@ const AdminInviteApplicant = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Date Field */}
                   <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-                    <label className="block text-gray-700 font-medium mb-2 flex items-center">
+                    <label className="text-gray-700 font-medium mb-2 flex items-center">
                       <Calendar className="mr-2 text-blue-600" size={18} />
                       Audition Date
                     </label>
@@ -357,7 +357,7 @@ const AdminInviteApplicant = () => {
                   
                   {/* Time Field */}
                   <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-                    <label className="block text-gray-700 font-medium mb-2 flex items-center">
+                    <label className="text-gray-700 font-medium mb-2 flex items-center">
                       <Clock className="mr-2 text-blue-600" size={18} />
                       Audition Time
                     </label>
@@ -373,7 +373,7 @@ const AdminInviteApplicant = () => {
                   
                   {/* Location Field */}
                   <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-                    <label className="block text-gray-700 font-medium mb-2 flex items-center">
+                    <label className="text-gray-700 font-medium mb-2 flex items-center">
                       <MapPin className="mr-2 text-blue-600" size={18} />
                       Location
                     </label>
