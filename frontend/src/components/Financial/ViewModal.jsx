@@ -12,7 +12,9 @@ import {
   HiOutlineX,
   HiOutlinePencil,
   HiOutlineEye,
-  HiOutlineEyeOff
+  HiOutlineEyeOff,
+  HiOutlinePhotograph,
+  HiOutlineDocument
 } from 'react-icons/hi';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -23,6 +25,62 @@ const ViewModal = ({ item, onClose, activeTab }) => {
   const [activeSection, setActiveSection] = useState(null);
   const [expandedSections, setExpandedSections] = useState({});
   const [isDownloading, setIsDownloading] = useState(false);
+  const [fileViewer, setFileViewer] = useState({ isOpen: false, url: '', type: '' });
+
+  // Check for bank slip or attachment when component mounts
+  useEffect(() => {
+    // Find bank slip or attachment URL in the item data
+    const findAttachment = () => {
+      for (const [key, value] of Object.entries(item)) {
+        if (
+          (key === 'bankSlipUrl' || 
+           key === 'fileUrl' || 
+           key === 'attachmentUrl' || 
+           key.toLowerCase().includes('slip') || 
+           key.toLowerCase().includes('attachment')) && 
+          typeof value === 'string'
+        ) {
+          const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(value);
+          const isPdf = /\.pdf$/i.test(value);
+          
+          if (isImage || isPdf) {
+            setFileViewer({
+              isOpen: true,
+              url: value,
+              type: isImage ? 'image' : 'pdf'
+            });
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+    
+    findAttachment();
+  }, [item]);
+
+  // Add the missing showFileViewer function
+  const showFileViewer = (url, type) => {
+    setFileViewer({
+      isOpen: true,
+      url,
+      type
+    });
+  };
+
+  // Add a function to close the file viewer
+  const closeFileViewer = () => {
+    setFileViewer({
+      isOpen: false,
+      url: '',
+      type: ''
+    });
+  };
+
+  // Add the handleViewFile function that was referenced but missing
+  const handleViewFile = (url, type) => {
+    showFileViewer(url, type);
+  };
 
   // Set all sections expanded by default
   useEffect(() => {
@@ -115,6 +173,24 @@ const ViewModal = ({ item, onClose, activeTab }) => {
           ))}
         </ul>
       ) : "—";
+    }
+    
+    // Handle bank slip or file attachments
+    if (key === 'bankSlipUrl' || key === 'fileUrl' || key === 'attachmentUrl' || key.toLowerCase().includes('slip') || key.toLowerCase().includes('attachment')) {
+      const isImage = typeof value === 'string' && /\.(jpg|jpeg|png|gif|webp)$/i.test(value);
+      const isPdf = typeof value === 'string' && /\.pdf$/i.test(value);
+      
+      if (isImage || isPdf) {
+        return (
+          <button
+            onClick={() => handleViewFile(value, isImage ? 'image' : 'pdf')}
+            className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors flex items-center gap-1"
+          >
+            {isImage ? <HiOutlinePhotograph className="w-4 h-4" /> : <HiOutlineDocument className="w-4 h-4" />}
+            View {isImage ? 'Image' : 'PDF'}
+          </button>
+        );
+      }
     }
     
     // If value is a URL, render as a clickable, truncated link
@@ -494,6 +570,49 @@ const ViewModal = ({ item, onClose, activeTab }) => {
         
         {/* Content */}
         <div className="p-6">
+          {/* Display attachment at the top if available */}
+          {fileViewer.url && (
+            <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <h3 className="text-lg font-semibold mb-3">
+                {fileViewer.type === 'image' ? 'Bank Slip Image' : 'Bank Slip PDF'}
+              </h3>
+              <div className="flex justify-center bg-white p-2 rounded border border-gray-300">
+                {fileViewer.type === 'image' ? (
+                  <img 
+                    src={fileViewer.url} 
+                    alt="Bank Slip" 
+                    className="max-w-full max-h-[300px] object-contain"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';
+                    }}
+                  />
+                ) : (
+                  <iframe
+                    src={fileViewer.url}
+                    title="PDF Viewer"
+                    className="w-full h-[300px] border-0"
+                    onError={(e) => {
+                      e.target.parentNode.innerHTML = '<div class="flex flex-col items-center justify-center h-full"><p class="text-red-500 mb-2">Unable to display PDF</p><a href="' + fileViewer.url + '" target="_blank" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Open PDF in New Tab</a></div>';
+                    }}
+                  />
+                )}
+              </div>
+              <div className="mt-2 flex justify-end">
+                <a
+                  href={fileViewer.url}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center gap-1 text-sm"
+                >
+                  <HiOutlineDownload className="w-4 h-4" />
+                  Download
+                </a>
+              </div>
+            </div>
+          )}
+          
           {renderFieldGroups()}
         </div>
         
@@ -507,6 +626,8 @@ const ViewModal = ({ item, onClose, activeTab }) => {
           </button>
         </div>
       </div>
+
+      {/* Remove the separate File Viewer Modal since we're showing it inline */}
     </div>
   );
 };
