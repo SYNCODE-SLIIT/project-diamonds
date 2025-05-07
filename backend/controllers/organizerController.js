@@ -123,15 +123,65 @@ export const deleteOrganizer = async (req, res) => {
   }
 };
 
-// NEW: Get a single organizer by ID
+// Get a single organizer by ID
 export const getOrganizerById = async (req, res) => {
   try {
-    const organizer = await Organizer.findById(req.params.id);
-    if (!organizer) {
-      return res.status(404).json({ message: "Organizer not found." });
+    const { id } = req.params;
+    
+    // Check for valid ID format to avoid unnecessary DB queries
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: "Invalid organizer ID format" });
     }
+    
+    const organizer = await Organizer.findById(id);
+    
+    if (!organizer) {
+      return res.status(404).json({ message: "Organizer not found" });
+    }
+    
     return res.status(200).json(organizer);
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    console.error("Error fetching organizer by ID:", error);
+    return res.status(500).json({ 
+      message: "Error fetching organizer details", 
+      error: error.message 
+    });
+  }
+};
+
+// Get an organizer by user ID (useful for linking user accounts to organizer profiles)
+export const getOrganizerByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Find the user to get its profileId
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    if (user.role !== 'organizer') {
+      return res.status(400).json({ message: "User is not an organizer" });
+    }
+    
+    if (!user.profileId) {
+      return res.status(404).json({ message: "No organizer profile linked to this user" });
+    }
+    
+    // Get the organizer profile
+    const organizer = await Organizer.findById(user.profileId);
+    
+    if (!organizer) {
+      return res.status(404).json({ message: "Organizer profile not found" });
+    }
+    
+    return res.status(200).json(organizer);
+  } catch (error) {
+    console.error("Error finding organizer by user ID:", error);
+    return res.status(500).json({ 
+      message: "Error finding organizer by user ID", 
+      error: error.message 
+    });
   }
 };
