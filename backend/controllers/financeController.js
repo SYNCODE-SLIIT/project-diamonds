@@ -1,3 +1,5 @@
+import Notification from '../models/Notification.js';
+
 exports.resolveAnomaly = async (req, res) => {
   try {
     const { id } = req.params;
@@ -183,4 +185,55 @@ const generateInsights = (forecast, metrics) => {
   }
 
   return insights;
+};
+
+// Notification controller functions
+exports.getNotifications = async (req, res) => {
+  try {
+    const notifications = await Notification.find({ user: req.user._id })
+      .sort({ createdAt: -1 })
+      .limit(50);
+
+    res.status(200).json({
+      success: true,
+      data: notifications
+    });
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch notifications',
+      error: error.message
+    });
+  }
+};
+
+exports.markNotificationAsRead = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const notification = await Notification.findOneAndUpdate(
+      { _id: id, user: req.user._id },
+      { isRead: true },
+      { new: true }
+    );
+
+    if (!notification) {
+      return res.status(404).json({
+        success: false,
+        message: 'Notification not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: notification
+    });
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to mark notification as read',
+      error: error.message
+    });
+  }
 }; 

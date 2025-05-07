@@ -16,11 +16,11 @@ import RecentIncomeWithChart from '../../components/Dashboard/RecentIncomeWithCh
 import RecentIncome from '../../components/Dashboard/RecentIncome';
 import { FiBell } from 'react-icons/fi';
 import Chatbot from './Chatbot';
+import { UserCircle2 } from 'lucide-react';
 
 const Dashboard = () => {
   // Make sure the user is authenticated before rendering this page
-  useUserAuth();
-
+  const { user: authUser } = useUserAuth();
   const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -93,99 +93,124 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="my-5 mx-auto">
-        {/* Notification Panel */}
-        <div className="flex justify-end mb-6">
-          <div className="relative">
-            <button
-              className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors duration-200 focus:outline-none"
-              onClick={() => setShowNotifications(v => !v)}
-              aria-label="Show notifications"
-            >
-              <FiBell className="w-6 h-6" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-            
-            {showNotifications && (
-              <div className="absolute right-0 mt-3 w-96 bg-white rounded-xl shadow-xl z-50 border border-gray-100 overflow-hidden">
-                <div className="p-4 bg-gradient-to-r from-blue-500 to-blue-600">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-white">Notifications</h3>
-                    <button 
-                      className="text-sm text-white/80 hover:text-white transition-colors flex items-center gap-1"
-                      onClick={fetchNotifications} 
-                      disabled={notifLoading}
-                    >
-                      <span>Refresh</span>
-                    </button>
-                  </div>
+      <div className="my-0 mx-auto">
+        {/* Modern Welcome Section - no card/container */}
+        <div className="flex items-center justify-between gap-8 mb-4 px-2">
+          <div className="flex items-center gap-4">
+            <div className="profile-picture-container">
+              {authUser?.profilePicture ? (
+                <img
+                  src={authUser.profilePicture}
+                  alt="Profile"
+                  className="w-14 h-14 rounded-full object-cover border-2 border-blue-200"
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center border-2 border-blue-200">
+                  <UserCircle2 className="w-8 h-8 text-blue-600" />
                 </div>
+              )}
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900 leading-tight">
+                Welcome, <span className="bg-gradient-to-r from-blue-500 to-blue-400 bg-clip-text text-transparent">{authUser?.fullName || 'User'}</span>!
+              </h1>
+              <p className="text-base text-gray-500 leading-tight">
+                Here's your financial overview
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center">
+            <div className="relative">
+              <button
+                className="relative p-2 text-gray-600 hover:bg-blue-50 rounded-full transition-colors duration-200 focus:outline-none"
+                onClick={() => setShowNotifications(v => !v)}
+                aria-label="Show notifications"
+              >
+                <FiBell className="w-6 h-6" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-semibold">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+              
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg z-50 border border-gray-100 overflow-hidden">
+                  <div className="p-4 bg-gradient-to-r from-blue-500 to-blue-600">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-white">Notifications</h3>
+                      <button 
+                        className="text-sm text-white/80 hover:text-white transition-colors flex items-center gap-1"
+                        onClick={fetchNotifications} 
+                        disabled={notifLoading}
+                      >
+                        <span>Refresh</span>
+                      </button>
+                    </div>
+                  </div>
 
-                <div className="max-h-[400px] overflow-y-auto">
-                  {notifLoading ? (
-                    <div className="p-6 text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-                      <p className="mt-2 text-gray-500">Loading notifications...</p>
-                    </div>
-                  ) : notifications.length === 0 ? (
-                    <div className="p-6 text-center">
-                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <FiBell className="w-8 h-8 text-gray-400" />
+                  <div className="max-h-[400px] overflow-y-auto">
+                    {notifLoading ? (
+                      <div className="p-6 text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                        <p className="mt-2 text-gray-500">Loading notifications...</p>
                       </div>
-                      <p className="text-gray-500">No notifications yet</p>
-                    </div>
-                  ) : (
-                    <ul className="divide-y divide-gray-100">
-                      {notifications.map(n => (
-                        <li 
-                          key={n._id} 
-                          className={`p-4 hover:bg-gray-50 transition-colors ${
-                            n.isRead ? 'bg-white' : 'bg-blue-50'
-                          }`}
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${
-                              n.type === 'success' ? 'bg-green-500' :
-                              n.type === 'warning' ? 'bg-yellow-500' :
-                              n.type === 'error' ? 'bg-red-500' :
-                              'bg-blue-500'
-                            }`} />
-                            <div className="flex-1">
-                              <p className="text-sm text-gray-800">{n.message}</p>
-                              <div className="mt-1 flex items-center gap-3">
-                                <span className="text-xs text-gray-500">
-                                  {new Date(n.createdAt).toLocaleString()}
-                                </span>
-                                {!n.isRead && (
+                    ) : notifications.length === 0 ? (
+                      <div className="p-6 text-center">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <FiBell className="w-8 h-8 text-gray-400" />
+                        </div>
+                        <p className="text-gray-500">No notifications yet</p>
+                      </div>
+                    ) : (
+                      <ul className="divide-y divide-gray-100">
+                        {notifications.map(n => (
+                          <li 
+                            key={n._id} 
+                            className={`p-4 hover:bg-gray-50 transition-colors ${
+                              n.isRead ? 'bg-white' : 'bg-blue-50'
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${
+                                n.type === 'success' ? 'bg-green-500' :
+                                n.type === 'warning' ? 'bg-yellow-500' :
+                                n.type === 'error' ? 'bg-red-500' :
+                                'bg-blue-500'
+                              }`} />
+                              <div className="flex-1">
+                                <p className="text-sm text-gray-800">{n.message}</p>
+                                <div className="mt-1 flex items-center gap-3">
+                                  <span className="text-xs text-gray-500">
+                                    {new Date(n.createdAt).toLocaleString()}
+                                  </span>
+                                  {!n.isRead && (
+                                    <button
+                                      onClick={() => handleMarkAsRead(n._id)}
+                                      className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                                    >
+                                      Mark as read
+                                    </button>
+                                  )}
+                                </div>
+                                {n.invoiceId && (
                                   <button
-                                    onClick={() => handleMarkAsRead(n._id)}
-                                    className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                                    onClick={() => handleDownloadInvoice(n.invoiceId)}
+                                    className="mt-2 text-xs bg-blue-50 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-100 transition-colors"
                                   >
-                                    Mark as read
+                                    Download Invoice
                                   </button>
                                 )}
                               </div>
-                              {n.invoiceId && (
-                                <button
-                                  onClick={() => handleDownloadInvoice(n.invoiceId)}
-                                  className="mt-2 text-xs bg-blue-50 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-100 transition-colors"
-                                >
-                                  Download Invoice
-                                </button>
-                              )}
                             </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
 

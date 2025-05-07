@@ -136,9 +136,6 @@ import WhyJoinUs from './pages/WhyJoinUs';
 
 import AdminEventRequestDetailsPage from './pages/admin/AdminEventRequestDetailsPage';
 
-import EventDetailPage from './pages/events/EventDetailPage';
-
-
 import FundraisePage from './components/Fundraise/FundraisePage';
 import EventDetailPage from './components/Fundraise/EventDetailPage';
 
