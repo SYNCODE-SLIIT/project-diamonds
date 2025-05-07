@@ -59,6 +59,7 @@ import merchandiseRoutes from './routes/merchandiseRoutes.js';
 
 import collaborationRoutes from './routes/collaborationRoutes.js'
 
+
 import chatbotRoutes from './routes/chatbot.js';
 
 
@@ -85,7 +86,6 @@ app.use('/uploads', express.static('uploads'));
 
 // Special middleware for Stripe webhooks
 app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
-
 
 // Add multer error handling middleware
 app.use(handleMulterError);
