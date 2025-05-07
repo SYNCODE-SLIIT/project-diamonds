@@ -29,15 +29,30 @@ import {
   X,
   Check,
   Upload,
-  Camera
+  Camera,
+  Video,
+  Link as LinkIcon,
+  Phone,
+  Save,
+  CalendarIcon,
+  RefreshCw
 } from 'lucide-react';
-import { fetchAllEvents, addNoteToEvent, updateEventNote, deleteEventNote } from '../../services/eventService';
-import { fetchEventMedia, uploadEventFeatureImage } from '../../services/eventMediaService';
+import { 
+  Facebook,
+  Instagram,
+  Youtube,
+  Twitter
+} from 'lucide-react';
+import { fetchAllEvents, addNoteToEvent, updateEventNote, deleteEventNote, updateEventDetails } from '../../services/eventService';
+import { fetchEventMedia, uploadEventFeatureImage, updateSocialMediaLinks } from '../../services/eventMediaService';
+import { getPackageById } from '../../services/packageService';
 import PackageDetailsModal from '../../components/event/PackageDetailsModal';
 import ServiceDetailsModal from '../../components/event/ServiceDetailsModal';
 import assets from '../../assets/assets.js';
 import toast from 'react-hot-toast';
 import axiosInstance from '../../utils/axiosInstance';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 
 // Default feature image from Cloudinary
 const DEFAULT_FEATURE_IMAGE_URL = "https://res.cloudinary.com/du5c9fw6s/image/upload/v1746620459/default_event_j82gdq.jpg";
@@ -47,6 +62,9 @@ const EventDetailPage = () => {
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
   const fileInputRef = useRef(null);
+  const posterInputRef = useRef(null);
+  const imagesInputRef = useRef(null);
+  const videosInputRef = useRef(null);
   
   const [event, setEvent] = useState(null);
   const [eventMedia, setEventMedia] = useState(null);
@@ -62,44 +80,116 @@ const EventDetailPage = () => {
   const [editedNoteContent, setEditedNoteContent] = useState('');
   const [deletingNote, setDeletingNote] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [editingSocialLink, setEditingSocialLink] = useState(null);
+  const [editedSocialLinks, setEditedSocialLinks] = useState({});
+  const [packageDetails, setPackageDetails] = useState(null);
+  
+  // States for editing event details
+  const [editingInfo, setEditingInfo] = useState(false);
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [editedEventDetails, setEditedEventDetails] = useState({});
+  const [validationErrors, setValidationErrors] = useState({});
+  const [updatingEvent, setUpdatingEvent] = useState(false);
   
   // Check if we're in the admin path to determine where to navigate back to
   const isAdminPath = window.location.pathname.includes('/admin/');
-
-  // Example performance data - in a real app this would come from the API
-  const [performances, setPerformances] = useState([
-    { id: 1, name: 'Opening Dance', duration: '15 mins', performers: 6, lead: 'John Smith', time: '19:00', status: 'confirmed' },
-    { id: 2, name: 'Traditional Kandyan', duration: '25 mins', performers: 8, lead: 'Kumari Perera', time: '19:30', status: 'confirmed' },
-    { id: 3, name: 'Modern Fusion', duration: '20 mins', performers: 4, lead: 'Amal Fernando', time: '20:15', status: 'pending' }
-  ]);
+  
+  // Function to refresh event data when needed
+  const refreshEventData = async (showLoadingState = false) => {
+    try {
+      if (showLoadingState) {
+        setLoading(true);
+      }
+      
+      // Fetch event details
+      const eventsData = await fetchAllEvents();
+      const currentEvent = eventsData.find(e => e._id === id);
+      
+      if (!currentEvent) {
+        setError("Event not found");
+        if (showLoadingState) {
+          setLoading(false);
+        }
+        return;
+      }
+      
+      // Update event state
+      setEvent(currentEvent);
+      
+      // Update notes state if available
+      if (currentEvent.notes && currentEvent.notes.length > 0) {
+        setNotes(currentEvent.notes);
+      }
+      
+      // Initialize edited event details with current values
+      setEditedEventDetails({
+        eventName: currentEvent.eventName || '',
+        eventType: currentEvent.eventType || 'private',
+        eventLocation: currentEvent.eventLocation || '',
+        eventDate: currentEvent.eventDate ? new Date(currentEvent.eventDate) : null,
+        eventTime: currentEvent.eventTime || { startDate: null, endDate: null },
+        guestCount: currentEvent.guestCount || 0,
+        additionalRequests: currentEvent.additionalRequests || ''
+      });
+      
+      // Fetch event media
+      try {
+        const media = await fetchEventMedia(id);
+        setEventMedia(media);
+        
+        // Initialize edited social links with current values
+        if (media?.socialMediaLinks) {
+          setEditedSocialLinks(media.socialMediaLinks);
+        }
+      } catch (mediaError) {
+        console.error('Error fetching event media:', mediaError);
+        // Continue even if media fetch fails
+      }
+      
+      if (showLoadingState) {
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('Error refreshing event data:', err);
+      if (showLoadingState) {
+        setError('Failed to load event details');
+        setLoading(false);
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchEventDetailsAndMedia = async () => {
       try {
         setLoading(true);
         
-        // Fetch event details
-        const eventsData = await fetchAllEvents();
-        const currentEvent = eventsData.find(e => e._id === id);
+        await refreshEventData(false);
         
-        if (!currentEvent) {
-          setError("Event not found");
-          setLoading(false);
-          return;
-        }
-        
-        setEvent(currentEvent);
-        if (currentEvent.notes && currentEvent.notes.length > 0) {
-          setNotes(currentEvent.notes);
-        }
-        
-        // Fetch event media
-        try {
-          const media = await fetchEventMedia(id);
-          setEventMedia(media);
-        } catch (mediaError) {
-          console.error('Error fetching event media:', mediaError);
-          // Continue even if media fetch fails
+        // Fetch package details if available
+        if (event?.packageID && event.packageID._id) {
+          try {
+            // Try to get detailed package data
+            const packageData = await getPackageById(event.packageID._id);
+            setPackageDetails(packageData);
+            
+            // If successful, we'll update the event object with the complete package details
+            if (packageData) {
+              console.log("Package performances:", packageData.performances);
+              setEvent(prev => ({
+                ...prev,
+                packageID: {
+                  ...prev.packageID,
+                  performances: packageData.performances?.map(p => ({
+                    ...p,
+                    status: 'confirmed' // All package performances are considered confirmed
+                  })) || []
+                }
+              }));
+            }
+          } catch (packageError) {
+            console.error('Error fetching package details:', packageError);
+            // Continue even if package fetch fails
+          }
         }
         
         setLoading(false);
@@ -112,6 +202,58 @@ const EventDetailPage = () => {
     
     fetchEventDetailsAndMedia();
   }, [id]);
+
+  // Add additional useEffect to load package details when event data is loaded
+  useEffect(() => {
+    if (event && event.packageID && event.packageID._id && (!event.packageID.performances || event.packageID.performances.length === 0)) {
+      // If we have an event with package ID but no performances, load package details
+      loadPackageDetails();
+    }
+  }, [event]);
+
+  // Add a separate function to specifically load package performances
+  const loadPackageDetails = async () => {
+    if (event?.packageID && event.packageID._id) {
+      try {
+        toast.loading('Loading performance details...', { id: 'package-loading' });
+        console.log("Fetching package details for ID:", event.packageID._id);
+        const packageData = await getPackageById(event.packageID._id);
+        
+        if (packageData) {
+          console.log("Received package data:", packageData);
+          setPackageDetails(packageData);
+          
+          if (packageData.performances && packageData.performances.length > 0) {
+            console.log("Package performances:", packageData.performances);
+            
+            // Update the event with performances
+            setEvent(prev => ({
+              ...prev,
+              packageID: {
+                ...prev.packageID,
+                performances: packageData.performances.map(p => ({
+                  ...p,
+                  status: 'confirmed' // All package performances are considered confirmed
+                }))
+              }
+            }));
+            
+            toast.success('Performance details loaded successfully!', { id: 'package-loading' });
+          } else {
+            console.log("No performances found in package data");
+            toast.error('No performances found in this package.', { id: 'package-loading' });
+          }
+        } else {
+          toast.error('Failed to load package details.', { id: 'package-loading' });
+        }
+      } catch (error) {
+        console.error('Error loading package details:', error);
+        toast.error('Error loading package details.', { id: 'package-loading' });
+      }
+    } else {
+      toast.error('No package assigned to this event.', { id: 'package-loading' });
+    }
+  };
 
   const handleSubmitNote = async () => {
     if (!newNote.trim()) {
@@ -129,13 +271,22 @@ const EventDetailPage = () => {
 
       const response = await addNoteToEvent(id, noteData);
       
-      // Update the notes state with the new note
+      // Update both the notes state and the event state with the new notes
       setNotes(response.allNotes);
+      
+      // Update the event object as well to keep it in sync
+      setEvent({
+        ...event,
+        notes: response.allNotes
+      });
       
       // Reset the form
       setNewNote('');
       setAddingNote(false);
       toast.success('Note added successfully');
+      
+      // Refresh event data to ensure all state is consistent
+      await refreshEventData(false);
     } catch (error) {
       console.error('Error adding note:', error);
       toast.error('Failed to add note. Please try again.');
@@ -157,9 +308,21 @@ const EventDetailPage = () => {
 
     try {
       const response = await updateEventNote(id, index, editedNoteContent);
+      
+      // Update both states
       setNotes(response.allNotes);
+      
+      // Update the event object as well to keep it in sync
+      setEvent({
+        ...event,
+        notes: response.allNotes
+      });
+      
       setEditingNoteIndex(null);
       toast.success('Note updated successfully');
+      
+      // Refresh event data to ensure all state is consistent
+      await refreshEventData(false);
     } catch (error) {
       console.error('Error updating note:', error);
       toast.error('Failed to update note. Please try again.');
@@ -170,8 +333,20 @@ const EventDetailPage = () => {
     try {
       setDeletingNote(true);
       const response = await deleteEventNote(id, index);
+      
+      // Update both states
       setNotes(response.allNotes);
+      
+      // Update the event object as well to keep it in sync
+      setEvent({
+        ...event,
+        notes: response.allNotes
+      });
+      
       toast.success('Note deleted successfully');
+      
+      // Refresh event data to ensure all state is consistent
+      await refreshEventData(false);
     } catch (error) {
       console.error('Error deleting note:', error);
       toast.error('Failed to delete note. Please try again.');
@@ -209,8 +384,16 @@ const EventDetailPage = () => {
       
       if (response.success) {
         // Update the event media state with the new feature image
-        setEventMedia(response.data);
+        const updatedEventMedia = {
+          ...eventMedia,
+          featureImage: response.data.featureImage
+        };
+        
+        setEventMedia(updatedEventMedia);
         toast.success('Feature image updated successfully!');
+        
+        // Refresh event data to ensure all state is consistent
+        await refreshEventData(false);
       } else {
         toast.error('Failed to update feature image');
       }
@@ -294,6 +477,400 @@ const EventDetailPage = () => {
     );
   };
 
+  const saveSocialLink = async (platform) => {
+    try {
+      // Prevent saving if URL is malformed
+      const url = editedSocialLinks[platform];
+      if (url && !url.startsWith('https://') && !url.startsWith('http://')) {
+        toast.error('Please enter a valid URL (starting with http:// or https://)');
+        return;
+      }
+      
+      // Create the updated social media links object
+      const updatedLinks = {
+        ...(eventMedia?.socialMediaLinks || {}),
+        [platform]: url
+      };
+      
+      // Make API call using the service function
+      const response = await updateSocialMediaLinks(id, updatedLinks);
+      
+      if (response.success) {
+        // Update the local state with the new social media links
+        const updatedEventMedia = {
+          ...eventMedia,
+          socialMediaLinks: updatedLinks
+        };
+        
+        setEventMedia(updatedEventMedia);
+        toast.success(`${platform.charAt(0).toUpperCase() + platform.slice(1)} link updated!`);
+        
+        // Refresh data to ensure all state is consistent
+        await refreshEventData(false);
+      } else {
+        toast.error('Failed to update social media link');
+      }
+      
+      setEditingSocialLink(null);
+    } catch (error) {
+      console.error('Error updating social media link:', error);
+      toast.error('An error occurred while updating the link');
+    }
+  };
+
+  // Validate and save WhatsApp number
+  const validateAndSaveWhatsApp = async () => {
+    try {
+      const phone = editedSocialLinks.whatsapp;
+      
+      if (!phone) {
+        toast.error('Please enter a WhatsApp number');
+        return;
+      }
+      
+      // Basic validation for international phone number with country code
+      // Should start with + followed by digits, spaces allowed
+      const phoneRegex = /^\+\d{1,3}\s\d{2}\s\d{3}\s\d{4}$/;
+      
+      if (!phoneRegex.test(phone)) {
+        toast.error('Please enter a valid phone number in the format: +XX XX XXX XXXX');
+        return;
+      }
+      
+      // Count total digits (excluding + and spaces)
+      const digitCount = phone.replace(/[^\d]/g, '').length;
+      
+      // Country code (1-3 digits) + 9 digits = 10-12 total digits
+      if (digitCount < 10 || digitCount > 12) {
+        toast.error('Phone number should have correct number of digits (country code + 9 digits)');
+        return;
+      }
+      
+      // Create the updated social media links object
+      const updatedLinks = {
+        ...(eventMedia?.socialMediaLinks || {}),
+        whatsapp: phone
+      };
+      
+      // Make API call using the service function
+      const response = await updateSocialMediaLinks(id, updatedLinks);
+      
+      if (response.success) {
+        // Update the local state immediately
+        const updatedEventMedia = {
+          ...eventMedia,
+          socialMediaLinks: updatedLinks
+        };
+        
+        setEventMedia(updatedEventMedia);
+        toast.success('WhatsApp number updated!');
+        setEditingSocialLink(null);
+        
+        // Refresh data to ensure all state is consistent
+        await refreshEventData(false);
+      } else {
+        toast.error('Failed to update WhatsApp number');
+      }
+    } catch (error) {
+      console.error('Error updating WhatsApp number:', error);
+      toast.error('An error occurred while updating the WhatsApp number');
+    }
+  };
+
+  const handleWhatsAppNumberChange = (e) => {
+    let input = e.target.value;
+    
+    // Only allow digits, plus sign, and spaces
+    input = input.replace(/[^\d+\s]/g, '');
+    
+    // Ensure it starts with +
+    if (input && !input.startsWith('+')) {
+      input = '+' + input;
+    }
+    
+    // Remove all spaces to start with a clean number
+    const digitsOnly = input.replace(/\s/g, '');
+    
+    // Format the number with proper spacing
+    let formatted = '';
+    
+    if (digitsOnly.length <= 1) {
+      // Just the + sign
+      formatted = digitsOnly;
+    } else {
+      // Extract country code (1-3 digits) and the rest of the number
+      const countryCodeMatch = digitsOnly.match(/^\+(\d{1,3})/);
+      
+      if (countryCodeMatch) {
+        const countryCode = countryCodeMatch[0]; // includes the + sign
+        const restOfNumber = digitsOnly.substring(countryCode.length);
+        
+        // Add country code
+        formatted = countryCode;
+        
+        // Add a space after country code if there are more digits
+        if (restOfNumber.length > 0) {
+          formatted += ' ';
+          
+          // Format the remaining digits as xx xxx xxxx
+          if (restOfNumber.length <= 2) {
+            // Just the first 2 digits
+            formatted += restOfNumber;
+          } else if (restOfNumber.length <= 5) {
+            // First 2 digits + space + next digits
+            formatted += restOfNumber.substring(0, 2) + ' ' + restOfNumber.substring(2);
+          } else if (restOfNumber.length <= 9) {
+            // First 2 digits + space + next 3 digits + space + last digits
+            formatted += restOfNumber.substring(0, 2) + ' ' + 
+                        restOfNumber.substring(2, 5) + ' ' + 
+                        restOfNumber.substring(5);
+          } else {
+            // Limit to 9 digits after country code
+            formatted += restOfNumber.substring(0, 2) + ' ' + 
+                        restOfNumber.substring(2, 5) + ' ' + 
+                        restOfNumber.substring(5, 9);
+          }
+        }
+      } else {
+        // Fallback if regex fails
+        formatted = digitsOnly;
+      }
+    }
+    
+    setEditedSocialLinks({...editedSocialLinks, whatsapp: formatted});
+  };
+
+  const handleWhatsAppKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      validateAndSaveWhatsApp();
+    }
+  };
+
+  // Validate event details before saving
+  const validateEventDetails = () => {
+    const errors = {};
+    
+    // Event name validation
+    if (editedEventDetails.eventName.trim().length < 2) {
+      errors.eventName = 'Event name must be at least 2 characters.';
+    }
+    
+    // Location validation
+    if (editedEventDetails.eventLocation.trim().length < 2) {
+      errors.eventLocation = 'Event location must be at least 2 characters.';
+    }
+    
+    // Guest count validation
+    if (!/^\d+$/.test(editedEventDetails.guestCount) || parseInt(editedEventDetails.guestCount) <= 0) {
+      errors.guestCount = 'Guest count must be a positive whole number.';
+    }
+    
+    // Event date validation
+    if (!editedEventDetails.eventDate) {
+      errors.eventDate = 'Event date is required.';
+    } else {
+      const currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0);
+      const selectedDate = new Date(editedEventDetails.eventDate);
+      selectedDate.setHours(0, 0, 0, 0);
+      
+      if (selectedDate < currentDate) {
+        errors.eventDate = 'Event date cannot be in the past.';
+      }
+    }
+    
+    // Event time validation
+    if (editedEventDetails.eventTime) {
+      const { startDate, endDate } = editedEventDetails.eventTime;
+      
+      if (!startDate) {
+        errors.startDate = 'Start time is required.';
+      }
+      
+      if (!endDate) {
+        errors.endDate = 'End time is required.';
+      }
+      
+      if (startDate && endDate) {
+        const startDateTime = new Date(startDate);
+        const endDateTime = new Date(endDate);
+        
+        if (endDateTime <= startDateTime) {
+          errors.endDate = 'End time must be after start time.';
+        }
+        
+        // Check if start time is in the past for today's events
+        const now = new Date();
+        const todayDate = new Date();
+        todayDate.setHours(0, 0, 0, 0);
+        
+        if (editedEventDetails.eventDate) {
+          const eventDate = new Date(editedEventDetails.eventDate);
+          eventDate.setHours(0, 0, 0, 0);
+          
+          if (eventDate.getTime() === todayDate.getTime() && startDateTime < now) {
+            errors.startDate = 'Start time cannot be in the past for today\'s event.';
+          }
+        }
+      }
+    }
+    
+    // Description validation when editing description
+    if (editingDescription && (!editedEventDetails.additionalRequests || editedEventDetails.additionalRequests.trim().length < 5)) {
+      errors.additionalRequests = 'Description must be at least 5 characters.';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+  
+  // Handle change in event details form
+  const handleEventDetailChange = (field, value) => {
+    setEditedEventDetails(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    // Live validation based on field type
+    const errors = {...validationErrors};
+    
+    switch(field) {
+      case 'eventName':
+        if (!value || value.trim().length < 2) {
+          errors.eventName = 'Event name must be at least 2 characters.';
+        } else {
+          delete errors.eventName;
+        }
+        break;
+        
+      case 'eventLocation':
+        if (!value || value.trim().length < 2) {
+          errors.eventLocation = 'Event location must be at least 2 characters.';
+        } else {
+          delete errors.eventLocation;
+        }
+        break;
+        
+      case 'guestCount':
+        // Check if input is not a number or is negative or has decimal points
+        if (!/^\d+$/.test(value) || parseInt(value) <= 0) {
+          errors.guestCount = 'Guest count must be a positive whole number.';
+        } else {
+          delete errors.guestCount;
+        }
+        break;
+        
+      case 'additionalRequests':
+        if (!value || value.trim().length < 5) {
+          errors.additionalRequests = 'Description must be at least 5 characters.';
+        } else {
+          delete errors.additionalRequests;
+        }
+        break;
+        
+      default:
+        // No validation for other fields
+        break;
+    }
+    
+    setValidationErrors(errors);
+  };
+  
+  // Enhanced time change handler with real-time validation
+  const handleTimeChange = (field, date) => {
+    const updatedTimes = {
+      ...editedEventDetails.eventTime,
+      [field]: date
+    };
+    
+    setEditedEventDetails(prev => ({
+      ...prev,
+      eventTime: updatedTimes
+    }));
+    
+    const errors = {...validationErrors};
+    
+    // Validate start and end times if both exist
+    if (updatedTimes.startDate && updatedTimes.endDate) {
+      const startDateTime = new Date(updatedTimes.startDate);
+      const endDateTime = new Date(updatedTimes.endDate);
+      
+      if (endDateTime <= startDateTime) {
+        errors.endDate = 'End time must be after start time.';
+      } else {
+        delete errors.endDate;
+      }
+    }
+    
+    setValidationErrors(errors);
+  };
+
+  // Function to handle date change with proper validation
+  const handleDateChange = (date) => {
+    setEditedEventDetails(prev => ({
+      ...prev,
+      eventDate: date
+    }));
+    
+    const errors = {...validationErrors};
+    
+    // Validate that date is not in the past
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+    
+    if (date < currentDate) {
+      errors.eventDate = 'Event date cannot be in the past.';
+    } else {
+      delete errors.eventDate;
+    }
+    
+    setValidationErrors(errors);
+  };
+
+  // Save event details
+  const saveEventDetails = async () => {
+    // Validate the form
+    if (!validateEventDetails()) {
+      // Form has errors
+      toast.error('Please fix the errors before saving.');
+      return;
+    }
+    
+    try {
+      setUpdatingEvent(true);
+      
+      const response = await updateEventDetails(id, editedEventDetails);
+      
+      if (response.success) {
+        // Update the local state with the complete event object
+        setEvent({
+          ...event,
+          eventName: editedEventDetails.eventName,
+          eventType: editedEventDetails.eventType,
+          eventLocation: editedEventDetails.eventLocation,
+          eventDate: editedEventDetails.eventDate,
+          eventTime: editedEventDetails.eventTime,
+          guestCount: editedEventDetails.guestCount,
+          additionalRequests: editedEventDetails.additionalRequests
+        });
+        
+        setEditingInfo(false);
+        setEditingDescription(false);
+        toast.success('Event details updated successfully!');
+        
+        // Refresh all data to ensure consistency
+        await refreshEventData(false);
+      } else {
+        toast.error(response.message || 'Failed to update event details.');
+      }
+    } catch (error) {
+      console.error('Error updating event details:', error);
+      toast.error(error.message || 'An error occurred while updating event details.');
+    } finally {
+      setUpdatingEvent(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -363,13 +940,36 @@ const EventDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-16">
-      {/* Hidden file input for image upload */}
+      {/* Hidden file inputs for image/media uploads */}
       <input 
         type="file" 
         ref={fileInputRef} 
         className="hidden" 
         accept="image/*" 
         onChange={handleFeatureImageUpload} 
+      />
+      
+      <input 
+        type="file" 
+        ref={posterInputRef} 
+        className="hidden" 
+        accept="image/*" 
+      />
+      
+      <input 
+        type="file" 
+        ref={imagesInputRef} 
+        className="hidden" 
+        accept="image/*" 
+        multiple 
+      />
+      
+      <input 
+        type="file" 
+        ref={videosInputRef} 
+        className="hidden" 
+        accept="video/*" 
+        multiple 
       />
       
       {/* Feature Image Hero Section - removing the navbar space and increasing height to 75vh */}
@@ -456,18 +1056,115 @@ const EventDetailPage = () => {
             {/* Essential Information */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
               <div className="p-6">
-                <div className="flex items-center mb-4">
-                  <Info className="w-5 h-5 mr-2 text-red-600" />
-                  <h2 className="text-xl font-bold text-gray-800">Essential Information</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <Info className="w-5 h-5 mr-2 text-red-600" />
+                    <h2 className="text-xl font-bold text-gray-800">Essential Information</h2>
+                  </div>
+                  
+                  {!editingInfo ? (
+                    <button 
+                      onClick={() => setEditingInfo(true)}
+                      className="p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-full transition-colors"
+                    >
+                      <Edit2 className="w-5 h-5" />
+                    </button>
+                  ) : (
+                    <div className="flex space-x-2">
+                      <button 
+                        onClick={() => {
+                          // Reset form
+                          setEditedEventDetails({
+                            eventName: event.eventName || '',
+                            eventType: event.eventType || 'private',
+                            eventLocation: event.eventLocation || '',
+                            eventDate: event.eventDate ? new Date(event.eventDate) : null,
+                            eventTime: event.eventTime || { startDate: null, endDate: null },
+                            guestCount: event.guestCount || 0,
+                            additionalRequests: event.additionalRequests || ''
+                          });
+                          setEditingInfo(false);
+                          setValidationErrors({});
+                        }}
+                        className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                        disabled={updatingEvent}
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                      
+                      <button 
+                        onClick={saveEventDetails}
+                        className="p-2 text-green-500 hover:text-green-700 hover:bg-green-100 rounded-full transition-colors"
+                        disabled={updatingEvent}
+                      >
+                        {updatingEvent ? (
+                          <div className="w-5 h-5 border-2 border-t-transparent border-green-500 rounded-full animate-spin"></div>
+                        ) : (
+                          <Save className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Event Name - Added at the top */}
+                <div className="mb-6 border-b border-gray-200 pb-4">
+                  <h3 className="text-sm text-gray-500 font-medium mb-2">Event Name</h3>
+                  {!editingInfo ? (
+                    <p className="text-lg font-semibold text-gray-900">{event.eventName}</p>
+                  ) : (
+                    <div>
+                      <input
+                        type="text"
+                        value={editedEventDetails.eventName}
+                        onChange={(e) => handleEventDetailChange('eventName', e.target.value)}
+                        className={`w-full p-2 border ${validationErrors.eventName ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-1 focus:ring-red-500`}
+                        placeholder="Enter event name"
+                      />
+                      {validationErrors.eventName && (
+                        <p className="text-sm text-red-500 mt-1">{validationErrors.eventName}</p>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex flex-col md:flex-row">
                   <div className="flex-1 border-b md:border-b-0 md:border-r border-gray-200 p-4">
                     <h3 className="text-sm text-gray-500 font-medium mb-2">Event Details</h3>
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       <div>
                         <p className="text-sm text-gray-500">Event Type</p>
-                        <p className="font-medium">{event.eventType.charAt(0).toUpperCase() + event.eventType.slice(1)}</p>
+                        {!editingInfo ? (
+                          <p className="font-medium">{event.eventType.charAt(0).toUpperCase() + event.eventType.slice(1)}</p>
+                        ) : (
+                          <div className="mt-1 space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                id="event-type-private"
+                                name="event-type"
+                                value="private"
+                                checked={editedEventDetails.eventType === 'private'}
+                                onChange={() => handleEventDetailChange('eventType', 'private')}
+                                className="h-4 w-4 text-red-600 focus:ring-red-500"
+                              />
+                              <label htmlFor="event-type-private" className="text-sm text-gray-700">Private</label>
+                            </div>
+                            
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                id="event-type-public"
+                                name="event-type"
+                                value="public"
+                                checked={editedEventDetails.eventType === 'public'}
+                                onChange={() => handleEventDetailChange('eventType', 'public')}
+                                className="h-4 w-4 text-red-600 focus:ring-red-500"
+                              />
+                              <label htmlFor="event-type-public" className="text-sm text-gray-700">Public</label>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       
                       <div>
@@ -489,21 +1186,122 @@ const EventDetailPage = () => {
                   
                   <div className="flex-1 p-4">
                     <h3 className="text-sm text-gray-500 font-medium mb-2">Venue Information</h3>
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       <div>
                         <p className="text-sm text-gray-500">Location</p>
-                        <p className="font-medium">{event.eventLocation}</p>
+                        {!editingInfo ? (
+                          <p className="font-medium">{event.eventLocation}</p>
+                        ) : (
+                          <div>
+                            <input
+                              type="text"
+                              value={editedEventDetails.eventLocation}
+                              onChange={(e) => handleEventDetailChange('eventLocation', e.target.value)}
+                              className={`w-full p-2 border ${validationErrors.eventLocation ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-1 focus:ring-red-500`}
+                              placeholder="Enter event location"
+                            />
+                            {validationErrors.eventLocation && (
+                              <p className="text-sm text-red-500 mt-1">{validationErrors.eventLocation}</p>
+                            )}
+                          </div>
+                        )}
                       </div>
                       
                       <div>
                         <p className="text-sm text-gray-500">Guest Count</p>
-                        <p className="font-medium">{event.guestCount} people</p>
+                        {!editingInfo ? (
+                          <p className="font-medium">{event.guestCount} people</p>
+                        ) : (
+                          <div>
+                            <input
+                              type="text"
+                              pattern="[0-9]*"
+                              inputMode="numeric"
+                              value={editedEventDetails.guestCount}
+                              onChange={(e) => {
+                                // Only allow positive integers
+                                const value = e.target.value;
+                                if (/^\d*$/.test(value)) {
+                                  handleEventDetailChange('guestCount', value);
+                                }
+                              }}
+                              className={`w-full p-2 border ${validationErrors.guestCount ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-1 focus:ring-red-500`}
+                              placeholder="Enter guest count"
+                            />
+                            {validationErrors.guestCount && (
+                              <p className="text-sm text-red-500 mt-1">{validationErrors.guestCount}</p>
+                            )}
+                          </div>
+                        )}
                       </div>
                       
                       <div>
-                        <p className="text-sm text-gray-500">Date & Time</p>
-                        <p className="font-medium">{formatDate(event.eventDate)}</p>
-                        <p className="font-medium">{event.eventTime ? formatTime(event.eventTime) : 'Time not specified'}</p>
+                        <p className="text-sm text-gray-500">Event Date</p>
+                        {!editingInfo ? (
+                          <p className="font-medium">{formatDate(event.eventDate)}</p>
+                        ) : (
+                          <div>
+                            <div className={`border ${validationErrors.eventDate ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 bg-white`}>
+                              <DatePicker
+                                selected={editedEventDetails.eventDate}
+                                onChange={handleDateChange}
+                                minDate={new Date()}
+                                dateFormat="MMMM d, yyyy"
+                                className="w-full focus:outline-none"
+                              />
+                            </div>
+                            {validationErrors.eventDate && (
+                              <p className="text-sm text-red-500 mt-1">{validationErrors.eventDate}</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <p className="text-sm text-gray-500">Event Time</p>
+                        {!editingInfo ? (
+                          <p className="font-medium">{event.eventTime ? formatTime(event.eventTime) : 'Time not specified'}</p>
+                        ) : (
+                          <div className="space-y-3">
+                            <div>
+                              <label className="text-xs text-gray-500">Start Time</label>
+                              <div className={`border ${validationErrors.startDate ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 bg-white mt-1`}>
+                                <DatePicker
+                                  selected={editedEventDetails.eventTime?.startDate ? new Date(editedEventDetails.eventTime.startDate) : null}
+                                  onChange={(date) => handleTimeChange('startDate', date)}
+                                  showTimeSelect
+                                  showTimeSelectOnly
+                                  timeIntervals={15}
+                                  timeCaption="Start Time"
+                                  dateFormat="h:mm aa"
+                                  className="w-full focus:outline-none"
+                                />
+                              </div>
+                              {validationErrors.startDate && (
+                                <p className="text-sm text-red-500 mt-1">{validationErrors.startDate}</p>
+                              )}
+                            </div>
+                            
+                            <div>
+                              <label className="text-xs text-gray-500">End Time</label>
+                              <div className={`border ${validationErrors.endDate ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 bg-white mt-1`}>
+                                <DatePicker
+                                  selected={editedEventDetails.eventTime?.endDate ? new Date(editedEventDetails.eventTime.endDate) : null}
+                                  onChange={(date) => handleTimeChange('endDate', date)}
+                                  showTimeSelect
+                                  showTimeSelectOnly
+                                  timeIntervals={15}
+                                  timeCaption="End Time"
+                                  dateFormat="h:mm aa"
+                                  className="w-full focus:outline-none"
+                                />
+                              </div>
+                              {validationErrors.endDate && (
+                                <p className="text-sm text-red-500 mt-1">{validationErrors.endDate}</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -514,16 +1312,74 @@ const EventDetailPage = () => {
             {/* Description */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
               <div className="p-6">
-                <div className="flex items-center mb-4">
-                  <FileText className="w-5 h-5 mr-2 text-red-600" />
-                  <h2 className="text-xl font-bold text-gray-800">Event Description</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <FileText className="w-5 h-5 mr-2 text-red-600" />
+                    <h2 className="text-xl font-bold text-gray-800">Event Description</h2>
+                  </div>
+                  
+                  {!editingDescription ? (
+                    <button 
+                      onClick={() => setEditingDescription(true)}
+                      className="p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-full transition-colors"
+                    >
+                      <Edit2 className="w-5 h-5" />
+                    </button>
+                  ) : (
+                    <div className="flex space-x-2">
+                      <button 
+                        onClick={() => {
+                          // Reset form
+                          setEditedEventDetails(prev => ({
+                            ...prev,
+                            additionalRequests: event.additionalRequests || ''
+                          }));
+                          setEditingDescription(false);
+                          setValidationErrors(prev => ({
+                            ...prev,
+                            additionalRequests: null
+                          }));
+                        }}
+                        className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                        disabled={updatingEvent}
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                      
+                      <button 
+                        onClick={saveEventDetails}
+                        className="p-2 text-green-500 hover:text-green-700 hover:bg-green-100 rounded-full transition-colors"
+                        disabled={updatingEvent || validationErrors.additionalRequests}
+                      >
+                        {updatingEvent ? (
+                          <div className="w-5 h-5 border-2 border-t-transparent border-green-500 rounded-full animate-spin"></div>
+                        ) : (
+                          <Save className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="prose max-w-none">
-                  {event.additionalRequests ? (
-                    <p>{event.additionalRequests}</p>
+                  {!editingDescription ? (
+                    event.additionalRequests ? (
+                      <p>{event.additionalRequests}</p>
+                    ) : (
+                      <p className="text-gray-500 italic">No description provided for this event.</p>
+                    )
                   ) : (
-                    <p className="text-gray-500 italic">No description provided for this event.</p>
+                    <div>
+                      <textarea
+                        value={editedEventDetails.additionalRequests || ''}
+                        onChange={(e) => handleEventDetailChange('additionalRequests', e.target.value)}
+                        className={`w-full p-3 min-h-[120px] border ${validationErrors.additionalRequests ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-1 focus:ring-red-500`}
+                        placeholder="Enter event description (minimum 5 characters)"
+                      />
+                      {validationErrors.additionalRequests && (
+                        <p className="text-sm text-red-500 mt-1">{validationErrors.additionalRequests}</p>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -532,53 +1388,66 @@ const EventDetailPage = () => {
             {/* Performances */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
               <div className="p-6">
-                <div className="flex items-center mb-4">
-                  <Music className="w-5 h-5 mr-2 text-red-600" />
-                  <h2 className="text-xl font-bold text-gray-800">Performances</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <Music className="w-5 h-5 mr-2 text-red-600" />
+                    <h2 className="text-xl font-bold text-gray-800">Performances</h2>
+                  </div>
+                  
+                  {event.packageID?._id && (
+                    <button 
+                      onClick={loadPackageDetails}
+                      className="flex items-center px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-1" />
+                      Refresh Performances
+                    </button>
+                  )}
                 </div>
                 
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Performance</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Performers</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lead</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {performances.map(performance => (
-                        <tr key={performance.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="font-medium text-gray-900">{performance.name}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-gray-500">
-                            {performance.duration}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-gray-500">
-                            {performance.performers}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-gray-500">
-                            {performance.lead}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-gray-500">
-                            {performance.time}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <StatusBadge status={performance.status} />
-                          </td>
+                {event.packageID?.performances && event.packageID.performances.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Performance Type</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                
-                {performances.length === 0 && (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500">No performances have been scheduled yet.</p>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {event.packageID.performances.map((performance, index) => (
+                          <tr key={index} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="font-medium text-gray-900">{performance.name || performance.type || 'Standard Performance'}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-gray-500">
+                              {performance.duration || '30 mins'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <StatusBadge status={performance.status || 'confirmed'} />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 rounded-lg p-8 text-center">
+                    <Music className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    {event.packageID?._id ? (
+                      <div>
+                        <p className="text-gray-500 mb-3">No performances data found for this package.</p>
+                        <button 
+                          onClick={loadPackageDetails}
+                          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                        >
+                          Load Performance Details
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">No package selected for this event.</p>
+                    )}
                   </div>
                 )}
               </div>
@@ -678,6 +1547,137 @@ const EventDetailPage = () => {
                 )}
               </div>
             </div>
+            
+            {/* Poster Carousel */}
+            <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center">
+                    <FileText className="w-5 h-5 mr-2 text-red-600" />
+                    <h2 className="text-xl font-bold text-gray-800">Event Poster</h2>
+                  </div>
+                  
+                  <button 
+                    onClick={() => posterInputRef.current.click()}
+                    className="mt-4 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                  >
+                    <Plus className="w-4 h-4 mr-1 inline" />
+                    Upload Poster
+                  </button>
+                </div>
+                
+                {eventMedia?.poster ? (
+                  <div className="aspect-[3/4] w-full">
+                    <img 
+                      src={eventMedia.poster} 
+                      alt="Event poster" 
+                      className="w-full h-full object-contain rounded-lg"
+                    />
+                  </div>
+                ) : (
+                  <div className="aspect-[3/4] flex flex-col items-center justify-center bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                    <FileText className="w-12 h-12 text-gray-400 mb-2" />
+                    <p className="text-gray-500">No poster uploaded yet</p>
+                    <button className="mt-4 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm">
+                      <Plus className="w-4 h-4 mr-1 inline" />
+                      Upload Poster
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Event Images Gallery */}
+            <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center">
+                    <Camera className="w-5 h-5 mr-2 text-red-600" />
+                    <h2 className="text-xl font-bold text-gray-800">Event Images</h2>
+                  </div>
+                  
+                  <button 
+                    onClick={() => imagesInputRef.current.click()}
+                    className="flex items-center px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Images
+                  </button>
+                </div>
+                
+                {eventMedia?.eventImages && eventMedia.eventImages.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {eventMedia.eventImages.map((image, index) => (
+                      <div key={index} className="aspect-square">
+                        <img 
+                          src={image} 
+                          alt={`Event image ${index + 1}`} 
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                    <Camera className="w-12 h-12 text-gray-400 mb-2" />
+                    <p className="text-gray-500">No event images uploaded yet</p>
+                    <button 
+                      onClick={() => imagesInputRef.current.click()}
+                      className="mt-4 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                    >
+                      <Plus className="w-4 h-4 mr-1 inline" />
+                      Upload Images
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Event Videos Carousel */}
+            <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center">
+                    <Video className="w-5 h-5 mr-2 text-red-600" />
+                    <h2 className="text-xl font-bold text-gray-800">Event Videos</h2>
+                  </div>
+                  
+                  <button 
+                    onClick={() => videosInputRef.current.click()}
+                    className="flex items-center px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Videos
+                  </button>
+                </div>
+                
+                {eventMedia?.eventVideos && eventMedia.eventVideos.length > 0 ? (
+                  <div className="space-y-4">
+                    {eventMedia.eventVideos.map((video, index) => (
+                      <div key={index} className="aspect-video rounded-lg overflow-hidden">
+                        <video 
+                          src={video} 
+                          controls
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                    <Video className="w-12 h-12 text-gray-400 mb-2" />
+                    <p className="text-gray-500">No event videos uploaded yet</p>
+                    <button 
+                      onClick={() => videosInputRef.current.click()}
+                      className="mt-4 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                    >
+                      <Plus className="w-4 h-4 mr-1 inline" />
+                      Upload Videos
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
           
           {/* Right Column - Sidebar */}
@@ -770,6 +1770,318 @@ const EventDetailPage = () => {
                     <p className="text-gray-500">No team members have been assigned yet.</p>
                   </div>
                 )}
+              </div>
+            </div>
+            
+            {/* Social Media Links */}
+            <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+              <div className="p-6">
+                <div className="flex items-center mb-6">
+                  <Globe className="w-5 h-5 mr-2 text-red-600" />
+                  <h2 className="text-xl font-bold text-gray-800">Social Media Links</h2>
+                </div>
+                
+                {/* Social Media Link Cards */}
+                <div className="space-y-4">
+                  {/* Facebook */}
+                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4 transition-all hover:shadow-md">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 rounded-full bg-blue-600 text-white flex items-center justify-center mr-3">
+                          <Facebook className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-gray-900">Facebook</h3>
+                          {eventMedia?.socialMediaLinks?.facebook ? (
+                            <a 
+                              href={eventMedia.socialMediaLinks.facebook} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-sm text-blue-600 hover:underline flex items-center"
+                            >
+                              <LinkIcon className="w-3 h-3 mr-1" />
+                              Click to view
+                            </a>
+                          ) : (
+                            <p className="text-sm text-gray-500">Not provided</p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <button 
+                        className="text-gray-500 hover:text-blue-600 transition-colors"
+                        onClick={() => setEditingSocialLink('facebook')}
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    
+                    {editingSocialLink === 'facebook' && (
+                      <div className="mt-3 flex gap-2">
+                        <input 
+                          type="text" 
+                          value={editedSocialLinks.facebook || ''}
+                          onChange={(e) => setEditedSocialLinks({...editedSocialLinks, facebook: e.target.value})}
+                          placeholder="https://facebook.com/yourpage"
+                          className="flex-1 text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                        <button 
+                          className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm"
+                          onClick={() => saveSocialLink('facebook')}
+                        >
+                          Save
+                        </button>
+                        <button 
+                          className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md text-sm"
+                          onClick={() => setEditingSocialLink(null)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Instagram */}
+                  <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg p-4 transition-all hover:shadow-md">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-purple-600 via-pink-600 to-orange-500 text-white flex items-center justify-center mr-3">
+                          <Instagram className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-gray-900">Instagram</h3>
+                          {eventMedia?.socialMediaLinks?.instagram ? (
+                            <a 
+                              href={eventMedia.socialMediaLinks.instagram}
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-sm text-purple-600 hover:underline flex items-center"
+                            >
+                              <LinkIcon className="w-3 h-3 mr-1" />
+                              Click to view
+                            </a>
+                          ) : (
+                            <p className="text-sm text-gray-500">Not provided</p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <button 
+                        className="text-gray-500 hover:text-purple-600 transition-colors"
+                        onClick={() => setEditingSocialLink('instagram')}
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    
+                    {editingSocialLink === 'instagram' && (
+                      <div className="mt-3 flex gap-2">
+                        <input 
+                          type="text" 
+                          value={editedSocialLinks.instagram || ''}
+                          onChange={(e) => setEditedSocialLinks({...editedSocialLinks, instagram: e.target.value})}
+                          placeholder="https://instagram.com/yourhandle"
+                          className="flex-1 text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-purple-500"
+                        />
+                        <button 
+                          className="px-3 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md text-sm"
+                          onClick={() => saveSocialLink('instagram')}
+                        >
+                          Save
+                        </button>
+                        <button 
+                          className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md text-sm"
+                          onClick={() => setEditingSocialLink(null)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* YouTube */}
+                  <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-lg p-4 transition-all hover:shadow-md">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 rounded-full bg-red-600 text-white flex items-center justify-center mr-3">
+                          <Youtube className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-gray-900">YouTube</h3>
+                          {eventMedia?.socialMediaLinks?.youtube ? (
+                            <a 
+                              href={eventMedia.socialMediaLinks.youtube}
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-sm text-red-600 hover:underline flex items-center"
+                            >
+                              <LinkIcon className="w-3 h-3 mr-1" />
+                              Click to view
+                            </a>
+                          ) : (
+                            <p className="text-sm text-gray-500">Not provided</p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <button 
+                        className="text-gray-500 hover:text-red-600 transition-colors"
+                        onClick={() => setEditingSocialLink('youtube')}
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    
+                    {editingSocialLink === 'youtube' && (
+                      <div className="mt-3 flex gap-2">
+                        <input 
+                          type="text" 
+                          value={editedSocialLinks.youtube || ''}
+                          onChange={(e) => setEditedSocialLinks({...editedSocialLinks, youtube: e.target.value})}
+                          placeholder="https://youtube.com/channel/your-channel"
+                          className="flex-1 text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500"
+                        />
+                        <button 
+                          className="px-3 py-1 bg-red-600 text-white rounded-md text-sm"
+                          onClick={() => saveSocialLink('youtube')}
+                        >
+                          Save
+                        </button>
+                        <button 
+                          className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md text-sm"
+                          onClick={() => setEditingSocialLink(null)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Twitter/X */}
+                  <div className="bg-gradient-to-r from-sky-50 to-gray-100 rounded-lg p-4 transition-all hover:shadow-md">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 rounded-full bg-black text-white flex items-center justify-center mr-3">
+                          <Twitter className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-gray-900">Twitter/X</h3>
+                          {eventMedia?.socialMediaLinks?.twitter ? (
+                            <a 
+                              href={eventMedia.socialMediaLinks.twitter}
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-sm text-sky-600 hover:underline flex items-center"
+                            >
+                              <LinkIcon className="w-3 h-3 mr-1" />
+                              Click to view
+                            </a>
+                          ) : (
+                            <p className="text-sm text-gray-500">Not provided</p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <button 
+                        className="text-gray-500 hover:text-sky-600 transition-colors"
+                        onClick={() => setEditingSocialLink('twitter')}
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    
+                    {editingSocialLink === 'twitter' && (
+                      <div className="mt-3 flex gap-2">
+                        <input 
+                          type="text" 
+                          value={editedSocialLinks.twitter || ''}
+                          onChange={(e) => setEditedSocialLinks({...editedSocialLinks, twitter: e.target.value})}
+                          placeholder="https://twitter.com/yourhandle"
+                          className="flex-1 text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-sky-500"
+                        />
+                        <button 
+                          className="px-3 py-1 bg-black text-white rounded-md text-sm"
+                          onClick={() => saveSocialLink('twitter')}
+                        >
+                          Save
+                        </button>
+                        <button 
+                          className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md text-sm"
+                          onClick={() => setEditingSocialLink(null)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* WhatsApp */}
+                  <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4 transition-all hover:shadow-md">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 rounded-full bg-green-500 text-white flex items-center justify-center mr-3">
+                          <Phone className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-gray-900">WhatsApp</h3>
+                          {eventMedia?.socialMediaLinks?.whatsapp ? (
+                            <a 
+                              href={`https://wa.me/${eventMedia.socialMediaLinks.whatsapp.replace(/\D/g, '')}`}
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-sm text-green-600 hover:underline flex items-center"
+                            >
+                              <Phone className="w-3 h-3 mr-1" />
+                              {eventMedia.socialMediaLinks.whatsapp}
+                            </a>
+                          ) : (
+                            <p className="text-sm text-gray-500">Not provided</p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <button 
+                        className="text-gray-500 hover:text-green-600 transition-colors"
+                        onClick={() => setEditingSocialLink('whatsapp')}
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    
+                    {editingSocialLink === 'whatsapp' && (
+                      <div className="mt-3 flex flex-col">
+                        <div className="mb-1">
+                          <input 
+                            type="tel" 
+                            value={editedSocialLinks.whatsapp || ''}
+                            onChange={handleWhatsAppNumberChange}
+                            onKeyDown={handleWhatsAppKeyDown}
+                            placeholder="+94 77 678 3345"
+                            maxLength={19} // +xxx(space)xx(space)xxx(space)xxxx = max 19 chars
+                            className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Format: +[country code] xx xxx xxxx (e.g., +94 77 678 3345)
+                          </p>
+                        </div>
+                        <div className="flex gap-2 mt-2">
+                          <button 
+                            className="px-3 py-1 bg-green-600 text-white rounded-md text-sm"
+                            onClick={() => validateAndSaveWhatsApp()}
+                          >
+                            Save
+                          </button>
+                          <button 
+                            className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md text-sm"
+                            onClick={() => setEditingSocialLink(null)}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
             

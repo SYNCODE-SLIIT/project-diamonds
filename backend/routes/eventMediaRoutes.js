@@ -1,7 +1,7 @@
 // routes/eventMediaRoutes.js
 import express from 'express';
 import multer from 'multer';
-import { uploadEventMedia, getEventMedia } from '../controllers/eventMediaController.js';
+import { uploadEventMedia, getEventMedia, updateSocialMediaLinks } from '../controllers/eventMediaController.js';
 
 const router = express.Router();
 const upload = multer({ dest: 'temp/' }); // temp dir for uploads
@@ -16,6 +16,9 @@ router.post(
   ]),
   uploadEventMedia
 );
+
+// Route for updating social media links
+router.post('/updateSocialLinks', updateSocialMediaLinks);
 
 router.get('/:eventId', getEventMedia);
 

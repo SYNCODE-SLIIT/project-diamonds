@@ -30,7 +30,10 @@ export const uploadEventFeatureImage = async (eventId, imageFile) => {
     const formData = new FormData();
     formData.append('eventId', eventId);
     formData.append('featureImage', imageFile);
-    formData.append('socialMediaLinks', JSON.stringify({}));
+    
+    // If there are existing social media links, include them to prevent overwrite
+    const currentMedia = await fetchEventMedia(eventId);
+    formData.append('socialMediaLinks', JSON.stringify(currentMedia.socialMediaLinks || {}));
     
     const response = await axiosInstance.post('/api/event-media/upload', formData, {
       headers: {
@@ -41,6 +44,26 @@ export const uploadEventFeatureImage = async (eventId, imageFile) => {
     return response.data;
   } catch (error) {
     console.error('Error uploading feature image:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update social media links for an event
+ * @param {string} eventId - ID of the event
+ * @param {Object} links - Object containing social media links
+ * @returns {Promise<Object>} - Updated event media data
+ */
+export const updateSocialMediaLinks = async (eventId, links) => {
+  try {
+    const formData = new FormData();
+    formData.append('eventId', eventId);
+    formData.append('socialMediaLinks', JSON.stringify(links));
+    
+    const response = await axiosInstance.post('/api/event-media/updateSocialLinks', formData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating social media links:', error);
     throw error;
   }
 }; 

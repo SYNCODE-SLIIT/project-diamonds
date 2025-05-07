@@ -95,3 +95,44 @@ export const getEventMedia = async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 };
+
+// Update Social Media Links
+export const updateSocialMediaLinks = async (req, res) => {
+  try {
+    const { eventId, socialMediaLinks } = req.body;
+    
+    if (!eventId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Event ID is required" 
+      });
+    }
+    
+    // Parse social media links if it's a string
+    const parsedLinks = typeof socialMediaLinks === 'string' 
+      ? JSON.parse(socialMediaLinks) 
+      : socialMediaLinks;
+    
+    // Find and update the event media
+    const updated = await EventMedia.findOneAndUpdate(
+      { eventId },
+      { 
+        $set: { socialMediaLinks: parsedLinks } 
+      },
+      { upsert: true, new: true }
+    );
+    
+    res.status(200).json({ 
+      success: true, 
+      message: "Social media links updated successfully",
+      data: updated 
+    });
+  } catch (err) {
+    console.error('Error updating social media links:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to update social media links", 
+      error: err.message 
+    });
+  }
+};
