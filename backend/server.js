@@ -59,7 +59,7 @@ import merchandiseRoutes from './routes/merchandiseRoutes.js';
 
 import collaborationRoutes from './routes/collaborationRoutes.js'
 
-import financeNotificationRoutes from './routes/financeNotificationRoutes.js';
+
 import chatbotRoutes from './routes/chatbot.js';
 
 
@@ -83,23 +83,8 @@ app.use(express.json());
 app.use(cors());
 app.use('/uploads', express.static('uploads'));
 
-
-// Define Multer error handling middleware
-const handleMulterError = (err, req, res, next) => {
-  if (err && err.name === 'MulterError') {
-    return res.status(400).json({
-      success: false,
-      message: err.message || 'File upload error occurred'
-
-    });
-  }
-  next(err);
-};
-
-
 // Special middleware for Stripe webhooks
 app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
-
 
 // Add multer error handling middleware
 app.use(handleMulterError);

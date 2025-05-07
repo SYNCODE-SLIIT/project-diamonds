@@ -40,7 +40,6 @@ import ApplicationSubmitted from './pages/authentication/ApplicationSubmitted';
 import AdminInviteApplicant from './pages/authentication/AdminInviteApplicant';
 import AdminProfile from './pages/authentication/AdminProfile';
 import GroupMembers from './pages/admin/GroupMembers';
-import AdminBudgetRequests from './pages/admin/AdminBudgetRequests';
 // import AdminInvitedApplicationsList from './pages/authentication/AdminInvitedApplicationsList';
 import FinalizedDetails from './pages/authentication/FinalizedDetails';
  
@@ -52,7 +51,6 @@ import EventRequestDashboard from './components/event/EventRequestDashboard';
 import EventsDashboard from './components/event/EventsDashboard';
 
 import EventCalendar from './pages/admin/EventCalender';
-import AdminBudgetRequests from './pages/admin/AdminBudgetRequests';
 
 // Financial Management Imports
 import FinancialDashboard from './components/Financial/FinancialDashboard';
