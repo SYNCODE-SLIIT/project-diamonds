@@ -185,6 +185,26 @@ export const updateProfilePicture = async (req, res) => {
   }
 };
 
+// Delete profile picture by clearing the field in both collections
+export const deleteProfilePicture = async (req, res) => {
+  try {
+    console.log('deleteProfilePicture called with', req.method, req.path, 'query:', req.query);
+    const userId = req.body.userId || req.query.userId;
+    if (!userId) {
+      console.log('deleteProfilePicture missing userId');
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+    console.log('Deleting profilePicture for userId=', userId);
+    // Clear profilePicture in MemberApplication and User
+    await MemberApplication.findByIdAndUpdate(userId, { $unset: { profilePicture: '' } });
+    await User.findOneAndUpdate({ profileId: userId }, { $unset: { profilePicture: '' } });
+    res.status(200).json({ message: 'Profile picture removed successfully' });
+  } catch (error) {
+    console.error('deleteProfilePicture error:', error);
+    res.status(500).json({ message: 'Error removing profile picture', error: error.message });
+  }
+};
+
 // Function to update user profile details
 export const updateMemberProfile = async (req, res) => {
   try {

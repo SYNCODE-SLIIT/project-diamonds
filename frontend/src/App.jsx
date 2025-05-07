@@ -129,6 +129,7 @@ import CertificateGenerator from './pages/content/CertificateGenerator';
 import Sponsorship from './pages/content/Sponsorship';
 import PublicBlogSlideShow from './pages/content/PublicBlogSlideShow';
 import PublicBlogDetail from './pages/content/PublicBlogDetail';
+import WhyJoinUs from './pages/WhyJoinUs';
 
 import AdminEventRequestDetailsPage from './pages/admin/AdminEventRequestDetailsPage';
 
@@ -172,6 +173,7 @@ const App = () => {
               <Route path='/our-founder' element={<OurFounderPage />} />
               <Route path='/blogs' element={<PublicBlogSlideShow />} />
               <Route path='/blogs/:id' element={<PublicBlogDetail />} />
+              <Route path='/why-join' element={<WhyJoinUs />} />
               {/* <Route path='/event-request' element={<EventRequestForm />} /> */}
               <Route path='/register/member/application' element={<MemberApplication />} />
 
