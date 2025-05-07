@@ -59,7 +59,6 @@ import merchandiseRoutes from './routes/merchandiseRoutes.js';
 
 import collaborationRoutes from './routes/collaborationRoutes.js'
 
-
 import chatbotRoutes from './routes/chatbot.js';
 
 

@@ -273,30 +273,89 @@ const Dashboard = () => {
         'Type': t.transactionType,
         'Date': new Date(t.date).toLocaleDateString()
       }));
+      
+      // Add analytics data
+      const analyticsData = [
+        ['Financial Analytics Summary', ''],
+        ['', ''],
+        ['Key Performance Indicators', ''],
+        ['Total Income', totalIncome],
+        ['Total Expense', totalExpense],
+        ['Net Profit', netProfit],
+        ['Total Payments', totalPayments],
+        ['Average Transaction', avgTransaction],
+        ['Budget Utilization', `${budgetPercent.toFixed(2)}%`],
+        ['', ''],
+        ['Payment Status Distribution', ''],
+      ];
+      
+      // Add payment status distribution
+      paymentStatusDataArray.forEach(item => {
+        analyticsData.push([item.name, item.amount]);
+      });
+      
+      analyticsData.push(['', '']);
+      analyticsData.push(['Top Users by Spend', '']);
+      
+      // Add top users
+      const topUsers = scatterData
+        .sort((a, b) => b.totalSpend - a.totalSpend)
+        .slice(0, 5);
+        
+      topUsers.forEach(user => {
+        analyticsData.push([user.user, user.totalSpend]);
+      });
+      
+      // Add daily trends
+      analyticsData.push(['', '']);
+      analyticsData.push(['Daily Transaction Trends', '']);
+      analyticsData.push(['Date', 'Amount', 'Count']);
+      
+      dailyTrendsChartData.forEach(day => {
+        analyticsData.push([day.date, day.total, day.count]);
+      });
 
       // Create worksheets
       const paymentSheet = XLSX.utils.json_to_sheet(paymentData);
       const budgetSheet = XLSX.utils.json_to_sheet(budgetData);
       const refundSheet = XLSX.utils.json_to_sheet(refundData);
       const transactionSheet = XLSX.utils.json_to_sheet(transactionData);
-
-      // Set column widths
+      const analyticsSheet = XLSX.utils.aoa_to_sheet(analyticsData);
+      
+      // Add styling to analytics sheet
+      if (!analyticsSheet['!cols']) analyticsSheet['!cols'] = [];
+      analyticsSheet['!cols'][0] = { wch: 25 };
+      analyticsSheet['!cols'][1] = { wch: 15 };
+      
+      // Fix column widths for other sheets
       const setColumnWidths = (sheet) => {
-        const maxWidth = 30;
-        const widths = [];
+        if (!sheet['!ref']) return; // Skip if sheet is empty
+        
+        const cols = [];
         const range = XLSX.utils.decode_range(sheet['!ref']);
+        
+        // Initialize with default width
         for (let C = range.s.c; C <= range.e.c; ++C) {
-          let maxLength = 0;
-          for (let R = range.s.r; R <= range.e.r; ++R) {
-            const cell = sheet[XLSX.utils.encode_cell({r: R, c: C})];
-            if (cell && cell.v) {
-              const length = cell.v.toString().length;
-              maxLength = Math.min(maxLength, length);
+          cols[C] = { wch: 15 }; // Default width
+        }
+        
+        // Adjust based on content
+        for (let R = range.s.r; R <= range.e.r; ++R) {
+          for (let C = range.s.c; C <= range.e.c; ++C) {
+            const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+            const cell = sheet[cellAddress];
+            if (!cell) continue;
+            
+            const cellValue = cell.v !== undefined ? String(cell.v) : '';
+            const cellWidth = cellValue.length + 2; // Add padding
+            
+            if (cellWidth > cols[C].wch) {
+              cols[C].wch = Math.min(cellWidth, 30); // Cap at 30 characters
             }
           }
-          widths.push({wch: Math.min(maxLength, maxWidth)});
         }
-        sheet['!cols'] = widths;
+        
+        sheet['!cols'] = cols;
       };
 
       setColumnWidths(paymentSheet);
@@ -305,6 +364,7 @@ const Dashboard = () => {
       setColumnWidths(transactionSheet);
       
       // Add sheets to workbook
+      XLSX.utils.book_append_sheet(wb, analyticsSheet, "Analytics");
       XLSX.utils.book_append_sheet(wb, paymentSheet, "Payments");
       XLSX.utils.book_append_sheet(wb, budgetSheet, "Budget");
       XLSX.utils.book_append_sheet(wb, refundSheet, "Refunds");
@@ -315,90 +375,113 @@ const Dashboard = () => {
       const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       saveAs(data, `Financial_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
       
-      toast.success('Excel report generated successfully');
+      toast.success('Excel report with analytics generated successfully');
     } catch (err) {
       console.error('Error exporting Excel:', err);
-      toast.error('Failed to export Excel report');
+      toast.error('Failed to export Excel report: ' + err.message);
     }
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     try {
-      // Get the report element
-      const reportElement = document.getElementById('dashboard-report');
+      // Try to use the jsPDF library directly for more reliable PDF generation
+      const { jsPDF } = await import('jspdf');
+      const autoTable = (await import('jspdf-autotable')).default;
       
-      // Create a print stylesheet
-      const printStyles = `
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          #dashboard-report, #dashboard-report * {
-            visibility: visible;
-          }
-          #dashboard-report {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            padding: 20px;
-          }
-          .no-print {
-            display: none;
-          }
-          .print-title {
-            font-size: 24px;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 20px;
-          }
-          .print-date {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #666;
-          }
-          .print-section {
-            page-break-before: always;
-            margin-top: 20px;
-          }
-          .print-divider {
-            page-break-after: always;
-            border-bottom: 1px solid #ddd;
-            margin: 20px 0;
-          }
-          .bg-white {
-            background-color: white !important;
-          }
-          .shadow-md, .shadow-lg {
-            box-shadow: none !important;
-          }
-          .rounded-2xl, .rounded-xl {
-            border-radius: 0 !important;
-          }
-          .grid {
-            display: block !important;
-          }
-          .grid > div {
-            margin-bottom: 20px;
-          }
-        }
-      `;
+      // Create a new PDF document
+      const doc = new jsPDF();
       
-      // Add print styles to document
-      const styleElement = document.createElement('style');
-      styleElement.textContent = printStyles;
-      document.head.appendChild(styleElement);
+      // Add header with logo-like styling
+      doc.setFillColor(44, 62, 80);
+      doc.rect(0, 0, doc.internal.pageSize.width, 30, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(22);
+      doc.text('Team Diamond Financial Report', 15, 20);
       
-      // Trigger print
-    window.print();
+      // Add date
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(11);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 15, 40);
       
-      // Clean up
-      document.head.removeChild(styleElement);
+      // Add KPI summary
+      doc.setFontSize(16);
+      doc.setTextColor(44, 62, 80);
+      doc.text('Financial Overview', 15, 55);
+      
+      const kpiData = [
+        ['Total Income', `RS. ${totalIncome.toLocaleString()}`],
+        ['Total Expense', `RS. ${totalExpense.toLocaleString()}`],
+        ['Net Profit', `RS. ${netProfit.toLocaleString()}`],
+        ['Total Payments', `RS. ${totalPayments.toLocaleString()}`],
+        ['Avg. Transaction', `RS. ${avgTransaction.toLocaleString()}`]
+      ];
+      
+      autoTable(doc, {
+        startY: 60,
+        head: [['Metric', 'Value']],
+        body: kpiData,
+        theme: 'striped',
+        headStyles: { fillColor: [44, 62, 80], textColor: [255, 255, 255] },
+        styles: { fontSize: 10 }
+      });
+      
+      // Add transactions table
+      doc.setFontSize(16);
+      doc.setTextColor(44, 62, 80);
+      doc.text('Recent Transactions', 15, doc.lastAutoTable.finalY + 20);
+      
+      const transactionTableData = transactions.slice(0, 10).map(t => [
+        t.user?.fullName || 'Unknown',
+        `RS. ${t.totalAmount.toLocaleString()}`,
+        t.transactionType,
+        new Date(t.date).toLocaleDateString()
+      ]);
+      
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 25,
+        head: [['User', 'Amount', 'Type', 'Date']],
+        body: transactionTableData,
+        theme: 'striped',
+        headStyles: { fillColor: [44, 62, 80], textColor: [255, 255, 255] },
+        styles: { fontSize: 10 }
+      });
+      
+      // Add payment status chart data
+      doc.setFontSize(16);
+      doc.setTextColor(44, 62, 80);
+      doc.text('Payment Status Distribution', 15, doc.lastAutoTable.finalY + 20);
+      
+      const paymentStatusTableData = paymentStatusDataArray.map(item => [
+        item.name,
+        `RS. ${item.amount.toLocaleString()}`
+      ]);
+      
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 25,
+        head: [['Status', 'Amount']],
+        body: paymentStatusTableData,
+        theme: 'striped',
+        headStyles: { fillColor: [44, 62, 80], textColor: [255, 255, 255] },
+        styles: { fontSize: 10 }
+      });
+      
+      // Add footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.setTextColor(150, 150, 150);
+        doc.text('Team Diamond Financial Services', 15, doc.internal.pageSize.height - 10);
+        doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width - 30, doc.internal.pageSize.height - 10);
+      }
+      
+      // Save the PDF directly instead of trying to use the backend
+      doc.save(`Financial_Report_${new Date().toISOString().split('T')[0]}.pdf`);
       
       toast.success('PDF report generated successfully');
     } catch (err) {
       console.error('Error exporting PDF:', err);
-      toast.error('Failed to export PDF report');
+      toast.error('Failed to export PDF report: ' + err.message);
     }
   };
 

@@ -94,63 +94,102 @@ const Dashboard = () => {
   return (
     <>
       <div className="my-5 mx-auto">
-        {/* Notification Bell */}
-        <div className="flex justify-end mb-4">
-          <div className="relative ml-4">
+        {/* Notification Panel */}
+        <div className="flex justify-end mb-6">
+          <div className="relative">
             <button
-              className="relative focus:outline-none"
+              className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors duration-200 focus:outline-none"
               onClick={() => setShowNotifications(v => !v)}
               aria-label="Show notifications"
             >
-              <FiBell className="w-7 h-7 text-gray-700" />
+              <FiBell className="w-6 h-6" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 font-bold">{unreadCount}</span>
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold">
+                  {unreadCount}
+                </span>
               )}
             </button>
+            
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg z-50 border border-gray-200 max-h-96 overflow-y-auto">
-                <div className="p-3 border-b font-semibold text-gray-700 flex justify-between items-center">
-                  Notifications
-                  <button className="text-xs text-blue-500 hover:underline" onClick={fetchNotifications} disabled={notifLoading}>
-                    Refresh
-                  </button>
+              <div className="absolute right-0 mt-3 w-96 bg-white rounded-xl shadow-xl z-50 border border-gray-100 overflow-hidden">
+                <div className="p-4 bg-gradient-to-r from-blue-500 to-blue-600">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-white">Notifications</h3>
+                    <button 
+                      className="text-sm text-white/80 hover:text-white transition-colors flex items-center gap-1"
+                      onClick={fetchNotifications} 
+                      disabled={notifLoading}
+                    >
+                      <span>Refresh</span>
+                    </button>
+                  </div>
                 </div>
-                {notifLoading ? (
-                  <div className="p-4 text-center text-gray-500">Loading...</div>
-                ) : notifications.length === 0 ? (
-                  <div className="p-4 text-center text-gray-500">No notifications</div>
-                ) : (
-                  <ul className="divide-y divide-gray-100">
-                    {notifications.map(n => (
-                      <li key={n._id} className={`p-3 flex flex-col gap-1 ${n.isRead ? 'bg-gray-50' : 'bg-blue-50'}`}>
-                        <div className="flex items-center gap-2">
-                          <span className={`inline-block w-2 h-2 rounded-full ${n.isRead ? 'bg-gray-300' : 'bg-blue-500'}`}></span>
-                          <span className="text-sm text-gray-800 flex-1">{n.message}</span>
-                          {!n.isRead && (
-                            <button
-                              className="ml-2 text-xs text-blue-600 hover:underline"
-                              onClick={() => handleMarkAsRead(n._id)}
-                            >Mark as read</button>
-                          )}
-                        </div>
-                        <span className="text-xs text-gray-400">{new Date(n.createdAt).toLocaleString()}</span>
-                        {n.invoiceId && (
-                          <button
-                            className="text-xs text-blue-700 hover:underline mt-1"
-                            onClick={() => handleDownloadInvoice(n.invoiceId)}
-                            type="button"
-                          >
-                            Download Invoice
-                          </button>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
+
+                <div className="max-h-[400px] overflow-y-auto">
+                  {notifLoading ? (
+                    <div className="p-6 text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                      <p className="mt-2 text-gray-500">Loading notifications...</p>
+                    </div>
+                  ) : notifications.length === 0 ? (
+                    <div className="p-6 text-center">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <FiBell className="w-8 h-8 text-gray-400" />
+                      </div>
+                      <p className="text-gray-500">No notifications yet</p>
+                    </div>
+                  ) : (
+                    <ul className="divide-y divide-gray-100">
+                      {notifications.map(n => (
+                        <li 
+                          key={n._id} 
+                          className={`p-4 hover:bg-gray-50 transition-colors ${
+                            n.isRead ? 'bg-white' : 'bg-blue-50'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${
+                              n.type === 'success' ? 'bg-green-500' :
+                              n.type === 'warning' ? 'bg-yellow-500' :
+                              n.type === 'error' ? 'bg-red-500' :
+                              'bg-blue-500'
+                            }`} />
+                            <div className="flex-1">
+                              <p className="text-sm text-gray-800">{n.message}</p>
+                              <div className="mt-1 flex items-center gap-3">
+                                <span className="text-xs text-gray-500">
+                                  {new Date(n.createdAt).toLocaleString()}
+                                </span>
+                                {!n.isRead && (
+                                  <button
+                                    onClick={() => handleMarkAsRead(n._id)}
+                                    className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                                  >
+                                    Mark as read
+                                  </button>
+                                )}
+                              </div>
+                              {n.invoiceId && (
+                                <button
+                                  onClick={() => handleDownloadInvoice(n.invoiceId)}
+                                  className="mt-2 text-xs bg-blue-50 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-100 transition-colors"
+                                >
+                                  Download Invoice
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
             )}
           </div>
         </div>
+
+        {/* Rest of the dashboard content */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <InfoCard
             icon={<IoMdCard />}

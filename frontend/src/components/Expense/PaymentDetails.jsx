@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { LuArrowLeft, LuRefreshCw } from 'react-icons/lu';
 import moment from 'moment';
 import axiosInstance from '../../utils/axiosInstance';
+import { toast } from 'react-hot-toast';
 
 const PaymentDetails = ({ payment, onBack, onRequestRefund }) => {
   const [merchandise, setMerchandise] = useState(null);
@@ -15,7 +16,7 @@ const PaymentDetails = ({ payment, onBack, onRequestRefund }) => {
           const response = await axiosInstance.get(`/api/merchandise/${payment.productId}`);
           setMerchandise(response.data);
         } catch (error) {
-          console.error('Error fetching merchandise details:', error);
+          toast.error('Failed to fetch merchandise details');
         } finally {
           setLoading(false);
         }

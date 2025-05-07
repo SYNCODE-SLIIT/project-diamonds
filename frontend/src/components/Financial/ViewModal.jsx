@@ -1,12 +1,104 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { jsPDF } from "jspdf";
 import axiosInstance from '../../utils/axiosInstance';
-import { HiOutlineUser, HiOutlineMail, HiOutlineCalendar, HiOutlineDocumentText, HiOutlineCurrencyDollar, HiOutlineBadgeCheck } from 'react-icons/hi';
+import { 
+  HiOutlineUser, 
+  HiOutlineMail, 
+  HiOutlineCalendar, 
+  HiOutlineDocumentText, 
+  HiOutlineCurrencyDollar, 
+  HiOutlineBadgeCheck,
+  HiOutlineDownload,
+  HiOutlineX,
+  HiOutlinePencil,
+  HiOutlineEye,
+  HiOutlineEyeOff,
+  HiOutlinePhotograph,
+  HiOutlineDocument
+} from 'react-icons/hi';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const ViewModal = ({ item, onClose, activeTab }) => {
   const [status, setStatus] = useState(item.status || '');
   const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState('success'); 
+  const [messageType, setMessageType] = useState('success');
+  const [activeSection, setActiveSection] = useState(null);
+  const [expandedSections, setExpandedSections] = useState({});
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [fileViewer, setFileViewer] = useState({ isOpen: false, url: '', type: '' });
+
+  // Check for bank slip or attachment when component mounts
+  useEffect(() => {
+    // Find bank slip or attachment URL in the item data
+    const findAttachment = () => {
+      for (const [key, value] of Object.entries(item)) {
+        if (
+          (key === 'bankSlipUrl' || 
+           key === 'fileUrl' || 
+           key === 'attachmentUrl' || 
+           key === 'infoFile' || // <-- Add this line for budget info file
+           key === 'receiptFile' || // <-- Add this line for refund receipt file
+           key.toLowerCase().includes('slip') || 
+           key.toLowerCase().includes('attachment')) && 
+          typeof value === 'string'
+        ) {
+          const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(value);
+          const isPdf = /\.pdf$/i.test(value);
+          
+          if (isImage || isPdf) {
+            setFileViewer({
+              isOpen: true,
+              url: value,
+              type: isImage ? 'image' : 'pdf'
+            });
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+    
+    findAttachment();
+  }, [item]);
+
+  // Add the missing showFileViewer function
+  const showFileViewer = (url, type) => {
+    setFileViewer({
+      isOpen: true,
+      url,
+      type
+    });
+  };
+
+  // Add a function to close the file viewer
+  const closeFileViewer = () => {
+    setFileViewer({
+      isOpen: false,
+      url: '',
+      type: ''
+    });
+  };
+
+  // Add the handleViewFile function that was referenced but missing
+  const handleViewFile = (url, type) => {
+    showFileViewer(url, type);
+  };
+
+  // Set all sections expanded by default
+  useEffect(() => {
+    const groups = getGroupedFields();
+    const initialExpandedState = {};
+    Object.keys(groups).forEach(group => {
+      initialExpandedState[group] = true;
+    });
+    setExpandedSections(initialExpandedState);
+    
+    // Set the first non-empty section as active
+    const firstSection = Object.keys(groups).find(group => 
+      groups[group] && groups[group].length > 0
+    );
+    setActiveSection(firstSection);
+  }, [item]);
 
   // Function to format data keys for display
   const formatKey = (key) => {
@@ -25,7 +117,6 @@ const ViewModal = ({ item, onClose, activeTab }) => {
       !skipFields.includes(key) && 
       value !== null && 
       value !== undefined &&
-     
       !(typeof value === 'object' && key === 'user' && item.userEmail)
     );
   };
@@ -60,17 +151,17 @@ const ViewModal = ({ item, onClose, activeTab }) => {
     // Format status with color-coded badge
     if (key === 'status' || key === 'paymentStatus') {
       const statusColors = {
-        pending: 'bg-yellow-100 text-yellow-800',
-        approved: 'bg-green-100 text-green-800',
-        rejected: 'bg-red-100 text-red-800',
-        declined: 'bg-red-100 text-red-800',
-        paid: 'bg-green-100 text-green-800',
-        failed: 'bg-red-100 text-red-800',
+        pending: 'bg-yellow-100 text-yellow-800 border border-yellow-300',
+        approved: 'bg-green-100 text-green-800 border border-green-300',
+        rejected: 'bg-red-100 text-red-800 border border-red-300',
+        declined: 'bg-red-100 text-red-800 border border-red-300',
+        paid: 'bg-green-100 text-green-800 border border-green-300',
+        failed: 'bg-red-100 text-red-800 border border-red-300',
       };
       
       return (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[value.toLowerCase()] || 'bg-gray-100 text-gray-800'}`}>
-          {value}
+        <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[value.toLowerCase()] || 'bg-gray-100 text-gray-800 border border-gray-300'}`}>
+          {value.charAt(0).toUpperCase() + value.slice(1)}
         </span>
       );
     }
@@ -86,6 +177,24 @@ const ViewModal = ({ item, onClose, activeTab }) => {
       ) : "—";
     }
     
+    // Handle bank slip or file attachments
+    if (key === 'bankSlipUrl' || key === 'fileUrl' || key === 'attachmentUrl' || key.toLowerCase().includes('slip') || key.toLowerCase().includes('attachment')) {
+      const isImage = typeof value === 'string' && /\.(jpg|jpeg|png|gif|webp)$/i.test(value);
+      const isPdf = typeof value === 'string' && /\.pdf$/i.test(value);
+      
+      if (isImage || isPdf) {
+        return (
+          <button
+            onClick={() => handleViewFile(value, isImage ? 'image' : 'pdf')}
+            className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors flex items-center gap-1"
+          >
+            {isImage ? <HiOutlinePhotograph className="w-4 h-4" /> : <HiOutlineDocument className="w-4 h-4" />}
+            View {isImage ? 'Image' : 'PDF'}
+          </button>
+        );
+      }
+    }
+    
     // If value is a URL, render as a clickable, truncated link
     const isUrl = typeof value === 'string' && value.match(/^https?:\/\//i);
     if (isUrl) {
@@ -95,7 +204,7 @@ const ViewModal = ({ item, onClose, activeTab }) => {
           href={value}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-600 underline break-all max-w-xs inline-block truncate align-middle"
+          className="text-blue-600 hover:text-blue-800 underline break-all max-w-xs inline-block truncate align-middle transition-colors"
           title={value}
         >
           {displayUrl}
@@ -176,13 +285,33 @@ const ViewModal = ({ item, onClose, activeTab }) => {
 
   // Accent color and icon mapping for groups
   const groupIcons = {
-    basic: <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4dd.png" alt="Document" className="w-5 h-5 mr-1" />,
-    financial: <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4b0.png" alt="Money" className="w-5 h-5 mr-1" />,
-    status: <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/2705.png" alt="Check" className="w-5 h-5 mr-1" />,
-    user: <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f9d1.png" alt="User" className="w-5 h-5 mr-1" />,
-    dates: <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4c5.png" alt="Calendar" className="w-5 h-5 mr-1" />,
-    identifiers: <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4dc.png" alt="Document" className="w-5 h-5 mr-1" />,
-    other: <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4dd.png" alt="Document" className="w-5 h-5 mr-1" />,
+    basic: <HiOutlineDocumentText className="w-5 h-5" />,
+    financial: <HiOutlineCurrencyDollar className="w-5 h-5" />,
+    status: <HiOutlineBadgeCheck className="w-5 h-5" />,
+    user: <HiOutlineUser className="w-5 h-5" />,
+    dates: <HiOutlineCalendar className="w-5 h-5" />,
+    identifiers: <HiOutlineDocumentText className="w-5 h-5" />,
+    other: <HiOutlineDocumentText className="w-5 h-5" />,
+  };
+
+  const groupTitles = {
+    basic: 'Basic Information',
+    financial: 'Financial Details',
+    status: 'Status Information',
+    user: 'User Information',
+    dates: 'Important Dates',
+    identifiers: 'Identifiers',
+    other: 'Additional Information'
+  };
+
+  const groupColors = {
+    basic: 'bg-blue-50 border-blue-200 text-blue-700',
+    financial: 'bg-green-50 border-green-200 text-green-700',
+    status: 'bg-purple-50 border-purple-200 text-purple-700',
+    user: 'bg-yellow-50 border-yellow-200 text-yellow-700',
+    dates: 'bg-indigo-50 border-indigo-200 text-indigo-700',
+    identifiers: 'bg-pink-50 border-pink-200 text-pink-700',
+    other: 'bg-gray-50 border-gray-200 text-gray-700',
   };
 
   const handleStatusChange = async (e) => {
@@ -198,9 +327,8 @@ const ViewModal = ({ item, onClose, activeTab }) => {
         updateUrl = `/api/finance/i/${item._id}`;
       } else if (activeTab === 'payments') {
         updateUrl = `/api/finance/p/${item._id}`;
-      } else if (activeTab === 'transactions') {
-        updateUrl = `/api/finance/t/${item._id}`;
       }
+      
       await axiosInstance.patch(updateUrl, { status: newStatus });
       setMessage('Status updated successfully');
       setMessageType('success');
@@ -211,354 +339,363 @@ const ViewModal = ({ item, onClose, activeTab }) => {
     }
   };
 
-  // Helper to pretty-print nested objects in the PDF (never as JSON string)
-  const prettyPrintObject = (doc, obj, x, y, indent = 0, maxWidth = 150) => {
-    const skipFields = ['__v'];
-    let startY = y;
-    if (Array.isArray(obj)) {
-      obj.forEach((item, idx) => {
-        doc.setFont(undefined, 'bold');
-        doc.text(' '.repeat(indent * 2) + `Item ${idx + 1}:`, x, startY);
-        doc.setFont(undefined, 'normal');
-        startY += 6;
-        startY = prettyPrintObject(doc, item, x + 8, startY, indent + 1, maxWidth - 8);
-      });
-      return startY;
-    }
-    Object.entries(obj).forEach(([k, v]) => {
-      if (skipFields.includes(k)) return;
-      let label = formatKey(k) + ':';
-      let value = v;
-      if (typeof value === 'object' && value !== null) {
-        if (k === 'user' && value.email) {
-          // Special handling for user
-          value = `${value.fullName || 'User'} (${value.email})`;
-          doc.setFont(undefined, 'bold');
-          doc.text(' '.repeat(indent * 2) + label, x, startY);
-          doc.setFont(undefined, 'normal');
-          doc.text(String(value), x + 40, startY);
-          startY += 6;
-        } else {
-          doc.setFont(undefined, 'bold');
-          doc.text(' '.repeat(indent * 2) + label, x, startY);
-          doc.setFont(undefined, 'normal');
-          startY += 6;
-          startY = prettyPrintObject(doc, value, x + 8, startY, indent + 1, maxWidth - 8);
-        }
-      } else {
-        // Format value for display
-        if (value === null || value === undefined) value = '—';
-        if (k.toLowerCase().includes('date') && value) {
-          try {
-            value = new Date(value).toLocaleString();
-          } catch {}
-        }
-        const textLines = doc.splitTextToSize(String(value), maxWidth - 40);
-        doc.setFont(undefined, 'bold');
-        doc.text(' '.repeat(indent * 2) + label, x, startY);
-        doc.setFont(undefined, 'normal');
-        doc.text(textLines, x + 40, startY);
-        startY += Math.max(6, textLines.length * 6);
-      }
-    });
-    return startY;
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
   };
 
-  const generatePDF = () => {
-    const doc = new jsPDF();
-    // Add logo at the top (PNG, 30x30 at 15, 8)
+  const handleDownloadPDF = async () => {
+    setIsDownloading(true);
     try {
-      doc.addImage('/logo192.png', 'PNG', 15, 8, 30, 30);
-    } catch (e) {
-      // If logo fails, continue without breaking
-    }
-    // Set document properties
-    doc.setProperties({
-      title: `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Record - ${item._id}`,
-      subject: `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Details`,
-      author: "Project Diamonds",
-      keywords: `${activeTab}, record, details`,
-      creator: "Project Diamonds Financial System"
-    });
-    // Add header with gradient background
-    doc.setFillColor(0, 102, 204);
-    doc.rect(0, 0, 210, 30, 'F');
-    // Add title
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(20);
-    doc.text(`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Record`, 105, 20, { align: "center" });
-    // Reset text color for content
-    doc.setTextColor(0, 0, 0);
-    // Add record ID and date
-    doc.setFontSize(10);
-    doc.text(`Record ID: ${item._id}`, 15, 40);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 150, 40, { align: "right" });
-    // Add a horizontal line
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.5);
-    doc.line(15, 45, 195, 45);
-    // Add record type icon
-    let iconText = "";
-    switch(activeTab) {
-      case 'payments': iconText = "💰"; break;
-      case 'budgets': iconText = "📊"; break;
-      case 'invoices': iconText = "📄"; break;
-      case 'refunds': iconText = "↩️"; break;
-      case 'transactions': iconText = "💸"; break;
-      case 'salary': iconText = "💵"; break;
-      default: iconText = "📝";
-    }
-    doc.setFontSize(16);
-    doc.text(iconText, 15, 60);
-    // Add record type title
-    doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
-    doc.text(`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Details`, 30, 60);
-    doc.setFont(undefined, 'normal');
-    // Add a light background for the main content area
-    doc.setFillColor(245, 245, 245);
-    doc.rect(15, 65, 180, 200, 'F');
-    // Start content at y=75
-    let y = 75;
-    // Group fields by category for better organization
-    const groups = getGroupedFields();
-    const groupOrder = ['basic', 'financial', 'status', 'user', 'dates', 'identifiers', 'other'];
-    const groupTitles = {
-      basic: 'Basic Information',
-      financial: 'Financial Details',
-      status: 'Status Information',
-      user: 'User Information',
-      dates: 'Important Dates',
-      identifiers: 'Identifiers',
-      other: 'Additional Information'
-    };
-    groupOrder.forEach(groupName => {
-      if (!groups[groupName] || groups[groupName].length === 0) return;
-      if (y + 20 > 250) {
-        doc.addPage();
-        y = 20;
-      }
-      doc.setFillColor(230, 230, 230);
-      doc.rect(15, y, 180, 8, 'F');
-      doc.setFontSize(12);
+      const doc = new jsPDF();
+  
+      // Add title bar with dark blue background
+      doc.setFillColor(31, 41, 55); // Tailwind blue-900
+      doc.rect(0, 0, doc.internal.pageSize.width, 24, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
       doc.setFont(undefined, 'bold');
-      doc.text(groupTitles[groupName], 20, y + 5);
-      y += 15;
-      doc.setFont(undefined, 'normal');
+      doc.text(
+        `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1, -1)} Details`,
+        doc.internal.pageSize.width / 2,
+        16,
+        { align: 'center' }
+      );
+  
+      // Add date below header, styled and spaced
       doc.setFontSize(10);
-      groups[groupName].forEach(key => {
-        let value = item[key];
-        if (typeof value === 'object' && value !== null) {
-          if (key === 'user' && value.email) {
-            value = `${value.fullName || 'User'} (${value.email})`;
-            doc.setFont(undefined, 'bold');
-            doc.text(`${formatKey(key)}:`, 20, y);
-            doc.setFont(undefined, 'normal');
-            doc.text(String(value), 70, y);
-            y += 7;
-          } else {
-            doc.setFont(undefined, 'bold');
-            doc.text(`${formatKey(key)}:`, 20, y);
-            doc.setFont(undefined, 'normal');
-            y = prettyPrintObject(doc, value, 30, y, 1);
+      doc.setTextColor(55, 65, 81); // Tailwind gray-700
+      doc.setFont(undefined, 'normal');
+      doc.text(
+        `Generated on: ${new Date().toLocaleString()}`,
+        doc.internal.pageSize.width / 2,
+        28,
+        { align: 'center' }
+      );
+  
+      let yPos = 36;
+      const groups = getGroupedFields();
+      const groupOrder = ['basic', 'financial', 'status', 'user', 'dates', 'identifiers', 'other'];
+  
+      // Color mapping for PDF (match Tailwind groupColors)
+      const pdfGroupColors = {
+        basic: [219, 234, 254],        // blue-50
+        financial: [220, 252, 231],    // green-50
+        status: [237, 233, 254],       // purple-50
+        user: [254, 249, 195],         // yellow-50
+        dates: [238, 242, 255],        // indigo-50
+        identifiers: [253, 242, 248],  // pink-50
+        other: [249, 250, 251],        // gray-50
+      };
+  
+      groupOrder.forEach(groupName => {
+        if (!groups[groupName] || groups[groupName].length === 0) return;
+  
+        // Section header background
+        const color = pdfGroupColors[groupName] || [249, 250, 251];
+        doc.setFillColor(...color);
+        doc.rect(10, yPos, doc.internal.pageSize.width - 20, 10, 'F');
+  
+        // Section title
+        doc.setFontSize(13);
+        doc.setTextColor(31, 41, 55); // dark blue for all headers
+        doc.setFont(undefined, 'bold');
+        doc.text(groupTitles[groupName], 14, yPos + 7);
+  
+        yPos += 14;
+        doc.setFontSize(11);
+        doc.setTextColor(55, 65, 81); // gray-700
+        doc.setFont(undefined, 'normal');
+  
+        groups[groupName].forEach(key => {
+          if (yPos > 270) {
+            doc.addPage();
+            yPos = 20;
           }
-        } else {
-          doc.setFont(undefined, 'bold');
-          doc.text(`${formatKey(key)}:`, 20, y);
-          doc.setFont(undefined, 'normal');
-          const textLines = doc.splitTextToSize(String(value), 150);
-          doc.text(textLines, 70, y);
-          y += Math.max(7, textLines.length * 7);
-        }
+          const value = item[key];
+          let displayValue = '';
+          if (value === null || value === undefined) {
+            displayValue = "—";
+          } else if (typeof value === 'object' && value !== null) {
+            if (Array.isArray(value)) {
+              displayValue = value.join(', ');
+            } else if (key === 'user' && value.email) {
+              displayValue = `${value.fullName || 'User'} (${value.email})`;
+            } else {
+              // For "Additional Information", pretty print each key-value on its own line
+              displayValue = Object.entries(value)
+                .map(([k, v]) => `${formatKey(k)}: ${typeof v === 'object' ? JSON.stringify(v) : v}`)
+                .join('\n');
+            }
+          } else {
+            displayValue = String(value);
+          }
+          const formattedKey = formatKey(key);
+          // For "other"/Additional Information, use multi-line text for objects
+          if (groupName === 'other' && typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            doc.setFont(undefined, 'bold');
+            doc.text(`${formattedKey}:`, 14, yPos);
+            doc.setFont(undefined, 'normal');
+            yPos += 6;
+            const lines = doc.splitTextToSize(displayValue, doc.internal.pageSize.width - 28);
+            doc.text(lines, 18, yPos);
+            yPos += lines.length * 6;
+          } else {
+            doc.text(`${formattedKey}: ${displayValue}`, 14, yPos);
+            yPos += 7;
+          }
+        });
+  
+        yPos += 7;
       });
-      y += 5;
-    });
-    // Add footer with page numbers
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setTextColor(100, 100, 100);
-      doc.text(`Page ${i} of ${pageCount}`, 105, 290, { align: "center" });
-      doc.text("Project Diamonds Financial System", 105, 295, { align: "center" });
-    }
-    return doc;
-  };
 
-  const handleDownload = () => {
-    const doc = generatePDF();
-    doc.save(`${activeTab}-record-${item._id}.pdf`);
-  };
-
-  const handleSendEmail = async () => {
-    try {
-      const doc = generatePDF();
-      const pdfData = doc.output('datauristring');
-      
-      // Make a POST request to your API to send the email.
-      await axiosInstance.post('/api/finance/send-email', { 
-        recordId: item._id,
-        pdfData,
-
-        email: item.user && item.user.email,
-      });
-    
-      setMessage('Email sent successfully');
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.setTextColor(150, 150, 150);
+        doc.text('Team Diamond Financial Services', 15, doc.internal.pageSize.height - 10);
+        doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width - 30, doc.internal.pageSize.height - 10);
+      }
+  
+      doc.save(`${activeTab}_${item._id}.pdf`);
+      setMessage('PDF downloaded successfully');
       setMessageType('success');
     } catch (err) {
-      console.error('Error sending email:', err);
-      setMessage('Error sending email');
+      console.error('Error generating PDF:', err);
+      setMessage('Error generating PDF');
       setMessageType('error');
-    } 
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const renderFileViewerButton = (fileUrl, label) => {
+    if (!fileUrl) return null;
+    const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(fileUrl);
+    const isPdf = /\.pdf$/i.test(fileUrl);
+    if (!isImage && !isPdf) return null;
+    return (
+      <button
+        onClick={() => handleViewFile(fileUrl, isImage ? 'image' : 'pdf')}
+        className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors flex items-center gap-1 mt-2"
+      >
+        {isImage ? <HiOutlinePhotograph className="w-4 h-4" /> : <HiOutlineDocument className="w-4 h-4" />}
+        View {label}
+      </button>
+    );
+  };
+  
+  // Inside your JSX where you render fields, add explicit viewers for budget info and refund receipt files:
+  {renderFileViewerButton(item.infoFile || item.budgetInfoFile, "Budget Info File")}
+  {renderFileViewerButton(item.receiptFile || item.refundReceiptFile, "Refund Receipt File")}
+
+  const renderFieldGroups = () => {
+    const groups = getGroupedFields();
+    const groupOrder = ['basic', 'financial', 'status', 'user', 'dates', 'identifiers', 'other'];
+    
+    return (
+      <div className="space-y-6">
+        {groupOrder.map(groupName => {
+          if (!groups[groupName] || groups[groupName].length === 0) return null;
+          
+          const isExpanded = expandedSections[groupName];
+          const isActive = activeSection === groupName;
+          
+          return (
+            <motion.div 
+              key={groupName} 
+              className={`bg-white rounded-lg shadow-md overflow-hidden border ${isActive ? 'ring-2 ring-offset-2 ring-blue-500' : 'border-gray-200'}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div 
+                className={`px-4 py-3 border-b ${groupColors[groupName]} flex justify-between items-center cursor-pointer`}
+                onClick={() => {
+                  setActiveSection(groupName);
+                  if (!isExpanded) {
+                    toggleSection(groupName);
+                  }
+                }}
+              >
+                <div className="flex items-center space-x-2">
+                  <span className="p-1 rounded-full bg-white bg-opacity-50">
+                    {groupIcons[groupName]}
+                  </span>
+                  <h3 className="text-sm font-medium">{groupTitles[groupName]}</h3>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleSection(groupName);
+                    }}
+                    className="p-1 rounded-full hover:bg-white hover:bg-opacity-30 transition-colors"
+                  >
+                    {isExpanded ? <HiOutlineEyeOff className="w-4 h-4" /> : <HiOutlineEye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+              
+              <AnimatePresence>
+                {isExpanded && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="divide-y divide-gray-100">
+                      {groups[groupName].map(key => {
+                        const value = item[key];
+                        return (
+                          <div key={key} className="px-4 py-3 hover:bg-gray-50 transition-colors">
+                            <div className="flex flex-col sm:flex-row sm:items-center">
+                              <label className="sm:w-1/3 text-sm font-medium text-gray-500 mb-1 sm:mb-0">
+                                {formatKey(key)}
+                              </label>
+                              <div className="sm:w-2/3 text-sm text-gray-900">
+                                {formatValue(key, value)}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          );
+        })}
+      </div>
+    );
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-self-center p-4 overflow-y-auto">
-      <div className="relative w-full max-w-4xl bg-white rounded-lg shadow-xl">
-        {/* Accent Bar & Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 h-2 w-full" />
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white bg-opacity-50">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-              {groupIcons[activeTab] || <HiOutlineDocumentText className="text-blue-500 w-5 h-5 mr-1" />} {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Record Details
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-auto">
+      <div className="bg-white shadow-2xl rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-auto relative">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between bg-blue-600 p-6 rounded-t-2xl sticky top-0 z-20">
+          <div className="flex items-center gap-3">
+            <HiOutlineDocumentText className="text-white text-3xl" />
+            <h2 className="text-2xl font-bold text-white">
+              {activeTab === 'budgets' ? 'Budget Details' :
+               activeTab === 'refunds' ? 'Refund Details' :
+               activeTab === 'invoices' ? 'Invoice Details' :
+               activeTab === 'payments' ? 'Payment Details' : 'Transaction Details'}
             </h2>
-            <p className="text-sm text-gray-500">ID: {item._id}</p>
           </div>
-          <button onClick={onClose} aria-label="Close modal" className="text-gray-500 hover:text-gray-700 focus:outline-none">
-            <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleDownloadPDF}
+              disabled={isDownloading}
+              className="text-white bg-blue-700 hover:bg-blue-800 rounded-full w-10 h-10 flex items-center justify-center transition duration-300"
+              title="Download PDF"
+            >
+              <HiOutlineDownload className="text-xl" />
+            </button>
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="text-white bg-red-500 hover:bg-red-600 rounded-full w-10 h-10 flex items-center justify-center transition duration-300"
+                title="Close"
+              >
+                <HiOutlineX className="text-xl" />
+              </button>
+            )}
+          </div>
         </div>
-        {/* Content */}
-        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto bg-white bg-opacity-30">
-          {/* File Previews (Deposit Slip, Receipt, Info File) */}
-          {activeTab === 'payments' && item.bankSlipFile && (
-            <div className="mb-6 bg-gray-50 bg-opacity-50 rounded-lg shadow p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center"><HiOutlineDocumentText className="mr-1" /> Deposit Slip</h3>
-              {item.bankSlipFile.toLowerCase().endsWith('.pdf') ? (
-                <iframe src={item.bankSlipFile} width="100%" height="300" title="Deposit Slip PDF" className="rounded border border-gray-200" />
-              ) : (
-                <img src={item.bankSlipFile} alt="Deposit Slip" className="max-w-full h-auto rounded" />
-              )}
-            </div>
-          )}
-          {activeTab === 'refunds' && item.receiptFile && (
-            <div className="mb-6 bg-gray-50 bg-opacity-50 rounded-lg shadow p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center"><HiOutlineDocumentText className="mr-1" /> Receipt File</h3>
-              {item.receiptFile.toLowerCase().endsWith('.pdf') ? (
-                <iframe src={item.receiptFile} width="100%" height="300" title="Receipt PDF" className="rounded border border-gray-200" />
-              ) : (
-                <img src={item.receiptFile} alt="Receipt" className="max-w-full h-auto rounded" />
-              )}
-            </div>
-          )}
-          {activeTab === 'budgets' && item.infoFile && (
-            <div className="mb-6 bg-gray-50 bg-opacity-50 rounded-lg shadow p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center"><HiOutlineDocumentText className="mr-1" /> Information File</h3>
-              {item.infoFile.toLowerCase().endsWith('.pdf') ? (
-                <iframe src={item.infoFile} width="100%" height="300" title="Info PDF" className="rounded border border-gray-200" />
-              ) : (
-                <img src={item.infoFile} alt="Info File" className="max-w-full h-auto rounded" />
-              )}
-            </div>
-          )}
-          {/* Grouped Fields as Cards */}
-          {(() => {
-            const groups = getGroupedFields();
-            const groupOrder = ['basic', 'financial', 'status', 'user', 'dates', 'identifiers', 'other'];
-            const groupTitles = {
-              basic: 'Basic Information',
-              financial: 'Financial Details',
-              status: 'Status Information',
-              user: 'User Information',
-              dates: 'Important Dates',
-              identifiers: 'Identifiers',
-              other: 'Additional Information'
-            };
-            return (
-              <div className="space-y-6">
-                {groupOrder.map(groupName => (
-                  groups[groupName] && groups[groupName].length > 0 ? (
-                    <section key={groupName} className="bg-gray-50 bg-opacity-50 rounded-lg shadow p-4">
-                      <h3 className="text-lg font-semibold mb-3 flex items-center">{groupIcons[groupName]} {groupTitles[groupName]}</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
-                        {groups[groupName].map(key => (
-                          <div key={key} className="flex items-center gap-2 py-1">
-                            <span className="text-gray-500 font-medium">{formatKey(key)}:</span>
-                            <span className="font-semibold text-gray-900">{formatValue(key, item[key])}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </section>
-                  ) : null
-                ))}
-              </div>
-            );
-          })()}
-          {/* Status Update Dropdown */}
-          {activeTab !== 'transactions' && (
-            <div className="mt-4 bg-white bg-opacity-50 rounded-lg shadow p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center"><HiOutlineBadgeCheck className="mr-1" /> Update Status</h3>
-              <select 
-                value={status} 
+        
+        {/* Status update section */}
+        {(activeTab === 'budgets' || activeTab === 'refunds' || activeTab === 'payments') && (
+          <div className="bg-gray-50 px-6 py-3 border-b border-gray-200 sticky top-[88px] z-10">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">Update Status:</label>
+              <select
+                value={status}
                 onChange={handleStatusChange}
-                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm bg-white bg-opacity-70"
+                className="form-select rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
               >
                 <option value="pending">Pending</option>
                 <option value="approved">Approved</option>
-                <option value="declined">Declined</option>
                 <option value="rejected">Rejected</option>
-                {activeTab === 'invoices' && <option value="paid">Paid</option>}
-                {activeTab === 'invoices' && <option value="failed">Failed</option>}
               </select>
             </div>
+          </div>
+        )}
+        
+        {/* Message display */}
+        {message && (
+          <div className={`px-6 py-3 ${messageType === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'} sticky top-[136px] z-10`}>
+            {message}
+          </div>
+        )}
+        
+        {/* Content */}
+        <div className="p-6">
+          {/* Display attachment at the top if available */}
+          {fileViewer.url && (
+            <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <h3 className="text-lg font-semibold mb-3">
+                {fileViewer.type === 'image' ? 'Bank Slip Image' : 'Bank Slip PDF'}
+              </h3>
+              <div className="flex justify-center bg-white p-2 rounded border border-gray-300">
+                {fileViewer.type === 'image' ? (
+                  <img 
+                    src={fileViewer.url} 
+                    alt="Bank Slip" 
+                    className="max-w-full max-h-[300px] object-contain"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';
+                    }}
+                  />
+                ) : (
+                  <iframe
+                    src={fileViewer.url}
+                    title="PDF Viewer"
+                    className="w-full h-[300px] border-0"
+                    onError={(e) => {
+                      e.target.parentNode.innerHTML = '<div class="flex flex-col items-center justify-center h-full"><p class="text-red-500 mb-2">Unable to display PDF</p><a href="' + fileViewer.url + '" target="_blank" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Open PDF in New Tab</a></div>';
+                    }}
+                  />
+                )}
+              </div>
+              <div className="mt-2 flex justify-end">
+                <a
+                  href={fileViewer.url}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center gap-1 text-sm"
+                >
+                  <HiOutlineDownload className="w-4 h-4" />
+                  Download
+                </a>
+              </div>
+            </div>
           )}
+          
+          {renderFieldGroups()}
         </div>
-        {/* Action Bar */}
-        <div className="flex flex-wrap justify-end gap-3 px-6 py-4 border-t bg-gray-50 bg-opacity-50">
-          <button 
-            onClick={handleDownload} 
-            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1 flex items-center"
-            title="Download as PDF"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Download PDF
-          </button>
-          <button 
-            onClick={onClose} 
-            className="bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1"
-            title="Close"
+        
+        {/* Footer */}
+        <div className="bg-gray-50 px-6 py-4 rounded-b-xl border-t border-gray-200 flex justify-end sticky bottom-0 z-10">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
           >
             Close
           </button>
         </div>
-        {/* Feedback Message */}
-        {message && (
-          <div className={`mx-6 mb-6 mt-2 p-3 rounded-md ${
-            messageType === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
-          }`}>
-            <div className="flex">
-              <div className="flex-shrink-0">
-                {messageType === 'success' ? (
-                  <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                ) : (
-                  <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                )}
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium">{message}</p>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Remove the separate File Viewer Modal since we're showing it inline */}
     </div>
   );
 };

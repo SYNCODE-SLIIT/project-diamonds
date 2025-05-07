@@ -30,6 +30,7 @@ import fs from 'fs';
 import Transaction from '../models/Transaction.js';
 import { uploadToSupabase } from '../utils/supabaseUpload.js';
 import { uploadFile } from '../utils/fileUpload.js';
+import { ticketPayment } from '../controllers/financialController.js';
 
 const router = express.Router();
 
@@ -140,100 +141,150 @@ router.get('/invoice/:invoiceId/download', protect, async (req, res) => {
     // Fetch payment details for this invoice
     const payment = await Payment.findOne({ invoiceId: invoice._id });
 
-    const doc = new PDFDocument({ margin: 40, size: 'A4' });
+    // Create PDF with smaller margins to fit more content
+    const doc = new PDFDocument({ 
+      margin: 20, 
+      size: 'A4',
+      bufferPages: true // Enable page buffering to calculate content height
+    });
+    
     res.setHeader('Content-Disposition', `attachment; filename=Invoice_${invoice.invoiceNumber}.pdf`);
     res.setHeader('Content-Type', 'application/pdf');
     doc.pipe(res);
 
-    // --- HEADER BAR ---
-    doc.rect(0, 0, doc.page.width, 70).fill('#FFD700'); // Gold color for header
-    
-    // Add logo from assets file
+    // --- HEADER ---
+    doc.rect(0, 0, doc.page.width, 70).fill('#2c3e50'); // Dark blue header
     try {
       if (fs.existsSync(logoPath)) {
-        doc.image(logoPath, 50, 10, { 
+        doc.image(logoPath, 25, 10, { 
           width: 50,
           height: 50
         });
       } else {
-        // Fallback to text logo if file doesn't exist
-        doc.fillColor('#000000')
+        doc.fillColor('#ffffff')
            .fontSize(24)
            .font('Helvetica-Bold')
-           .text('TD', 50, 20, { width: 50, align: 'center' });
+           .text('TD', 30, 20);
       }
     } catch (logoError) {
-      console.error('Error adding logo:', logoError);
-      // Fallback to text logo if there's an error
-      doc.fillColor('#000000')
+      doc.fillColor('#ffffff')
          .fontSize(24)
          .font('Helvetica-Bold')
-         .text('TD', 50, 20, { width: 50, align: 'center' });
+         .text('TD', 30, 20);
     }
     
-    doc.fillColor('#000000')
-       .fontSize(28)
+    doc.fillColor('#ffffff')
+       .fontSize(26)
        .font('Helvetica-Bold')
-       .text('INVOICE', 130, 25, { align: 'left' });
-    doc.fillColor('black');
+       .text('INVOICE', doc.page.width - 140, 20, { align: 'right' });
 
-    // --- INVOICE TO & DETAILS ---
-    doc.moveDown(1.5);
-    doc.fontSize(12).font('Helvetica-Bold').fillColor('#FFD700').text('INVOICE TO:', 50, 90);
-    doc.font('Helvetica').fillColor('black').text(invoice.user?.fullName || 'N/A', 50, 105);
-    doc.text(invoice.user?.email || '', 50, 120);
-    // Add more user info if available
+    // --- CUSTOMER AND INVOICE INFO ---
+    const leftCol = 25;
+    const rightCol = 340;
+    
+    // Left Column - Invoice To
+    doc.font('Helvetica-Bold').fillColor('#2c3e50').fontSize(11).text('BILL TO:', leftCol, 90);
+    doc.font('Helvetica').fillColor('#333333').fontSize(10)
+      .text(invoice.user?.fullName || 'N/A', leftCol, 105)
+      .text(invoice.user?.email || 'N/A', leftCol, 120);
 
-    doc.font('Helvetica-Bold').fillColor('#FFD700').text('Invoice No:', 350, 90, { continued: true }).font('Helvetica').fillColor('black').text(invoice.invoiceNumber);
-    doc.font('Helvetica-Bold').fillColor('#FFD700').text('Invoice Date:', 350, 105, { continued: true }).font('Helvetica').fillColor('black').text(invoice.createdAt.toLocaleDateString());
-    doc.font('Helvetica-Bold').fillColor('#FFD700').text('Account No:', 350, 120, { continued: true }).font('Helvetica').fillColor('black').text(invoice.user?._id?.toString().slice(-6) || '');
+    // Right Column - Invoice Details
+    doc.font('Helvetica-Bold').fillColor('#2c3e50').fontSize(10)
+      .text('INVOICE #:', rightCol, 90)
+      .text('DATE:', rightCol, 105)
+      .text('ACCOUNT #:', rightCol, 120);
+      
+    doc.font('Helvetica').fillColor('#333333').fontSize(10)
+      .text(invoice.invoiceNumber, rightCol + 70, 90)
+      .text(new Date(invoice.createdAt).toLocaleDateString(), rightCol + 70, 105)
+      .text(invoice.user?._id?.toString().slice(-6) || 'N/A', rightCol + 70, 120);
 
-    // --- SIDEBAR (Payment Method & Terms) ---
-    doc.roundedRect(40, 150, 180, 80, 8).fillOpacity(0.08).fill('#FFD700').fillOpacity(1);
-    doc.fontSize(11).font('Helvetica-Bold').fillColor('#FFD700').text('PAYMENT METHOD', 50, 160);
-    doc.font('Helvetica').fillColor('black').text(payment?.paymentMethod || 'N/A', 50, 175);
-    doc.moveDown(0.5);
-    doc.font('Helvetica-Bold').fillColor('#FFD700').text('TERMS & CONDITIONS', 50, 195);
-    doc.font('Helvetica').fillColor('black').fontSize(9).text('Payment is due upon receipt. Please contact us if you have any questions about this invoice.', 50, 210, { width: 160 });
-
-    // --- PRODUCT TABLE ---
-    const tableTop = 250;
-    doc.font('Helvetica-Bold').fontSize(12).fillColor('#FFD700');
-    doc.text('PRODUCT', 250, tableTop);
-    doc.text('PRICE', 370, tableTop);
-    doc.text('QTY', 440, tableTop);
-    doc.text('TOTAL', 500, tableTop);
-    doc.moveTo(250, tableTop + 18).lineTo(doc.page.width - 40, tableTop + 18).stroke('#FFD700');
-    doc.font('Helvetica').fontSize(11).fillColor('black');
-    let rowY = tableTop + 28;
-    // If payment has productName/quantity, show as line item, else show generic
+    // --- TABLE ---
+    const tableTop = 150;
+    const tableWidth = doc.page.width - 50;
+    
+    // Table Header with background
+    doc.rect(leftCol, tableTop, tableWidth, 20).fill('#f5f5f5');
+    doc.strokeColor('#cccccc').lineWidth(1)
+      .rect(leftCol, tableTop, tableWidth, 20)
+      .stroke();
+    
+    // Table Header Text
+    doc.fillColor('#2c3e50').fontSize(10).font('Helvetica-Bold');
+    doc.text('DESCRIPTION', leftCol + 10, tableTop + 6)
+      .text('PRICE', leftCol + 300, tableTop + 6)
+      .text('QTY', leftCol + 380, tableTop + 6)
+      .text('TOTAL', leftCol + 450, tableTop + 6);
+    
+    // Table Row
+    const rowY = tableTop + 30;
+    doc.rect(leftCol, rowY - 10, tableWidth, 25).fillAndStroke('#ffffff', '#cccccc');
+    
+    doc.font('Helvetica').fillColor('#333333').fontSize(9);
     if (payment && payment.productName) {
-      doc.text(payment.productName, 250, rowY);
-      doc.text(`RS. ${payment.amount}`, 370, rowY);
-      doc.text(payment.quantity ? payment.quantity.toString() : '1', 440, rowY);
-      doc.text(`RS. ${payment.amount * (payment.quantity || 1)}`, 500, rowY);
-      rowY += 20;
+      doc.text(payment.productName, leftCol + 10, rowY)
+        .text(`RS. ${payment.amount.toLocaleString()}`, leftCol + 300, rowY)
+        .text(payment.quantity || '1', leftCol + 380, rowY)
+        .text(`RS. ${(payment.amount * (payment.quantity || 1)).toLocaleString()}`, leftCol + 450, rowY);
     } else {
-      doc.text(invoice.category, 250, rowY);
-      doc.text(`RS. ${invoice.amount}`, 370, rowY);
-      doc.text('1', 440, rowY);
-      doc.text(`RS. ${invoice.amount}`, 500, rowY);
-      rowY += 20;
+      doc.text(invoice.category || 'Service', leftCol + 10, rowY)
+        .text(`RS. ${invoice.amount.toLocaleString()}`, leftCol + 300, rowY)
+        .text('1', leftCol + 380, rowY)
+        .text(`RS. ${invoice.amount.toLocaleString()}`, leftCol + 450, rowY);
     }
-    // Add more rows if needed
-    doc.moveTo(250, rowY).lineTo(doc.page.width - 40, rowY).stroke('#FFD700');
 
     // --- TOTALS ---
-    doc.font('Helvetica-Bold').fillColor('#FFD700').text('SUB TOTAL', 370, rowY + 15, { continued: true }).font('Helvetica').fillColor('black').text(`RS. ${invoice.amount}`, 470, rowY + 15);
-    doc.font('Helvetica-Bold').fillColor('#FFD700').text('TAX', 370, rowY + 30, { continued: true }).font('Helvetica').fillColor('black').text('RS. 0.00', 470, rowY + 30);
-    doc.font('Helvetica-Bold').fillColor('#FFD700').text('TOTAL', 370, rowY + 45, { continued: true }).font('Helvetica').fillColor('black').text(`RS. ${invoice.amount}`, 470, rowY + 45);
+    const totalY = rowY + 40;
+    doc.rect(leftCol + 300, totalY, tableWidth - 300, 25).fill('#f5f5f5');
+    doc.strokeColor('#cccccc').lineWidth(1)
+      .rect(leftCol + 300, totalY, tableWidth - 300, 25)
+      .stroke();
+      
+    doc.font('Helvetica-Bold').fillColor('#2c3e50').fontSize(10)
+      .text('TOTAL DUE:', leftCol + 310, totalY + 8)
+      .text(`RS. ${invoice.amount.toLocaleString()}`, leftCol + 450, totalY + 8);
+
+    // --- PAYMENT AND CONTACT INFO (Side by side with less height) ---
+    const infoY = totalY + 50;
+    
+    // Add background for payment and contact info
+    doc.rect(leftCol, infoY - 5, tableWidth, 80).fillAndStroke('#f9f9f9', '#e0e0e0');
+    
+    // Left side - Payment info
+    doc.font('Helvetica-Bold').fillColor('#2c3e50').fontSize(10)
+      .text('Payment Information', leftCol + 10, infoY);
+    doc.font('Helvetica').fillColor('#333333').fontSize(9)
+      .text('Please make payment within 7 days.', leftCol + 10, infoY + 15)
+      .text('Bank transfers and online payments accepted.', leftCol + 10, infoY + 30);
+    
+    // Right side - Contact info
+    doc.font('Helvetica-Bold').fillColor('#2c3e50').fontSize(10)
+      .text('Contact Information', rightCol, infoY);
+    doc.font('Helvetica').fillColor('#333333').fontSize(9)
+      .text('Email: TeamDiamond@gmail.com', rightCol, infoY + 15)
+      .text('Phone: +94 23141506', rightCol, infoY + 30)
+      .text('Web: www.teamdiamond.com', rightCol, infoY + 45);
 
     // --- FOOTER ---
-    doc.fontSize(10).fillColor('gray').text('Thank you for your business!', 40, doc.page.height - 60, { align: 'center' });
-    doc.fontSize(10).fillColor('gray').text('Team Diamond | +123 456 7890 | studio@company.com | www.company.com', 40, doc.page.height - 45, { align: 'center' });
-    doc.fontSize(10).fillColor('gray').text('General Manager', 470, doc.page.height - 30);
-    doc.moveTo(470, doc.page.height - 40).lineTo(560, doc.page.height - 40).stroke('#FFD700');
+    // Calculate the position for footer to ensure it's at the bottom of page 1
+    const footerHeight = 30;
+    const pageHeight = doc.page.height;
+    
+    // Add a styled footer at the bottom of the page
+    doc.rect(0, pageHeight - footerHeight, doc.page.width, footerHeight)
+      .fillColor('#2c3e50')
+      .fill();
+    
+    // Thank you message with style
+    doc.fontSize(10)
+      .fillColor('#ffffff')
+      .font('Helvetica-Bold')
+      .text('Thank you for your business!', doc.page.width / 2, pageHeight - footerHeight + 10, {
+        width: doc.page.width - 50,
+        align: 'center'
+      });
 
+    // Finalize the document
     doc.end();
   } catch (error) {
     res.status(500).json({ message: 'Error downloading invoice', error: error.message });
@@ -316,5 +367,27 @@ router.post('/anomalies/:id/resolve', async (req, res) => {
     });
   }
 });
+
+
+router.post('/tp', memoryUpload.single('bankSlip'), async (req, res, next) => {
+  try {
+    if (req.file) {
+      try {
+        const uploadResult = await uploadToSupabase(req.file, 'bank_slips');
+        req.fileUrl = uploadResult.url;
+        req.fileProvider = uploadResult.provider;
+      } catch (supabaseError) {
+        console.warn('Supabase upload failed, falling back to Cloudinary:', supabaseError.message);
+        const uploadResult = await uploadFile(req.file, 'bank_slips');
+        req.fileUrl = uploadResult.url;
+        req.fileProvider = uploadResult.provider;
+      }
+    }
+    next();
+  } catch (error) {
+    console.error('Bank slip upload error:', error);
+    return res.status(500).json({ message: 'File upload failed', error: error.message });
+  }
+}, ticketPayment);
 
 export default router;
