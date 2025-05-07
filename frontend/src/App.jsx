@@ -67,9 +67,10 @@ import PaymentOptions from './components/Financial/PaymentOptions';
 import AnomalyDetection from './components/Financial/AnomalyDetection';
 import PaymentSuccess from './components/Financial/PaymentSuccess';
 import PaymentCancel from './components/Financial/PaymentCancel';
+import TicketPaymentCancel from './components/Financial/TicketPaymentCancel';
 // public layout and pages
 import PublicLayout from './components/layout/PublicLayout';
-import Home from './pages/home';
+import Home from './pages/Home';
 import Contactus from './pages/Contactus';
 
 import OrganizerProfile from './pages/EventOrganizerProfile';
@@ -122,6 +123,8 @@ import DirectChatRoom from './pages/shared/DirectChatRoom';
 
 import MerchandiseAdmin from './pages/admin/MerchandiseAdmin';
 import Collabaration from './pages/content/Collaboration';
+import FundraisePage from './components/Fundraise/FundraisePage';
+import EventDetailPage from './components/Fundraise/EventDetailPage';
 
 const App = () => {
   return (
@@ -257,8 +260,11 @@ const App = () => {
 
           <Route path="/merchandise" element={<Merchandise />} />
           <Route path="/donate" element={<DonationPage />} />
+          <Route path="/fundraising" element={<FundraisePage />} />
+          <Route path="/events/:eventSlug" element={<EventDetailPage />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-cancel" element={<PaymentCancel />} />
+          <Route path="/ticket-payment-cancel" element={<TicketPaymentCancel />} />
 
         </Routes>
 
