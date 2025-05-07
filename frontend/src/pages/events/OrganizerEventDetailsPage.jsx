@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { UserContext } from '../../context/userContext';
 import { 
@@ -27,20 +27,29 @@ import {
   Trash2,
   Edit2,
   X,
-  Check
+  Check,
+  Upload,
+  Camera
 } from 'lucide-react';
 import { fetchAllEvents, addNoteToEvent, updateEventNote, deleteEventNote } from '../../services/eventService';
+import { fetchEventMedia, uploadEventFeatureImage } from '../../services/eventMediaService';
 import PackageDetailsModal from '../../components/event/PackageDetailsModal';
 import ServiceDetailsModal from '../../components/event/ServiceDetailsModal';
 import assets from '../../assets/assets.js';
 import toast from 'react-hot-toast';
+import axiosInstance from '../../utils/axiosInstance';
+
+// Default feature image from Cloudinary
+const DEFAULT_FEATURE_IMAGE_URL = "https://res.cloudinary.com/du5c9fw6s/image/upload/v1746620459/default_event_j82gdq.jpg";
 
 const EventDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
+  const fileInputRef = useRef(null);
   
   const [event, setEvent] = useState(null);
+  const [eventMedia, setEventMedia] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [viewingPackage, setViewingPackage] = useState(null);
@@ -52,6 +61,10 @@ const EventDetailPage = () => {
   const [editingNoteIndex, setEditingNoteIndex] = useState(null);
   const [editedNoteContent, setEditedNoteContent] = useState('');
   const [deletingNote, setDeletingNote] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  
+  // Check if we're in the admin path to determine where to navigate back to
+  const isAdminPath = window.location.pathname.includes('/admin/');
 
   // Example performance data - in a real app this would come from the API
   const [performances, setPerformances] = useState([
@@ -61,10 +74,11 @@ const EventDetailPage = () => {
   ]);
 
   useEffect(() => {
-    const fetchEventDetails = async () => {
+    const fetchEventDetailsAndMedia = async () => {
       try {
         setLoading(true);
         
+        // Fetch event details
         const eventsData = await fetchAllEvents();
         const currentEvent = eventsData.find(e => e._id === id);
         
@@ -78,6 +92,16 @@ const EventDetailPage = () => {
         if (currentEvent.notes && currentEvent.notes.length > 0) {
           setNotes(currentEvent.notes);
         }
+        
+        // Fetch event media
+        try {
+          const media = await fetchEventMedia(id);
+          setEventMedia(media);
+        } catch (mediaError) {
+          console.error('Error fetching event media:', mediaError);
+          // Continue even if media fetch fails
+        }
+        
         setLoading(false);
       } catch (err) {
         console.error('Error fetching event details:', err);
@@ -86,7 +110,7 @@ const EventDetailPage = () => {
       }
     };
     
-    fetchEventDetails();
+    fetchEventDetailsAndMedia();
   }, [id]);
 
   const handleSubmitNote = async () => {
@@ -161,10 +185,60 @@ const EventDetailPage = () => {
     setEditedNoteContent('');
   };
 
+  // Handle feature image upload
+  const handleFeatureImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please upload a valid image file (JPEG, PNG, WebP)');
+      return;
+    }
+    
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+    
+    try {
+      setUploadingImage(true);
+      const response = await uploadEventFeatureImage(id, file);
+      
+      if (response.success) {
+        // Update the event media state with the new feature image
+        setEventMedia(response.data);
+        toast.success('Feature image updated successfully!');
+      } else {
+        toast.error('Failed to update feature image');
+      }
+    } catch (error) {
+      console.error('Error uploading feature image:', error);
+      toast.error('An error occurred while uploading the image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+  
+  // Trigger file input click
+  const triggerFileInput = () => {
+    fileInputRef.current.click();
+  };
+
   // Format date to a readable format
   const formatDate = (dateString) => {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+  
+  // Format month and day for the feature image overlay
+  const formatMonthDay = (dateString) => {
+    const date = new Date(dateString);
+    const month = date.toLocaleString('default', { month: 'short' });
+    const day = date.getDate();
+    return { month, day };
   };
 
   // Format time for display
@@ -288,71 +362,94 @@ const EventDetailPage = () => {
   const eventCost = calculateTotalCost();
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-16 pt-24 mt-20">
-      {/* Back Button */}
-      <div className="container mx-auto px-4 mb-6">
-        <button 
-          onClick={() => navigate('/event-dashboard')}
-          className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Events
-        </button>
-      </div>
+    <div className="min-h-screen bg-gray-50 pb-16">
+      {/* Hidden file input for image upload */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        className="hidden" 
+        accept="image/*" 
+        onChange={handleFeatureImageUpload} 
+      />
       
-      {/* Hero Section */}
-      <div className="container mx-auto px-4">
-        {/* Event Header Card */}
-        <div className="bg-gradient-to-r from-red-800 to-red-600 text-white rounded-xl shadow-xl overflow-hidden mb-8">
-          <div className="p-8">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-              <div>
-                <div className="flex items-center mb-2">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${event.eventType === 'public' ? 'bg-purple-700 text-white' : 'bg-blue-700 text-white'} mr-3`}>
-                    {event.eventType === 'public' ? 
-                      <><Globe className="w-3 h-3 mr-1" /> Public Event</> : 
-                      <><Lock className="w-3 h-3 mr-1" /> Private Event</>
-                    }
-                  </span>
-                  <StatusBadge status={event.status} />
-                </div>
-                <h1 className="text-3xl md:text-4xl font-bold">{event.eventName}</h1>
-                <p className="text-white/80 mt-2">Event ID: {event._id}</p>
-              </div>
-              
-              <div className="mt-4 md:mt-0 flex items-center">
-                <div className="text-right">
-                  <p className="text-white/80">Total Event Cost</p>
-                  <p className="text-2xl font-bold">Rs. {eventCost.total.toLocaleString()}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex flex-wrap gap-6 text-white/90">
-              <div className="flex items-center">
-                <Calendar className="w-5 h-5 mr-2 text-white/70" />
-                <span>{formatDate(event.eventDate)}</span>
-              </div>
-              
-              <div className="flex items-center">
-                <Clock className="w-5 h-5 mr-2 text-white/70" />
-                <span>{event.eventTime ? formatTime(event.eventTime) : 'Time not specified'}</span>
-              </div>
-              
-              <div className="flex items-center">
-                <MapPin className="w-5 h-5 mr-2 text-white/70" />
-                <span>{event.eventLocation}</span>
-              </div>
-              
-              <div className="flex items-center">
-                <Users className="w-5 h-5 mr-2 text-white/70" />
-                <span>{event.guestCount} guests</span>
-              </div>
-            </div>
+      {/* Feature Image Hero Section - removing the navbar space and increasing height to 75vh */}
+      <div className="relative w-full h-[75vh]">
+        {/* Feature Image with fallback */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ 
+            backgroundImage: `url(${eventMedia?.featureImage || DEFAULT_FEATURE_IMAGE_URL})` 
+          }}
+        >
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+        </div>
+        
+        {/* Back button - moved down further */}
+        <div className="absolute top-32 left-6 z-10">
+          <button 
+            onClick={() => navigate('/event-dashboard')}
+            className="flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-white hover:bg-white/30 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Events
+          </button>
+        </div>
+        
+        {/* Edit icon - moved down further */}
+        <button
+          onClick={triggerFileInput}
+          disabled={uploadingImage}
+          className="absolute top-32 right-6 z-10 flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-white hover:bg-white/30 transition-colors"
+        >
+          {uploadingImage ? (
+            <span className="flex items-center">
+              <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
+              Uploading...
+            </span>
+          ) : (
+            <>
+              <Camera className="w-4 h-4 mr-2" />
+              Change Image
+            </>
+          )}
+        </button>
+        
+        {/* Event info overlay (bottom left) */}
+        <div className="absolute bottom-8 left-8 z-10 max-w-2xl">
+          <div className="flex items-center mb-2">
+            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${event.eventType === 'public' ? 'bg-purple-700 text-white' : 'bg-blue-700 text-white'} mr-3`}>
+              {event.eventType === 'public' ? 
+                <><Globe className="w-3 h-3 mr-1" /> Public Event</> : 
+                <><Lock className="w-3 h-3 mr-1" /> Private Event</>
+              }
+            </span>
+            <StatusBadge status={event.status} />
+          </div>
+          
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">{event.eventName}</h1>
+          
+          <div className="flex items-center text-white/90">
+            <MapPin className="w-5 h-5 mr-2 text-white/70" />
+            <span>{event.eventLocation}</span>
           </div>
         </div>
         
-        {/* Main Content */}
+        {/* Date overlay (bottom right) */}
+        <div className="absolute bottom-8 right-8 z-10">
+          <div className="bg-white/20 backdrop-blur-sm p-4 rounded-lg text-center">
+            {event.eventDate && (
+              <>
+                <p className="text-white/80 uppercase text-sm font-medium">{formatMonthDay(event.eventDate).month}</p>
+                <p className="text-white text-3xl font-bold">{formatMonthDay(event.eventDate).day}</p>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {/* Main Content - increased space below the feature image */}
+      <div className="container mx-auto px-4 mt-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Details */}
           <div className="lg:col-span-2">
