@@ -40,6 +40,7 @@ import ApplicationSubmitted from './pages/authentication/ApplicationSubmitted';
 import AdminInviteApplicant from './pages/authentication/AdminInviteApplicant';
 import AdminProfile from './pages/authentication/AdminProfile';
 import GroupMembers from './pages/admin/GroupMembers';
+import AdminBudgetRequests from './pages/admin/AdminBudgetRequests';
 // import AdminInvitedApplicationsList from './pages/authentication/AdminInvitedApplicationsList';
 import FinalizedDetails from './pages/authentication/FinalizedDetails';
  
@@ -51,6 +52,7 @@ import EventRequestDashboard from './components/event/EventRequestDashboard';
 import EventsDashboard from './components/event/EventsDashboard';
 
 import EventCalendar from './pages/admin/EventCalender';
+import AdminBudgetRequests from './pages/admin/AdminBudgetRequests';
 
 // Financial Management Imports
 import FinancialDashboard from './components/Financial/FinancialDashboard';
@@ -121,6 +123,9 @@ import DirectChatRoom from './pages/shared/DirectChatRoom';
 
 import MerchandiseAdmin from './pages/admin/MerchandiseAdmin';
 import Collabaration from './pages/content/Collaboration';
+import CertificateGenerator from './pages/content/CertificateGenerator';
+import Sponsorship from './pages/content/Sponsorship';
+import PublicBlogSlideShow from './pages/content/PublicBlogSlideShow';
 
 const App = () => {
   return (
@@ -132,11 +137,13 @@ const App = () => {
           <Routes>
           
             <Route path='/financial' element={<FinancialDashboard />} />
+
             <Route path='/bform' exact element={<BudgetForm/>} />
             <Route path='/rform' exact element={<RefundForm/>} />
             <Route path='/pform' exact element={<PaymentOptions />} />
 
-            <Route path="/media/:id" component={<ViewMedia/>} />
+
+            <Route path="/media/:id" element={<ViewMedia />} />
             <Route path="/media/edit/:id" element={<EditMedia />} />
 {/* 
             <Route path="/media" element={<ViewAllMedia />} /> */}
@@ -155,7 +162,7 @@ const App = () => {
               <Route path='/organizer-profile' element={<OrganizerProfile />} />
               <Route path='/login' element={<Login />} />
               <Route path='/our-founder' element={<OurFounderPage />} />
-
+              <Route path='/blogs' element={<PublicBlogSlideShow />} />
               {/* <Route path='/event-request' element={<EventRequestForm />} /> */}
               <Route path='/register/member/application' element={<MemberApplication />} />
 
@@ -221,7 +228,11 @@ const App = () => {
             <Route path="finalized/:id" element={<FinalizedDetails />} />
             <Route path="budget-requests" element={<AdminBudgetRequests />} />
             <Route path="merchandise" element={<MerchandiseAdmin />} />
+            <Route path="certificate-generator" element={<CertificateGenerator />} />
+            <Route path="sponsorship" element={<Sponsorship />} />
+
             <Route path="financial/anomalies" element={<AnomalyDetection />} />
+
           </Route>
        
 
@@ -238,9 +249,6 @@ const App = () => {
           {/* Financial Routes */}
 
 
-          <Route path='/bform' element={<BudgetForm/>} />
-          <Route path='/rform' element={<RefundForm/>} />
-          <Route path='/pform' element={<PaymentOptions />} />
           <Route path='/report' element={<FinancialReport />} />
 
           {/* Content Management Routes */}

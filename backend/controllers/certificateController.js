@@ -19,3 +19,13 @@ export const getAllCertificates = async (req, res) => {
     res.status(500).json({ message: 'Error retrieving certificates', error: err });
   }
 };
+
+export const deleteCertificate = async (req, res) => {
+  try {
+    const deleted = await Certificate.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ message: 'Certificate not found' });
+    res.json({ message: 'Certificate deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error deleting certificate', error: err });
+  }
+};

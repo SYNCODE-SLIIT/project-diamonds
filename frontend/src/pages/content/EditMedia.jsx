@@ -9,8 +9,6 @@ const EditMedia = () => {
     mediaTitle: "",
     description: "",
     category: "",
-    privacy: "Public",
-    tags: "",
   });
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -26,9 +24,6 @@ const EditMedia = () => {
           mediaTitle: data.mediaTitle,
           description: data.description,
           category: data.category,
-          privacy: data.privacy,
-          // Convert tags array into a comma separated string if necessary
-          tags: Array.isArray(data.tags) ? data.tags.join(", ") : data.tags,
         });
         setLoading(false);
       } catch (err) {
@@ -59,18 +54,14 @@ const EditMedia = () => {
       formData.append("mediaTitle", media.mediaTitle);
       formData.append("description", media.description);
       formData.append("category", media.category);
-      formData.append("privacy", media.privacy);
-      formData.append("tags", media.tags);
-      if (file) {
-        formData.append("file", file);
-      }
+      formData.append("file", file);
 
       await axiosInstance.put(`/api/media/update/${id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
-      navigate("/media"); // Redirect after successful update
+      navigate("/admin/media"); // Redirect after successful update
     } catch (err) {
       console.error("Failed to update media:", err);
       setError("Failed to update media. Please try again.");
@@ -113,36 +104,14 @@ const EditMedia = () => {
           className="w-full p-2 border rounded mt-1"
         />
 
-        <label className="block text-sm font-medium mt-3">Privacy:</label>
-        <select
-          name="privacy"
-          value={media.privacy}
-          onChange={handleChange}
-          className="w-full p-2 border rounded mt-1"
-        >
-          <option value="Public">Public</option>
-          <option value="Private">Private</option>
-        </select>
-
-        <label className="block text-sm font-medium mt-3">
-          Tags (comma separated):
-        </label>
-        <input
-          type="text"
-          name="tags"
-          value={media.tags}
-          onChange={handleChange}
-          className="w-full p-2 border rounded mt-1"
-        />
-
-        <label className="block text-sm font-medium mt-3">
-          Update Media File (optional):
-        </label>
+        <label className="block text-sm font-medium mt-3">Select Video File:</label>
         <input
           type="file"
           name="file"
+          accept="video/*"
           onChange={handleFileChange}
           className="w-full p-2 border rounded mt-1"
+          required
         />
 
         <button

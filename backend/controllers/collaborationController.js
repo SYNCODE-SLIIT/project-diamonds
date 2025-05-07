@@ -21,11 +21,8 @@ export const getCollaborators = async (req, res) => {
 
 export const updateCollaborator = async (req, res) => {
   try {
-    const updated = await Collaboration.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
+    const updated = await Collaboration.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updated) return res.status(404).json({ message: 'Collaborator not found' });
     res.json(updated);
   } catch (error) {
     res.status(400).json({ message: error.message });

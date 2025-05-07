@@ -5,8 +5,12 @@ export const createMedia = async (req, res) => {
   try {
     const { mediaTitle, description, category, privacy, tags, uploadedBy } = req.body;
     const file = req.file ? req.file.path : null;
+    // Determine media type from mimetype
+    const mediaType = req.file
+      ? (req.file.mimetype.startsWith('video/') ? 'video' : 'image')
+      : 'image';
     
-    if (!file) return res.status(400).json({ message: "Image file is required" });
+    if (!file) return res.status(400).json({ message: "Media file is required" });
     
     // Convert tags to an array (if provided as comma-separated string)
     const tagsArray = tags
@@ -20,6 +24,7 @@ export const createMedia = async (req, res) => {
       description, 
       category, 
       privacy, 
+      mediaType,
       tags: tagsArray, 
       file, 
       uploadedBy 
@@ -61,6 +66,10 @@ export const updateMedia = async (req, res) => {
   try {
     const { mediaTitle, description, category, privacy, tags } = req.body;
     const file = req.file ? req.file.path : undefined;
+    // Determine new mediaType if file uploaded
+    const mediaType = req.file
+      ? (req.file.mimetype.startsWith('video/') ? 'video' : 'image')
+      : undefined;
     
     // Convert tags to array if necessary
     const tagsArray = tags
@@ -70,6 +79,7 @@ export const updateMedia = async (req, res) => {
       : undefined;
     
     const updateFields = { mediaTitle, description, category, privacy };
+    if (mediaType) updateFields.mediaType = mediaType;
     if (tagsArray !== undefined) updateFields.tags = tagsArray;
     if (file) updateFields.file = file;
     
