@@ -2,7 +2,7 @@ import express from 'express';
 
 const router = express.Router();
 
-import { createApplication, updateApplicationStatus, getApplicationById, updateProfilePicture, upload, updateMemberProfile, checkMemberEmail, inviteApplication, getInvitedApplications, getFinalizedApplications, deleteApplication } from '../controllers/memberApplicationController.js';
+import { createApplication, updateApplicationStatus, getApplicationById, updateProfilePicture, deleteProfilePicture, upload, updateMemberProfile, checkMemberEmail, inviteApplication, getInvitedApplications, getFinalizedApplications, deleteApplication } from '../controllers/memberApplicationController.js';
 import { validateMemberApplication } from '../middleware/validateMemberApplication.js';
 import { getApprovedMembers } from '../controllers/memberApplicationController.js';
 
@@ -12,6 +12,8 @@ router.post('/register/member/application', validateMemberApplication, createApp
 
 // Route to update profile picture
 router.put('/profile-picture', upload.single('profilePicture'), updateProfilePicture);
+// Route to delete profile picture
+router.delete('/profile-picture', deleteProfilePicture);
 
 // Route to update member details (email, contact, availability)
 router.put('/update-profile', updateMemberProfile);
