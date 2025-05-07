@@ -102,7 +102,7 @@ import EditContentCreator from './pages/content/EditContentCreator';
 import CalendarEvents from './pages/CalendarEvents';
 
 import AdminDashboard from './components/team/AdminDashboard';
-import MyEvents  from './components/event/MyEvents';
+import EventDashboard from './components/event/EventDashboard';
 import EventAssign from './components/team/EventAssign';
 import EventAssignmentRequests from './components/team/EventAssignmentRequests';
 import PracticeAssign from './components/team/PracticeAssign';
@@ -114,6 +114,8 @@ import PracticeAssignments from './components/team/PracticeAssignments';
 import DirectChatRoom from './pages/shared/DirectChatRoom';
 
 import AdminEventRequestDetailsPage from './pages/admin/AdminEventRequestDetailsPage';
+
+import EventDetailPage from './pages/events/EventDetailPage';
 
 const App = () => {
   return (
@@ -161,9 +163,9 @@ const App = () => {
               <Route path="/event-requests" element={<OrganizerEventRequests />} />
               <Route path="/event-requests/:id" element={<EventRequestDetailsPage />} />
               <Route path="/event-requests/:id/edit" element={<EventRequestEditPage />} />
-              <Route path="/event-dashboard" element={<MyEvents />} />
-              {/* <Route path='/organizer/new-event' element={<OrganizerNewEvent />} />
-              <Route path='/organizer/manage-events' element={<OrganizerManageEvents />} /> */}
+              <Route path="/event-dashboard" element={<EventDashboard />} />
+              <Route path="/event-dashboard/:id" element={<EventDetailPage />} />
+              
 
             </Route>
 

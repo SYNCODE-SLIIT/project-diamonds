@@ -123,6 +123,71 @@ const EventRequestDashboard = () => {
     return true;
   });
 
+  const handleModalClose = () => {
+    setCurrentRequest(null);
+  };
+  
+  // Format date for display
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+  
+  // Format time from ISO to human-readable format
+  const formatTime = (timeString) => {
+    if (!timeString) return '';
+    
+    try {
+      // Convert 24-hour format to 12-hour format with AM/PM
+      const [hours, minutes] = timeString.split(':');
+      const hour = parseInt(hours, 10);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const hour12 = hour % 12 || 12;
+      return `${hour12}:${minutes} ${ampm}`;
+    } catch (error) {
+      return timeString;
+    }
+  };
+  
+  // Format date-time for display with new structure
+  const formatDateTime = (timeObj) => {
+    if (!timeObj) return 'Not specified';
+    
+    // Check if we have new date-time format
+    if (timeObj.startDate && timeObj.endDate) {
+      const startDate = new Date(timeObj.startDate);
+      const endDate = new Date(timeObj.endDate);
+      
+      const formatFullTime = (date) => {
+        return date.toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        });
+      };
+      
+      // Check if dates are different
+      const sameDay = startDate.toDateString() === endDate.toDateString();
+      
+      if (sameDay) {
+        return `${formatFullTime(startDate)} - ${formatFullTime(endDate)}`;
+      } else {
+        return `${formatDate(startDate)} ${formatFullTime(startDate)} - 
+                ${formatDate(endDate)} ${formatFullTime(endDate)}`;
+      }
+    }
+    
+    // Legacy format
+    if (timeObj.start && timeObj.end) {
+      return `${formatTime(timeObj.start)} - ${formatTime(timeObj.end)}`;
+    }
+    
+    return 'Time not specified';
+  };
+
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-6">Event Requests Management</h2>
@@ -226,7 +291,7 @@ const EventRequestDashboard = () => {
               <div className="space-y-3 mb-6">
                 <div className="flex items-center text-gray-600">
                   <CalendarIcon className="w-4 h-4 mr-2 text-blue-500" />
-                  <p><strong>Date:</strong> {new Date(req.eventDate).toLocaleDateString()}</p>
+                  <p><strong>Date:</strong> {formatDateTime(req.eventTime)}</p>
                 </div>
                 
                 <div className="flex items-center text-gray-600">

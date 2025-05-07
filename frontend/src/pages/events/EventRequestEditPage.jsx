@@ -33,6 +33,11 @@ const EventRequestEditPage = () => {
     eventLocation: '',
     guestCount: '',
     eventDate: '',
+    eventType: 'private',
+    eventTime: {
+      startDate: '',
+      endDate: ''
+    },
     remarks: '',
     selectedPackageID: '',
     selectedServices: [],
@@ -59,12 +64,43 @@ const EventRequestEditPage = () => {
         
         setOriginalRequest(currentRequest);
         
+        // Convert old format to new if needed
+        let startDate, endDate;
+        
+        if (currentRequest.eventTime.startDate) {
+          startDate = currentRequest.eventTime.startDate;
+          endDate = currentRequest.eventTime.endDate;
+        } else if (currentRequest.eventTime.start) {
+          // Convert old format (time only) to date-time
+          const eventDate = new Date(currentRequest.eventDate);
+          
+          // Start time
+          const [startHours, startMinutes] = currentRequest.eventTime.start.split(':').map(Number);
+          startDate = new Date(eventDate);
+          startDate.setHours(startHours, startMinutes, 0);
+          
+          // End time
+          const [endHours, endMinutes] = currentRequest.eventTime.end.split(':').map(Number);
+          endDate = new Date(eventDate);
+          endDate.setHours(endHours, endMinutes, 0);
+          
+          // If end time is before start time, it's likely the next day
+          if (endDate < startDate) {
+            endDate.setDate(endDate.getDate() + 1);
+          }
+        }
+        
         // Initialize form data
         setFormData({
           eventName: currentRequest.eventName,
           eventLocation: currentRequest.eventLocation,
           guestCount: currentRequest.guestCount,
           eventDate: currentRequest.eventDate?.slice(0, 10),
+          eventType: currentRequest.eventType || 'private',
+          eventTime: {
+            startDate: startDate ? new Date(startDate).toISOString().slice(0, 16) : '',
+            endDate: endDate ? new Date(endDate).toISOString().slice(0, 16) : ''
+          },
           remarks: currentRequest.remarks || '',
           selectedPackageID: currentRequest.packageID?._id || '',
           selectedServices: currentRequest.additionalServices?.map(s => s.serviceID._id) || [],
@@ -88,6 +124,96 @@ const EventRequestEditPage = () => {
     fetchData();
   }, [id, user]);
 
+  // Handle form field changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    
+    if (name === 'eventDate') {
+      // When event date changes, update both the eventDate and the date portion of startDate
+      setFormData(prev => {
+        // Get the current time portion from startDate
+        let updatedStartDate = prev.eventTime.startDate;
+        
+        if (value) {
+          const currentStartDateTime = new Date(prev.eventTime.startDate);
+          // Create a new date with the selected date but keep the current time
+          const newStartDate = new Date(value);
+          newStartDate.setHours(
+            currentStartDateTime.getHours(),
+            currentStartDateTime.getMinutes(),
+            0, 0
+          );
+          updatedStartDate = newStartDate.toISOString().slice(0, 16);
+        }
+        
+        return {
+          ...prev,
+          [name]: value,
+          eventTime: {
+            ...prev.eventTime,
+            startDate: updatedStartDate
+          }
+        };
+      });
+    } else if (name === 'eventTime.startDate') {
+      const [field, subfield] = name.split('.');
+      
+      // When changing start time, ensure the date portion matches the event date
+      if (formData.eventDate) {
+        const selectedDateTime = new Date(value);
+        const eventDate = new Date(formData.eventDate);
+        
+        // If the date portion of startDate doesn't match eventDate, adjust it
+        if (selectedDateTime.getDate() !== eventDate.getDate() ||
+            selectedDateTime.getMonth() !== eventDate.getMonth() ||
+            selectedDateTime.getFullYear() !== eventDate.getFullYear()) {
+          
+          // Create a new date with the event date but keep the selected time
+          eventDate.setHours(
+            selectedDateTime.getHours(),
+            selectedDateTime.getMinutes(),
+            0, 0
+          );
+          
+          const updatedStartDate = eventDate.toISOString().slice(0, 16);
+          
+          setFormData(prev => ({
+            ...prev,
+            [field]: {
+              ...prev[field],
+              [subfield]: updatedStartDate
+            }
+          }));
+          
+          return;
+        }
+      }
+      
+      // Normal processing for start time when event date matches
+      setFormData(prev => ({
+        ...prev,
+        [field]: {
+          ...prev[field],
+          [subfield]: value
+        }
+      }));
+    } else if (name === 'eventTime.endDate') {
+      const [field, subfield] = name.split('.');
+      setFormData(prev => ({
+        ...prev,
+        [field]: {
+          ...prev[field],
+          [subfield]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
+
   // Validation functions
   const validateStep1 = () => {
     const newErrors = {};
@@ -100,25 +226,90 @@ const EventRequestEditPage = () => {
       newErrors.eventLocation = 'Event location is required';
     }
 
-    if (!formData.guestCount || isNaN(Number(formData.guestCount)) || Number(formData.guestCount) <= 0) {
-      newErrors.guestCount = 'Valid guest count is required';
+    if (!formData.guestCount || formData.guestCount < 1) {
+      newErrors.guestCount = 'Guest count must be at least 1';
     }
 
     if (!formData.eventDate) {
       newErrors.eventDate = 'Event date is required';
     } else {
+      // Validate event date is not in the past and at least 5 days from today
       const selectedDate = new Date(formData.eventDate);
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      if (selectedDate <= today) {
-        newErrors.eventDate = 'Event date must be in the future';
-      } else {
-        const fiveDaysFromNow = new Date();
-        fiveDaysFromNow.setDate(today.getDate() + 5);
-
-        if (selectedDate < fiveDaysFromNow) {
-          newErrors.eventDate = 'Must have at least 5 days prior notice';
+      const minDate = new Date();
+      minDate.setDate(today.getDate() + 5);
+      
+      if (selectedDate < minDate) {
+        newErrors.eventDate = 'Please book at least 5 days in advance';
+      }
+    }
+    
+    if (!formData.eventTime.startDate) {
+      newErrors['eventTime.startDate'] = 'Start date and time is required';
+    } else {
+      // Validate start date/time is not in the past
+      const startDate = new Date(formData.eventTime.startDate);
+      const today = new Date();
+      const minDate = new Date();
+      minDate.setDate(today.getDate() + 5);
+      
+      if (startDate < minDate) {
+        newErrors['eventTime.startDate'] = 'Please book event start at least 5 days in advance';
+      }
+    }
+    
+    if (!formData.eventTime.endDate) {
+      newErrors['eventTime.endDate'] = 'End date and time is required';
+    }
+    
+    // Validate that start date matches event date
+    if (formData.eventDate && formData.eventTime.startDate) {
+      const eventDate = new Date(formData.eventDate);
+      const startDate = new Date(formData.eventTime.startDate);
+      
+      // Check if the date parts match
+      if (eventDate.getDate() !== startDate.getDate() || 
+          eventDate.getMonth() !== startDate.getMonth() || 
+          eventDate.getFullYear() !== startDate.getFullYear()) {
+        newErrors['eventTime.startDate'] = 'Start date must match the event date';
+      }
+    }
+    
+    // Validate that end time is after start time
+    if (formData.eventTime.startDate && formData.eventTime.endDate) {
+      const startDate = new Date(formData.eventTime.startDate);
+      const endDate = new Date(formData.eventTime.endDate);
+      
+      if (endDate <= startDate) {
+        newErrors['eventTime.endDate'] = 'End date/time must be after start date/time';
+      }
+      
+      // Check minimum duration (10 minutes)
+      const diffMs = endDate - startDate;
+      const diffMinutes = diffMs / (1000 * 60);
+      
+      if (diffMinutes < 10) {
+        newErrors['eventTime.endDate'] = 'Event must last at least 10 minutes';
+      }
+      
+      // Verify that end date is not before event date
+      if (formData.eventDate) {
+        const eventDate = new Date(formData.eventDate);
+        // Reset time to beginning of day for comparison
+        eventDate.setHours(0, 0, 0, 0);
+        
+        const endDateTime = new Date(formData.eventTime.endDate);
+        const endDateDay = endDateTime.getDate();
+        const endDateMonth = endDateTime.getMonth();
+        const endDateYear = endDateTime.getFullYear();
+        
+        const eventDateDay = eventDate.getDate();
+        const eventDateMonth = eventDate.getMonth();
+        const eventDateYear = eventDate.getFullYear();
+        
+        // If end date is before event date
+        if (new Date(endDateYear, endDateMonth, endDateDay) < new Date(eventDateYear, eventDateMonth, eventDateDay)) {
+          newErrors['eventTime.endDate'] = 'End date cannot be before the event date';
         }
       }
     }
@@ -161,50 +352,52 @@ const EventRequestEditPage = () => {
     setStep(prev => Math.max(1, prev - 1));
   };
 
-  // Form input handlers
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Clear the error for this field as the user types
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }));
-    }
+  // Toggle service selection
+  const toggleService = (serviceId) => {
+    setFormData(prev => {
+      const services = [...prev.selectedServices];
+      
+      if (services.includes(serviceId)) {
+        return {
+          ...prev,
+          selectedServices: services.filter(id => id !== serviceId)
+        };
+      } else {
+        return {
+          ...prev,
+          selectedServices: [...services, serviceId]
+        };
+      }
+    });
   };
 
-  const toggleService = (id) => {
-    setFormData(prev => ({
-      ...prev,
-      selectedServices: prev.selectedServices.includes(id)
-        ? prev.selectedServices.filter(s => s !== id)
-        : [...prev.selectedServices, id]
-    }));
-  };
-
-  // Form submission
+  // Handle form submission
   const handleSubmit = async () => {
-    setSubmitting(true);
     try {
+      setSubmitting(true);
+      
+      // Create payload
       const payload = {
-        organizerID: user._id,
-        packageID: formData.selectedPackageID,
-        additionalServices: formData.selectedServices.map(s => ({ serviceID: s })),
         eventName: formData.eventName,
         eventLocation: formData.eventLocation,
+        eventType: formData.eventType,
+        eventTime: formData.eventTime,
         guestCount: Number(formData.guestCount),
         eventDate: formData.eventDate,
-        remarks: formData.remarks,
-        status: originalRequest.status,  // Preserve the original status
-        reviewedBy: originalRequest.reviewedBy,  // Preserve any review information
-        approvalDate: originalRequest.approvalDate,
+        packageID: formData.selectedPackageID,
+        additionalServices: formData.selectedServices.map(id => ({ serviceID: id })),
+        remarks: formData.remarks
       };
-
+      
+      // Call API
       await updateRequest(id, payload);
       
-      // Redirect to details page
+      // Redirect on success
       navigate(`/event-requests/${id}`);
-    } catch (error) {
-      setError(error.message || 'Failed to update event request');
+    } catch (err) {
+      console.error('Error updating request:', err);
+      setError('Failed to update request. Please try again.');
+    } finally {
       setSubmitting(false);
     }
   };
@@ -402,6 +595,68 @@ const EventRequestEditPage = () => {
                   {errors.eventDate && (
                     <p className="text-red-500 text-sm mt-1">{errors.eventDate}</p>
                   )}
+                </div>
+
+                <div className="col-span-2">
+                  <label className="block text-gray-700 font-medium mb-2">Event Type</label>
+                  <div className="flex space-x-4">
+                    <label className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        name="eventType"
+                        value="private"
+                        checked={formData.eventType === 'private'}
+                        onChange={handleChange}
+                        className="form-radio h-4 w-4 text-blue-600"
+                      />
+                      <span className="ml-2">Private</span>
+                    </label>
+                    <label className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        name="eventType"
+                        value="public"
+                        checked={formData.eventType === 'public'}
+                        onChange={handleChange}
+                        className="form-radio h-4 w-4 text-blue-600"
+                      />
+                      <span className="ml-2">Public</span>
+                    </label>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {formData.eventType === 'public' 
+                      ? 'Public events can be displayed on the website and offer ticket sales.' 
+                      : 'Private events are hidden from public listings.'}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-gray-700 font-medium mb-2">Start Date & Time</label>
+                  <input 
+                    type="datetime-local" 
+                    name="eventTime.startDate" 
+                    value={formData.eventTime.startDate} 
+                    min={formData.eventDate ? `${formData.eventDate}T00:00` : undefined}
+                    max={formData.eventDate ? `${formData.eventDate}T23:59` : undefined}
+                    onChange={handleChange} 
+                    className={`w-full border p-3 rounded-lg ${errors['eventTime.startDate'] ? 'border-red-500' : 'border-gray-300'}`}
+                  />
+                  {errors['eventTime.startDate'] && <p className="text-red-500 text-sm mt-1">{errors['eventTime.startDate']}</p>}
+                  <p className="text-xs text-gray-500 mt-1">Start time will use the event date selected above</p>
+                </div>
+
+                <div>
+                  <label className="block text-gray-700 font-medium mb-2">End Date & Time</label>
+                  <input 
+                    type="datetime-local" 
+                    name="eventTime.endDate" 
+                    value={formData.eventTime.endDate} 
+                    min={formData.eventTime.startDate || (formData.eventDate ? `${formData.eventDate}T00:00` : undefined)}
+                    onChange={handleChange} 
+                    className={`w-full border p-3 rounded-lg ${errors['eventTime.endDate'] ? 'border-red-500' : 'border-gray-300'}`}
+                  />
+                  {errors['eventTime.endDate'] && <p className="text-red-500 text-sm mt-1">{errors['eventTime.endDate']}</p>}
+                  <p className="text-xs text-gray-500 mt-1">For overnight events, select different dates</p>
                 </div>
 
                 <div className="col-span-2">

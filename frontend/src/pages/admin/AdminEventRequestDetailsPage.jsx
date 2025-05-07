@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchAllRequests, updateStatus } from '../../services/eventRequestService';
+import { findOrganizerByUserId, getOrganizerById } from '../../services/organizerService';
 import { UserContext } from '../../context/userContext';
 import { 
   Calendar, 
@@ -21,7 +22,11 @@ import {
   XSquare,
   Building,
   User,
-  CalendarCheck
+  CalendarCheck,
+  Phone,
+  Mail,
+  Globe,
+  Briefcase
 } from 'lucide-react';
 import PackageDetailsModal from '../../components/event/PackageDetailsModal';
 import ServiceDetailsModal from '../../components/event/ServiceDetailsModal';
@@ -31,8 +36,11 @@ const AdminEventRequestDetailsPage = () => {
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
   const [request, setRequest] = useState(null);
+  const [organizer, setOrganizer] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [organizerLoading, setOrganizerLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [organizerError, setOrganizerError] = useState(null);
   const [viewingPackage, setViewingPackage] = useState(null);
   const [viewingService, setViewingService] = useState(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -55,10 +63,35 @@ const AdminEventRequestDetailsPage = () => {
         
         setRequest(currentRequest);
         setLoading(false);
+        
+        // After we have the request, fetch the organizer details
+        fetchOrganizerDetails(currentRequest.organizerID);
       } catch (err) {
         console.error('Error fetching request details:', err);
         setError('Failed to load request details');
         setLoading(false);
+      }
+    };
+    
+    const fetchOrganizerDetails = async (organizerId) => {
+      setOrganizerLoading(true);
+      try {
+        let organizerData;
+        try {
+          // First attempt: treat organizerId as User._id
+          organizerData = await findOrganizerByUserId(organizerId);
+        } catch (userErr) {
+          console.warn('findOrganizerByUserId failed, falling back to getOrganizerById:', userErr);
+          // Fallback: treat organizerId as Organizer._id
+          organizerData = await getOrganizerById(organizerId);
+        }
+        setOrganizer(organizerData);
+        setOrganizerError(null);
+      } catch (err) {
+        console.error('Error fetching organizer details:', err);
+        setOrganizerError('Failed to load organizer details');
+      } finally {
+        setOrganizerLoading(false);
       }
     };
     
@@ -242,33 +275,107 @@ const AdminEventRequestDetailsPage = () => {
             {/* Organizer Information */}
             <div className="mt-8 border-t border-gray-100 pt-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Organizer Information</h3>
-              <div className="bg-gray-50 p-6 rounded-lg grid md:grid-cols-2 gap-4">
-                <div className="flex items-center">
-                  <User className="w-5 h-5 text-blue-600 mr-3" />
-                  <div>
-                    <p className="text-sm text-gray-500">Organizer ID</p>
-                    <p className="font-medium text-gray-800">{request.organizerID}</p>
+              {organizerLoading ? (
+                <div className="bg-gray-50 p-6 rounded-lg flex justify-center items-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                  <span className="ml-2 text-gray-600">Loading organizer details...</span>
+                </div>
+              ) : organizerError ? (
+                <div className="bg-red-50 p-6 rounded-lg text-red-600">
+                  <p className="flex items-center">
+                    <AlertTriangle className="w-5 h-5 mr-2" />
+                    {organizerError}
+                  </p>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500">Organizer ID: {request.organizerID}</p>
                   </div>
                 </div>
-                <div className="flex items-center">
-                  <User className="w-5 h-5 text-blue-600 mr-3" />
-                  <div>
-                    <p className="text-sm text-gray-500">Organizer Name</p>
-                    <p className="font-medium text-gray-800">
-                      {request.organizerName || "John Doe"}
-                    </p>
+              ) : organizer ? (
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="flex items-start">
+                      <User className="w-5 h-5 text-blue-600 mr-3 mt-1" />
+                      <div>
+                        <p className="text-sm text-gray-500">Full Name</p>
+                        <p className="font-medium text-gray-800">{organizer.fullName}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <Building className="w-5 h-5 text-blue-600 mr-3 mt-1" />
+                      <div>
+                        <p className="text-sm text-gray-500">Organization</p>
+                        <p className="font-medium text-gray-800">
+                          {organizer.organizationName || "Not specified"}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <Mail className="w-5 h-5 text-blue-600 mr-3 mt-1" />
+                      <div>
+                        <p className="text-sm text-gray-500">Email</p>
+                        <p className="font-medium text-gray-800">{organizer.email}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <Phone className="w-5 h-5 text-blue-600 mr-3 mt-1" />
+                      <div>
+                        <p className="text-sm text-gray-500">Contact Number</p>
+                        <p className="font-medium text-gray-800">
+                          {organizer.contactNumber || "Not provided"}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <MapPin className="w-5 h-5 text-blue-600 mr-3 mt-1" />
+                      <div>
+                        <p className="text-sm text-gray-500">Business Address</p>
+                        <p className="font-medium text-gray-800">
+                          {organizer.businessAddress || "Not provided"}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <Globe className="w-5 h-5 text-blue-600 mr-3 mt-1" />
+                      <div>
+                        <p className="text-sm text-gray-500">Website</p>
+                        {organizer.website ? (
+                          <a 
+                            href={organizer.website.startsWith('http') ? organizer.website : `https://${organizer.website}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="font-medium text-blue-600 hover:underline"
+                          >
+                            {organizer.website}
+                          </a>
+                        ) : (
+                          <p className="font-medium text-gray-800">Not provided</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
+                  
+                  {organizer.organizationDescription && (
+                    <div className="mt-6 pt-4 border-t border-gray-200">
+                      <div className="flex items-start">
+                        <Briefcase className="w-5 h-5 text-blue-600 mr-3 mt-1" />
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">Organization Description</p>
+                          <p className="text-gray-800">{organizer.organizationDescription}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center md:col-span-2">
-                  <Building className="w-5 h-5 text-blue-600 mr-3" />
-                  <div>
-                    <p className="text-sm text-gray-500">Company</p>
-                    <p className="font-medium text-gray-800">
-                      {request.company || "ABC Events Company"}
-                    </p>
-                  </div>
+              ) : (
+                <div className="bg-gray-50 p-6 rounded-lg text-gray-500">
+                  <p>No organizer details available. ID: {request.organizerID}</p>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Package Information */}

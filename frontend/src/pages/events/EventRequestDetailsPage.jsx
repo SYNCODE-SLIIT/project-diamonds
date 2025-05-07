@@ -19,7 +19,9 @@ import {
   UserCheck, 
   MessageSquare,
   Sparkles,
-  CalendarCheck
+  CalendarCheck,
+  Globe,
+  Lock
 } from 'lucide-react';
 import PackageDetailsModal from '../../components/event/PackageDetailsModal';
 import ServiceDetailsModal from '../../components/event/ServiceDetailsModal';
@@ -113,6 +115,65 @@ const EventRequestDetailsPage = () => {
       </div>
     </div>
   );
+
+  // Format time from ISO to human-readable format
+  const formatTime = (timeString) => {
+    if (!timeString) return '';
+    
+    try {
+      // Convert 24-hour format to 12-hour format with AM/PM
+      const [hours, minutes] = timeString.split(':');
+      const hour = parseInt(hours, 10);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const hour12 = hour % 12 || 12;
+      return `${hour12}:${minutes} ${ampm}`;
+    } catch (error) {
+      return timeString;
+    }
+  };
+  
+  // Format full date-time for display
+  const formatDateTime = (dateTimeObj) => {
+    if (!dateTimeObj) return 'Not specified';
+    
+    // Check if we have new date-time format with startDate and endDate
+    if (dateTimeObj.startDate && dateTimeObj.endDate) {
+      const startDate = new Date(dateTimeObj.startDate);
+      const endDate = new Date(dateTimeObj.endDate);
+      
+      // Format date-time with month, day, hour, and minute
+      const formatFullDateTime = (date) => {
+        const options = { 
+          month: 'short', 
+          day: 'numeric',
+          hour: 'numeric', 
+          minute: '2-digit',
+          hour12: true 
+        };
+        return date.toLocaleString('en-US', options);
+      };
+      
+      // Check if dates are the same
+      const sameDay = startDate.toDateString() === endDate.toDateString();
+      
+      if (sameDay) {
+        return `${formatFullDateTime(startDate)} - ${endDate.toLocaleTimeString('en-US', { 
+          hour: 'numeric', 
+          minute: '2-digit', 
+          hour12: true 
+        })}`;
+      } else {
+        return `${formatFullDateTime(startDate)} - ${formatFullDateTime(endDate)}`;
+      }
+    }
+    
+    // Legacy format
+    if (dateTimeObj.start && dateTimeObj.end) {
+      return `${formatTime(dateTimeObj.start)} - ${formatTime(dateTimeObj.end)}`;
+    }
+    
+    return 'Not specified';
+  };
 
   if (loading) {
     return (
@@ -232,6 +293,37 @@ const EventRequestDetailsPage = () => {
                 <div>
                   <h3 className="font-medium text-gray-700">Guest Count</h3>
                   <p className="text-gray-900">{request.guestCount}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start">
+                <div className="bg-indigo-50 rounded-full p-3 mr-4">
+                  <Clock className="w-6 h-6 text-indigo-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-700">Event Time</h3>
+                  <p className="text-gray-900">
+                    {request.eventTime?.start && request.eventTime?.end 
+                      ? `${formatDateTime(request.eventTime)}`
+                      : 'Not specified'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start">
+                <div className={`${request.eventType === 'public' ? 'bg-amber-50' : 'bg-purple-50'} rounded-full p-3 mr-4`}>
+                  {request.eventType === 'public' 
+                    ? <Globe className="w-6 h-6 text-amber-600" /> 
+                    : <Lock className="w-6 h-6 text-purple-600" />}
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-700">Event Type</h3>
+                  <p className="text-gray-900 capitalize">{request.eventType || 'Private'}</p>
+                  <p className="text-xs text-gray-500">
+                    {request.eventType === 'public' 
+                      ? 'Public events can be displayed on the website and offer ticket sales.' 
+                      : 'Private events are hidden from public listings.'}
+                  </p>
                 </div>
               </div>
 
