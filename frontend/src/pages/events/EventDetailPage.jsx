@@ -220,6 +220,9 @@ const EventDetailPage = () => {
     );
   };
 
+  // Check if we're in the admin path to determine where to navigate back to
+  const isAdminPath = window.location.pathname.includes('/admin/');
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -239,7 +242,7 @@ const EventDetailPage = () => {
           <h2 className="text-xl font-bold mb-2">Error</h2>
           <p>{error}</p>
           <button 
-            onClick={() => navigate('/event-dashboard')}
+            onClick={() => navigate(isAdminPath ? '/admin/events' : '/event-dashboard')}
             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
             Back to Events
@@ -257,7 +260,7 @@ const EventDetailPage = () => {
           <h2 className="text-xl font-bold mb-2">Event Not Found</h2>
           <p>The event you're looking for could not be found.</p>
           <button 
-            onClick={() => navigate('/event-dashboard')}
+            onClick={() => navigate(isAdminPath ? '/admin/events' : '/event-dashboard')}
             className="mt-4 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
           >
             Back to Events
@@ -292,7 +295,7 @@ const EventDetailPage = () => {
       {/* Back Button */}
       <div className="container mx-auto px-4 mb-6">
         <button 
-          onClick={() => navigate('/event-dashboard')}
+          onClick={() => navigate(isAdminPath ? '/admin/events' : '/event-dashboard')}
           className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
