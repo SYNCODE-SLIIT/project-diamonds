@@ -1,4 +1,3 @@
-
 // src/components/event/CustomPackageModal.jsx
 
 import React, { useState } from 'react';
@@ -146,13 +145,13 @@ const CustomPackageModal = ({ onClose, onSuccess, createdBy }) => {
     <AnimatePresence>
       <Dialog open={true} onClose={onClose} className="relative z-50">
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" aria-hidden="true" />
-        <div className="fixed inset-0 flex items-center justify-center p-4">
+        <div className="fixed inset-0 flex items-center justify-center p-4 overflow-y-auto">
           <Dialog.Panel
             as={motion.div}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="relative bg-white p-6 rounded-lg max-w-2xl w-full"
+            className="relative bg-white p-6 rounded-lg w-full mx-auto my-8 max-w-xl sm:max-w-2xl lg:max-w-3xl"
           >
             <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
               <XIcon className="w-5 h-5" />
@@ -160,7 +159,7 @@ const CustomPackageModal = ({ onClose, onSuccess, createdBy }) => {
 
             <Dialog.Title className="text-xl font-semibold mb-4">Create Custom Package</Dialog.Title>
 
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 pb-2">
               <input type="text" name="packageName" placeholder="Package Name"
                 value={formData.packageName} onChange={handleChange}
                 className="w-full border p-2 rounded"

@@ -81,6 +81,8 @@ import EventBookingPage from './pages/EventBookingPage';
 import EventRequestForm from './components/event/EventRequestForm';
 
 import OrganizerEventRequests from './components/event/OrganizerEventRequests';
+import EventRequestDetailsPage from './pages/events/EventRequestDetailsPage';
+import EventRequestEditPage from './pages/events/EventRequestEditPage';
 
 import MemberDashboardLayout from './components/layout/MemberDashboardLayout';
 
@@ -105,7 +107,8 @@ import EditContentCreator from './pages/content/EditContentCreator';
 import CalendarEvents from './pages/CalendarEvents';
 
 import AdminDashboard from './components/team/AdminDashboard';
-import MyEvents  from './components/event/MyEvents';
+
+import EventDashboard from './components/event/EventDashboard';
 
 import EventAssign from './components/team/EventAssign';
 import EventAssignmentRequests from './components/team/EventAssignmentRequests';
@@ -119,6 +122,7 @@ import DirectChatRoom from './pages/shared/DirectChatRoom';
 
 
 
+
 import MerchandiseAdmin from './pages/admin/MerchandiseAdmin';
 import Collabaration from './pages/content/Collaboration';
 import CertificateGenerator from './pages/content/CertificateGenerator';
@@ -126,6 +130,11 @@ import Sponsorship from './pages/content/Sponsorship';
 import PublicBlogSlideShow from './pages/content/PublicBlogSlideShow';
 import PublicBlogDetail from './pages/content/PublicBlogDetail';
 import WhyJoinUs from './pages/WhyJoinUs';
+
+import AdminEventRequestDetailsPage from './pages/admin/AdminEventRequestDetailsPage';
+
+import EventDetailPage from './pages/events/EventDetailPage';
+
 
 const App = () => {
   return (
@@ -175,9 +184,11 @@ const App = () => {
 
               <Route path='/events' element={<EventBookingPage />} />
               <Route path="/event-requests" element={<OrganizerEventRequests />} />
-              <Route path="/event-dashboard" element={<MyEvents />} />
-              {/* <Route path='/organizer/new-event' element={<OrganizerNewEvent />} />
-              <Route path='/organizer/manage-events' element={<OrganizerManageEvents />} /> */}
+              <Route path="/event-requests/:id" element={<EventRequestDetailsPage />} />
+              <Route path="/event-requests/:id/edit" element={<EventRequestEditPage />} />
+              <Route path="/event-dashboard" element={<EventDashboard />} />
+              <Route path="/event-dashboard/:id" element={<EventDetailPage />} />
+              
 
             </Route>
 
@@ -226,6 +237,7 @@ const App = () => {
             <Route path="packages" element={<PackageList />} />
             <Route path="events" element={<EventsDashboard />} />
             <Route path="event-requests" element={<EventRequestDashboard />} />
+            <Route path="event-requests/:id" element={<AdminEventRequestDetailsPage />} />
             <Route path="financial" element={<FinancialDashboard />} />
             <Route path="applications/combined" element={<AdminApplicationsCombinedList />} />
             <Route path="finalized/:id" element={<FinalizedDetails />} />
