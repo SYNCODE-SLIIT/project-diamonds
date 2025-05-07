@@ -41,6 +41,7 @@ const EventSchema = new mongoose.Schema({
 
   notes: [{
     author: { type: String },
+    authorId: { type: String },
     content: { type: String  },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date }
