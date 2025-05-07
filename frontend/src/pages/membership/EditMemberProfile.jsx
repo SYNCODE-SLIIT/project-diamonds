@@ -159,7 +159,7 @@ const EditMemberProfile = () => {
               />
             ) : (
               <div className="profile-image-placeholder">
-                <box-icon name="user" size="lg" color="#4a7bfc"></box-icon>
+                <box-icon name="user" size="lg" color="#25105A"></box-icon>
               </div>
             )}
           </div>
@@ -198,7 +198,7 @@ const EditMemberProfile = () => {
           <h3>Contact Information</h3>
           <div className="form-group">
             <label htmlFor="email">
-              <box-icon name="envelope" color="#4a7bfc" size="sm"></box-icon>
+              <box-icon name="envelope" color="#25105A" size="sm"></box-icon>
               Email Address
             </label>
             <input
@@ -213,7 +213,7 @@ const EditMemberProfile = () => {
 
           <div className="form-group">
             <label htmlFor="contactNumber">
-              <box-icon name="phone" color="#4a7bfc" size="sm"></box-icon>
+              <box-icon name="phone" color="#25105A" size="sm"></box-icon>
               Contact Number
             </label>
             <input
@@ -230,7 +230,7 @@ const EditMemberProfile = () => {
           <h3>Dance Profile</h3>
           <div className="form-group">
             <label htmlFor="danceStyle">
-              <box-icon name="music" color="#4a7bfc" size="sm"></box-icon>
+              <box-icon name="music" color="#25105A" size="sm"></box-icon>
               Dance Style
             </label>
             <input
@@ -244,7 +244,7 @@ const EditMemberProfile = () => {
 
           <div className="form-group">
             <label htmlFor="achievements">
-              <box-icon name="trophy" color="#4a7bfc" size="sm"></box-icon>
+              <box-icon name="trophy" color="#25105A" size="sm"></box-icon>
               Achievements (comma separated)
             </label>
             <input
@@ -265,7 +265,7 @@ const EditMemberProfile = () => {
                 {editedAvailabilities.map((item, index) => (
                   <li key={index} className="availability-item">
                     <span>
-                      <box-icon name="time" color="#4a7bfc" size="sm"></box-icon>
+                      <box-icon name="time" color="#25105A" size="sm"></box-icon>
                       {item.day}: {item.start} - {item.end}
                     </span>
                     <button 

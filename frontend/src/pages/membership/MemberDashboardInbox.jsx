@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { UserContext } from '../../context/userContext';
-import { MessageSquare, ChevronRight } from 'lucide-react';
+import { MessageSquare, ChevronRight, Users, Clock, Search, AlertCircle, Bell } from 'lucide-react';
 
 const MemberDashboardInbox = () => {
   const { user } = useContext(UserContext);
@@ -11,6 +11,8 @@ const MemberDashboardInbox = () => {
   const [managerThread, setManagerThread] = useState(null);
   const [managerUnread, setManagerUnread] = useState(0);
   const [loadingManager, setLoadingManager] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const intervalRef = useRef(null);
   const lastCountsRef = useRef([]);
   const lastManagerUnreadRef = useRef(0);
@@ -113,6 +115,17 @@ const MemberDashboardInbox = () => {
     }
   };
 
+  // Filter groups based on search query and unread filter
+  const filteredGroups = groups.filter(group => {
+    const matchesSearch = searchQuery === '' || 
+      group.groupName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (group.lastMessage && group.lastMessage.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    const matchesUnreadFilter = !showUnreadOnly || group.unreadCount > 0;
+    
+    return matchesSearch && matchesUnreadFilter;
+  });
+
   useEffect(() => {
     fetchGroupsInit();
     if (!startedRef.current && user?._id) {
@@ -134,120 +147,217 @@ const MemberDashboardInbox = () => {
     return () => clearInterval(intervalRef.current);
   }, [user, managerThread]);
 
+  // Get total unread count
+  const totalUnreadCount = groups.reduce((total, group) => total + (group.unreadCount || 0), 0) + managerUnread;
+
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white shadow-xl rounded-2xl">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-extrabold text-gray-800">Inbox</h1>
-        <div className="text-gray-500 text-sm">
-          {groups.length} chat groups
+    <div className="min-h-screen">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-[#1E0B32] to-[#25105A] text-white rounded-xl shadow-xl mb-6">
+        <div className="container mx-auto px-6 py-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold flex items-center">
+                <MessageSquare className="mr-3 h-8 w-8" /> 
+                Inbox
+                {totalUnreadCount > 0 && (
+                  <span className="ml-3 bg-pink-500 text-white text-sm font-medium px-2.5 py-0.5 rounded-full">
+                    {totalUnreadCount}
+                  </span>
+                )}
+              </h1>
+              <p className="text-purple-200 mt-1">Stay connected with your team and management</p>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-purple-300" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search messages..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-3 py-2 bg-[#2A1A44]/50 border border-purple-400/30 rounded-lg text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                />
+              </div>
+              
+              <button 
+                onClick={() => setShowUnreadOnly(!showUnreadOnly)}
+                className={`p-2 rounded-lg transition-colors ${showUnreadOnly ? 'bg-pink-500 text-white' : 'bg-[#2A1A44]/50 text-purple-300 border border-purple-400/30'}`}
+                title={showUnreadOnly ? "Show all conversations" : "Show unread only"}
+              >
+                <Bell size={16} />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Manager Chat Section */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-700 mb-3">Management</h2>
-        {loadingManager ? (
-          <div className="flex justify-center items-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
-          </div>
-        ) : managerThread ? (
-          <Link 
-            to={`/member-dashboard/direct-chat/${managerThread._id}`} 
-            className="block"
-          >
-            <div className="bg-green-50 border border-green-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out transform hover:-translate-y-1 p-4 flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="bg-green-100 text-green-600 p-3 rounded-full">
-                  <MessageSquare size={24} />
+      <div className="container mx-auto px-4 pb-12">
+        {/* Manager Chat Section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <Users className="mr-2 h-5 w-5 text-[#25105A]" /> 
+            Team Management
+          </h2>
+          
+          {loadingManager ? (
+            <div className="bg-white rounded-xl border border-purple-100 shadow-sm p-6 flex justify-center items-center">
+              <div className="animate-pulse flex space-x-3">
+                <div className="rounded-full bg-purple-100 h-10 w-10"></div>
+                <div className="flex-1 space-y-2 py-1">
+                  <div className="h-4 bg-purple-100 rounded w-3/4"></div>
+                  <div className="h-3 bg-purple-100 rounded w-5/6"></div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    Chat with Manager
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    Direct message with administration
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                {managerUnread > 0 && (
-                  <span className="bg-green-500 text-white text-xs font-bold px-2.5 py-0.5 rounded-full">
-                    {managerUnread}
-                  </span>
-                )}
-                <ChevronRight className="h-5 w-5 text-gray-400" />
               </div>
             </div>
-          </Link>
-        ) : (
-          <div className="text-center py-4 bg-gray-50 rounded-lg border border-gray-200">
-            <p className="text-gray-500">No manager available for direct messaging.</p>
-          </div>
-        )}
-      </div>
-
-      {/* Group Chats Section */}
-      <div>
-        <h2 className="text-lg font-semibold text-gray-700 mb-3">Group Chats</h2>
-        {loading && (
-          <div className="flex justify-center items-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          </div>
-        )}
-
-        {errorMsg && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-            {errorMsg}
-          </div>
-        )}
-
-        {groups.length === 0 && !loading ? (
-          <div className="text-center py-8 text-gray-500">
-            <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-            </svg>
-            <p className="text-xl">No chat groups found</p>
-            <p className="text-sm">Start a new conversation or join a group</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {groups.map((group) => (
-              <Link 
-                key={group._id} 
-                to={`/member-dashboard/messaging/chat/${group._id}`} 
-                className="block"
-              >
-                <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out transform hover:-translate-y-1 p-4 flex items-center justify-between">
+          ) : managerThread ? (
+            <Link 
+              to={`/member-dashboard/direct-chat/${managerThread._id}`} 
+              className="block"
+            >
+              <div className="bg-white border border-purple-100 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out transform hover:-translate-y-1 overflow-hidden">
+                <div className="border-l-4 border-[#25105A] p-6 flex items-center justify-between">
                   <div className="flex items-center space-x-4">
-                    <div className="bg-blue-100 text-blue-600 p-3 rounded-full">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                      </svg>
+                    <div className="bg-gradient-to-br from-[#1E0B32] to-[#25105A] text-white p-3 rounded-full">
+                      <MessageSquare size={24} />
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-gray-800">
-                        {group.groupName}
+                        Team Manager
                       </h3>
                       <p className="text-sm text-gray-500">
-                        {group.lastMessage || 'No recent messages'}
+                        Direct communication with administration
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    {group.unreadCount > 0 && (
-                      <span className="bg-blue-500 text-white text-xs font-bold px-2.5 py-0.5 rounded-full">
-                        {group.unreadCount}
+                  <div className="flex items-center space-x-3">
+                    {managerUnread > 0 && (
+                      <span className="bg-pink-500 text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full">
+                        {managerUnread}
                       </span>
                     )}
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                    <ChevronRight className="h-5 w-5 text-gray-400" />
                   </div>
                 </div>
-              </Link>
-            ))}
-          </div>
-        )}
+              </div>
+            </Link>
+          ) : (
+            <div className="bg-white rounded-xl border border-purple-100 shadow-sm p-6 text-center">
+              <AlertCircle className="h-12 w-12 text-purple-300 mx-auto mb-2" />
+              <p className="text-gray-500">No team manager is currently available.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Group Chats Section */}
+        <div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <Users className="mr-2 h-5 w-5 text-[#25105A]" /> 
+            Group Conversations
+            {groups.length > 0 && (
+              <span className="ml-2 text-sm text-gray-500 font-normal">
+                ({filteredGroups.length} {filteredGroups.length === 1 ? 'chat' : 'chats'})
+              </span>
+            )}
+          </h2>
+
+          {loading && (
+            <div className="bg-white rounded-xl border border-purple-100 shadow-sm p-6 flex justify-center items-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#25105A]"></div>
+            </div>
+          )}
+
+          {errorMsg && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg mb-4">
+              <div className="flex items-center">
+                <AlertCircle className="h-5 w-5 mr-2" />
+                <span>{errorMsg}</span>
+              </div>
+            </div>
+          )}
+
+          {!loading && filteredGroups.length === 0 && (
+            <div className="bg-white rounded-xl border border-purple-100 shadow-sm p-12 text-center">
+              {searchQuery || showUnreadOnly ? (
+                <>
+                  <Search className="h-12 w-12 text-purple-200 mx-auto mb-3" />
+                  <p className="text-xl text-gray-700">No matching conversations found</p>
+                  <p className="text-gray-500 mt-1">Try adjusting your search or filters</p>
+                </>
+              ) : (
+                <>
+                  <MessageSquare className="h-12 w-12 text-purple-200 mx-auto mb-3" />
+                  <p className="text-xl text-gray-700">No conversations yet</p>
+                  <p className="text-gray-500 mt-1">Join or start a new group chat</p>
+                </>
+              )}
+            </div>
+          )}
+
+          {!loading && filteredGroups.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredGroups.map((group) => (
+                <Link 
+                  key={group._id} 
+                  to={`/member-dashboard/messaging/chat/${group._id}`} 
+                  className="block"
+                >
+                  <div className={`
+                    bg-white border ${group.unreadCount > 0 ? 'border-purple-200' : 'border-gray-100'} 
+                    rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out 
+                    transform hover:-translate-y-1 overflow-hidden
+                  `}>
+                    <div className={`
+                      ${group.unreadCount > 0 ? 'border-l-4 border-[#25105A]' : ''} 
+                      p-5 flex items-center justify-between
+                    `}>
+                      <div className="flex items-center space-x-4">
+                        <div className={`
+                          ${group.unreadCount > 0 
+                            ? 'bg-gradient-to-br from-[#1E0B32] to-[#25105A] text-white' 
+                            : 'bg-purple-50 text-purple-600'} 
+                          p-3 rounded-full
+                        `}>
+                          <Users size={20} />
+                        </div>
+                        <div>
+                          <h3 className={`font-semibold ${group.unreadCount > 0 ? 'text-gray-800' : 'text-gray-700'}`}>
+                            {group.groupName}
+                          </h3>
+                          <p className={`text-sm truncate max-w-xs ${group.unreadCount > 0 ? 'text-gray-700 font-medium' : 'text-gray-500'}`}>
+                            {group.lastMessage || 'No recent messages'}
+                          </p>
+                          {group.lastMessageTimestamp && (
+                            <p className="text-xs text-gray-400 mt-1">
+                              <Clock className="inline-block w-3 h-3 mr-1" />
+                              {new Date(group.lastMessageTimestamp).toLocaleString(undefined, { 
+                                month: 'short', 
+                                day: 'numeric',
+                                hour: '2-digit', 
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        {group.unreadCount > 0 && (
+                          <span className="bg-pink-500 text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full">
+                            {group.unreadCount}
+                          </span>
+                        )}
+                        <ChevronRight className="h-5 w-5 text-gray-400" />
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

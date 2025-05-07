@@ -15,6 +15,8 @@ const DirectChatRoom = () => {
   const messagesEndRef = useRef(null);
   const lastCountRef = useRef(0);
   const token = localStorage.getItem('token');
+  // Determine correct inbox path based on user role
+  const inboxPath = user?.role === 'member' ? '/member-dashboard/inbox' : '/admin/inbox';
 
   useEffect(() => {
     if (threadId && user?._id) {
@@ -152,7 +154,7 @@ const DirectChatRoom = () => {
     <div className="container mx-auto px-4 py-4 max-w-7xl">
       <div className="mb-4">
         <div className="flex items-center mb-2">
-          <Link to="/admin/inbox" className="text-[#1c4b82] hover:underline mr-2 flex items-center">
+          <Link to={inboxPath} className="text-[#1c4b82] hover:underline mr-2 flex items-center">
             <ArrowLeft className="h-5 w-5 mr-1" />
             Back to Inbox
           </Link>
