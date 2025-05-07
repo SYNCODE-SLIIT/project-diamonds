@@ -198,7 +198,6 @@ const RecentTransactionPage = () => {
                   onDelete={handleIncomeDelete}
                   onDownload={handleDownloadIncomeDetails}
                   onViewDetails={(id) => {
-                    console.log('Income card clicked, id:', id);
                     const found = incomeData.find((item) => item._id === id);
                     setSelectedIncome(found || null);
                   }}
@@ -212,7 +211,6 @@ const RecentTransactionPage = () => {
                   onDelete={handleExpenseDelete}
                   onDownload={handleDownloadExpenseDetails}
                   onViewDetails={(id) => {
-                    console.log('Expense card clicked, id:', id);
                     // Try to find by paymentId, fallback to _id
                     let found = expenseData.find((item) => item.paymentId === id);
                     if (!found) {

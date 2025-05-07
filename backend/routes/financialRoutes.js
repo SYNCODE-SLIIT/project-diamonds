@@ -30,6 +30,7 @@ import fs from 'fs';
 import Transaction from '../models/Transaction.js';
 import { uploadToSupabase } from '../utils/supabaseUpload.js';
 import { uploadFile } from '../utils/fileUpload.js';
+import { ticketPayment } from '../controllers/financialController.js';
 
 const router = express.Router();
 
@@ -366,5 +367,27 @@ router.post('/anomalies/:id/resolve', async (req, res) => {
     });
   }
 });
+
+
+router.post('/tp', memoryUpload.single('bankSlip'), async (req, res, next) => {
+  try {
+    if (req.file) {
+      try {
+        const uploadResult = await uploadToSupabase(req.file, 'bank_slips');
+        req.fileUrl = uploadResult.url;
+        req.fileProvider = uploadResult.provider;
+      } catch (supabaseError) {
+        console.warn('Supabase upload failed, falling back to Cloudinary:', supabaseError.message);
+        const uploadResult = await uploadFile(req.file, 'bank_slips');
+        req.fileUrl = uploadResult.url;
+        req.fileProvider = uploadResult.provider;
+      }
+    }
+    next();
+  } catch (error) {
+    console.error('Bank slip upload error:', error);
+    return res.status(500).json({ message: 'File upload failed', error: error.message });
+  }
+}, ticketPayment);
 
 export default router;

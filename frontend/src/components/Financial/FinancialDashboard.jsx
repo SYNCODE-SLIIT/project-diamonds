@@ -189,7 +189,6 @@ const Dashboard = () => {
           reason: fullBudget.reason ?? '',
           remainingBudget: fullBudget.remainingBudget ?? 0,
         };
-        console.log('PATCH budget updateData:', updateData);
       } else if (activeTab === 'invoices') {
         updateData = { paymentStatus: newStatus };
       } else {

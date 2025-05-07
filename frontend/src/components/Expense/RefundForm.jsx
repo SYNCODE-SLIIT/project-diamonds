@@ -5,7 +5,6 @@ import { API_PATHS } from '../../utils/apiPaths';
 import { toast } from 'react-hot-toast';
 
 const RefundForm = ({ payment, onBack, onSuccess }) => {
-  console.log("Payment object in RefundForm:", payment);
   const [formData, setFormData] = useState({
     refundAmount: payment?.amount || 0,
     reason: '',
@@ -88,12 +87,6 @@ const RefundForm = ({ payment, onBack, onSuccess }) => {
         formDataToSend.append('invoiceNumber', payment.invoiceNumber);
       }
       formDataToSend.append('receiptFile', formData.receiptFile);
-      
-      // Debug: log FormData
-      console.log("Sending refund request with invoiceNumber:", payment.invoiceNumber);
-      for (let pair of formDataToSend.entries()) {
-        console.log(pair[0]+ ': ' + pair[1]);
-      }
       
       // Send request to backend
       const response = await axiosInstance.post(API_PATHS.REFUND.ADD_REFUND, formDataToSend, {

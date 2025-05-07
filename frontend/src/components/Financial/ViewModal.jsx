@@ -36,6 +36,8 @@ const ViewModal = ({ item, onClose, activeTab }) => {
           (key === 'bankSlipUrl' || 
            key === 'fileUrl' || 
            key === 'attachmentUrl' || 
+           key === 'infoFile' || // <-- Add this line for budget info file
+           key === 'receiptFile' || // <-- Add this line for refund receipt file
            key.toLowerCase().includes('slip') || 
            key.toLowerCase().includes('attachment')) && 
           typeof value === 'string'
@@ -348,43 +350,72 @@ const ViewModal = ({ item, onClose, activeTab }) => {
     setIsDownloading(true);
     try {
       const doc = new jsPDF();
-      
-      // Add title
-      const title = `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1, -1)} Details`;
+  
+      // Add title bar with dark blue background
+      doc.setFillColor(31, 41, 55); // Tailwind blue-900
+      doc.rect(0, 0, doc.internal.pageSize.width, 24, 'F');
+      doc.setTextColor(255, 255, 255);
       doc.setFontSize(18);
-      doc.text(title, 105, 15, { align: 'center' });
-      
-      // Add date
+      doc.setFont(undefined, 'bold');
+      doc.text(
+        `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1, -1)} Details`,
+        doc.internal.pageSize.width / 2,
+        16,
+        { align: 'center' }
+      );
+  
+      // Add date below header, styled and spaced
       doc.setFontSize(10);
-      doc.text(`Generated on: ${new Date().toLocaleString()}`, 105, 22, { align: 'center' });
-      
-      // Add content
-      doc.setFontSize(12);
-      let yPos = 30;
-      
+      doc.setTextColor(55, 65, 81); // Tailwind gray-700
+      doc.setFont(undefined, 'normal');
+      doc.text(
+        `Generated on: ${new Date().toLocaleString()}`,
+        doc.internal.pageSize.width / 2,
+        28,
+        { align: 'center' }
+      );
+  
+      let yPos = 36;
       const groups = getGroupedFields();
       const groupOrder = ['basic', 'financial', 'status', 'user', 'dates', 'identifiers', 'other'];
-      
+  
+      // Color mapping for PDF (match Tailwind groupColors)
+      const pdfGroupColors = {
+        basic: [219, 234, 254],        // blue-50
+        financial: [220, 252, 231],    // green-50
+        status: [237, 233, 254],       // purple-50
+        user: [254, 249, 195],         // yellow-50
+        dates: [238, 242, 255],        // indigo-50
+        identifiers: [253, 242, 248],  // pink-50
+        other: [249, 250, 251],        // gray-50
+      };
+  
       groupOrder.forEach(groupName => {
         if (!groups[groupName] || groups[groupName].length === 0) return;
-        
-        // Add section title
+  
+        // Section header background
+        const color = pdfGroupColors[groupName] || [249, 250, 251];
+        doc.setFillColor(...color);
+        doc.rect(10, yPos, doc.internal.pageSize.width - 20, 10, 'F');
+  
+        // Section title
+        doc.setFontSize(13);
+        doc.setTextColor(31, 41, 55); // dark blue for all headers
         doc.setFont(undefined, 'bold');
-        doc.text(groupTitles[groupName], 14, yPos);
-        yPos += 7;
-        
-        // Add section content
+        doc.text(groupTitles[groupName], 14, yPos + 7);
+  
+        yPos += 14;
+        doc.setFontSize(11);
+        doc.setTextColor(55, 65, 81); // gray-700
         doc.setFont(undefined, 'normal');
+  
         groups[groupName].forEach(key => {
-          // Skip if we're at the bottom of the page
           if (yPos > 270) {
             doc.addPage();
             yPos = 20;
           }
-          
           const value = item[key];
           let displayValue = '';
-          
           if (value === null || value === undefined) {
             displayValue = "—";
           } else if (typeof value === 'object' && value !== null) {
@@ -393,25 +424,42 @@ const ViewModal = ({ item, onClose, activeTab }) => {
             } else if (key === 'user' && value.email) {
               displayValue = `${value.fullName || 'User'} (${value.email})`;
             } else {
-              displayValue = JSON.stringify(value);
+              // For "Additional Information", pretty print each key-value on its own line
+              displayValue = Object.entries(value)
+                .map(([k, v]) => `${formatKey(k)}: ${typeof v === 'object' ? JSON.stringify(v) : v}`)
+                .join('\n');
             }
           } else {
             displayValue = String(value);
           }
-          
-          // Format key
           const formattedKey = formatKey(key);
-          
-          // Add key-value pair
-          doc.text(`${formattedKey}: ${displayValue}`, 14, yPos);
-          yPos += 7;
+          // For "other"/Additional Information, use multi-line text for objects
+          if (groupName === 'other' && typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            doc.setFont(undefined, 'bold');
+            doc.text(`${formattedKey}:`, 14, yPos);
+            doc.setFont(undefined, 'normal');
+            yPos += 6;
+            const lines = doc.splitTextToSize(displayValue, doc.internal.pageSize.width - 28);
+            doc.text(lines, 18, yPos);
+            yPos += lines.length * 6;
+          } else {
+            doc.text(`${formattedKey}: ${displayValue}`, 14, yPos);
+            yPos += 7;
+          }
         });
-        
-        // Add spacing between sections
-        yPos += 5;
+  
+        yPos += 7;
       });
-      
-      // Save the PDF
+
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.setTextColor(150, 150, 150);
+        doc.text('Team Diamond Financial Services', 15, doc.internal.pageSize.height - 10);
+        doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width - 30, doc.internal.pageSize.height - 10);
+      }
+  
       doc.save(`${activeTab}_${item._id}.pdf`);
       setMessage('PDF downloaded successfully');
       setMessageType('success');
@@ -423,6 +471,26 @@ const ViewModal = ({ item, onClose, activeTab }) => {
       setIsDownloading(false);
     }
   };
+
+  const renderFileViewerButton = (fileUrl, label) => {
+    if (!fileUrl) return null;
+    const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(fileUrl);
+    const isPdf = /\.pdf$/i.test(fileUrl);
+    if (!isImage && !isPdf) return null;
+    return (
+      <button
+        onClick={() => handleViewFile(fileUrl, isImage ? 'image' : 'pdf')}
+        className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors flex items-center gap-1 mt-2"
+      >
+        {isImage ? <HiOutlinePhotograph className="w-4 h-4" /> : <HiOutlineDocument className="w-4 h-4" />}
+        View {label}
+      </button>
+    );
+  };
+  
+  // Inside your JSX where you render fields, add explicit viewers for budget info and refund receipt files:
+  {renderFileViewerButton(item.infoFile || item.budgetInfoFile, "Budget Info File")}
+  {renderFileViewerButton(item.receiptFile || item.refundReceiptFile, "Refund Receipt File")}
 
   const renderFieldGroups = () => {
     const groups = getGroupedFields();
