@@ -271,10 +271,10 @@ const TicketPaymentForm = ({ ticket, onClose, onSuccess }) => {
   if (step === 1) {
     return (
       <div style={{background: 'rgba(0,0,0,0.2)'}} className="fixed inset-0 flex items-center justify-center z-50 p-4">
-        <div className="max-w-lg w-full bg-white shadow-xl rounded-2xl p-8 relative">
+        <div className="max-w-lg w-full bg-white shadow-2xl rounded-3xl p-10 relative border border-gray-200">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -282,26 +282,32 @@ const TicketPaymentForm = ({ ticket, onClose, onSuccess }) => {
           </button>
           <div className="mb-6">
             <div className="text-xs text-gray-500 mb-2">Step 1 of 2</div>
-            <h2 className="text-2xl font-bold mb-2">Ticket Details</h2>
-            <p className="text-gray-600">Review your ticket information before proceeding to payment.</p>
+            <h2 className="text-3xl font-extrabold mb-2 text-[#0a174e]">Ticket Details</h2>
+            <p className="text-gray-600 text-base">Review your ticket information before proceeding to payment.</p>
           </div>
-          <div className="mb-4 p-4 bg-gray-50 rounded border">
-            <div className="font-semibold text-lg">{ticket.name}</div>
-            <div className="mt-2">Price: <span className="font-bold text-indigo-700">LKR {ticket.price.toLocaleString()}</span></div>
-            <div className="mt-2">
-              <label className="block font-medium mb-1">Quantity</label>
+          <div className="mb-8 p-6 bg-[#f8fafc] rounded-2xl border border-gray-300 shadow-sm">
+            <div className="font-bold text-xl text-[#133b5c] mb-2">{ticket.name}</div>
+            <div className="flex items-center mb-4">
+              <span className="font-medium text-gray-700 mr-2">Price:</span>
+              <span className="font-bold text-lg text-[#4f46e5]">LKR {ticket.price.toLocaleString()}</span>
+            </div>
+            <div className="mb-4">
+              <label className="block font-medium text-gray-700 mb-1">Quantity</label>
               <input
                 type="number"
                 min={1}
                 value={quantity}
                 onChange={e => setQuantity(Math.max(1, Number(e.target.value)))}
-                className="w-20 border rounded px-3 py-2 text-center"
+                className="w-24 border rounded-lg px-3 py-2 text-center text-lg font-semibold focus:ring-2 focus:ring-[#f4d160] focus:outline-none bg-white shadow"
               />
             </div>
-            <div className="mt-2">Total: <span className="font-bold text-green-700 text-lg">LKR {(totalAmount).toLocaleString()}</span></div>
+            <div className="flex items-center mt-2">
+              <span className="font-medium text-gray-700 mr-2">Total:</span>
+              <span className="font-bold text-lg text-[#16a34a]">LKR {(ticket.price * quantity).toLocaleString()}</span>
+            </div>
           </div>
           <button
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg mt-4 transition"
+            className="w-full bg-gradient-to-r from-[#4f46e5] to-[#f4d160] hover:from-[#4338ca] hover:to-[#f4d160]/80 text-white font-bold py-3 rounded-xl mt-4 text-lg shadow-lg transition-all duration-200"
             onClick={() => setStep(2)}
           >
             Next: Payment Details
