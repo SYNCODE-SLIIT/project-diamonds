@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import { Toaster } from 'react-hot-toast';
 import AdminApplicationsCombinedList from './pages/authentication/AdminApplicationsCombinedList';
@@ -76,6 +76,7 @@ import OrganizerProfile from './pages/EventOrganizerProfile';
 
 
 import EventBookingPage from './pages/EventBookingPage';
+import DonationPage from './components/Donation/DonationPage';
 
 
 import EventRequestForm from './components/event/EventRequestForm';
@@ -255,7 +256,7 @@ const App = () => {
           <Route path="/Cmanager" element={<ContentMediaDashboard />} />
 
           <Route path="/merchandise" element={<Merchandise />} />
-
+          <Route path="/donate" element={<DonationPage />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-cancel" element={<PaymentCancel />} />
 

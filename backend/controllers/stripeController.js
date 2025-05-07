@@ -146,4 +146,56 @@ export const createCheckoutSession = async (req, res) => {
     console.error('Error creating Stripe Checkout session:', err);
     res.status(500).json({ error: err.message });
   }
-}; 
+};
+
+// Create a Stripe Checkout session for donations
+export const createDonationCheckoutSession = async (req, res) => {
+  const {
+    amount,
+    currency,
+    firstName,
+    lastName,
+    email,
+    phone,
+    supportProject,
+    dedicate,
+    comment,
+    coverFees
+  } = req.body;
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      customer_email: email,
+      line_items: [
+        {
+          price_data: {
+            currency: currency || 'lkr',
+            product_data: {
+              name: 'Donation',
+              description: supportProject,
+            },
+            unit_amount: Math.round(Number(amount) * 100), // Stripe expects amount in cents
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: 'http://localhost:5173/success', // Change as needed
+      cancel_url: 'http://localhost:5173/cancel',   // Change as needed
+      metadata: {
+        firstName,
+        lastName,
+        email,
+        phone,
+        supportProject,
+        dedicate,
+        comment,
+        coverFees,
+      }
+    });
+    res.json({ sessionId: session.id });
+  } catch (err) {
+    console.error('Error creating Stripe Donation Checkout session:', err);
+    res.status(500).json({ error: err.message });
+  }
+};
