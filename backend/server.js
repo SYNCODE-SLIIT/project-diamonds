@@ -59,7 +59,6 @@ import merchandiseRoutes from './routes/merchandiseRoutes.js';
 
 import collaborationRoutes from './routes/collaborationRoutes.js'
 
-
 import chatbotRoutes from './routes/chatbot.js';
 
 
@@ -115,6 +114,7 @@ app.use('/api/organizers', organizerRoutes);
 
 // Financial Management Routes
 app.use('/api/finance', financialRoutes);
+app.use('/api/finance/notifications', financeNotificationRoutes);
 
 app.use('/api/assignments', assignmentRoutes);
 
@@ -131,7 +131,6 @@ app.use('/api/packages', packageRoutes);
 app.use('/api/services', additionalServiceRoutes);
 app.use('/api/event-requests', eventRequestRoutes);
 
-app.use("/api/finance", financialRoutes);
 app.use("/api/member-applications", memberApplicationRoutes);
 app.use("/api/admin/applications", adminApplicationRoutes);
 app.use("/api/users", userRoutes);

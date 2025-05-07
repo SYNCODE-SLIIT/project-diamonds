@@ -12,6 +12,7 @@ const MerchandiseStore = () => {
   const [editProduct, setEditProduct] = useState(null);
   const [form, setForm] = useState({ name: '', price: '', image: '', description: '' });
   const [formMode, setFormMode] = useState('add'); // 'add' or 'edit'
+  const [confirmation, setConfirmation] = useState(null);
 
   // Fetch products
   const fetchProducts = async () => {
@@ -119,9 +120,43 @@ const MerchandiseStore = () => {
       {/* Payment Modal */}
       <MerchandiseModal isOpen={buyModalOpen} onClose={() => setBuyModalOpen(false)} title="Buy Merchandise">
         {selectedProduct && (
-          <MerchandisePaymentForm product={selectedProduct} onClose={() => setBuyModalOpen(false)} />
+          <MerchandisePaymentForm
+            product={selectedProduct}
+            onConfirm={data => {
+              console.log('Received confirmation in parent:', data);
+              setConfirmation(data);
+              setBuyModalOpen(false);
+            }}
+          />
         )}
       </MerchandiseModal>
+      {confirmation && (
+        (() => { console.log('Rendering confirmation overlay', confirmation); return null; })(),
+        <div className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg text-center">
+            <h2 className="text-2xl font-bold mb-2 text-green-700">Thank you!</h2>
+            <p className="text-gray-700 mb-4">
+              Your payment has been submitted for <span className="font-semibold">{confirmation.productName}</span>.
+            </p>
+            <div className="mb-4">
+              <div className="font-semibold">Reference ID:</div>
+              <div className="text-lg font-bold text-indigo-700 mb-2">{confirmation.referenceId}</div>
+              <div className="font-semibold">Order ID:</div>
+              <div className="text-lg font-bold text-gray-700 mb-2">{confirmation.orderId}</div>
+              <div className="font-semibold">Quantity:</div>
+              <div className="text-lg font-bold text-gray-700 mb-2">{confirmation.quantity}</div>
+              <div className="font-semibold">Total Paid:</div>
+              <div className="text-lg font-bold text-green-700 mb-2">LKR {confirmation.totalAmount}</div>
+            </div>
+            <button
+              className="mt-4 px-6 py-2 bg-blue-600 text-white rounded"
+              onClick={() => setConfirmation(null)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

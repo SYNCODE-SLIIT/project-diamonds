@@ -25,7 +25,8 @@ const BudgetSchema = new mongoose.Schema({
   reason: { type: String, required: true },      
   infoFile: { type: String },                      
   status: { type: String, enum: ['approved', 'declined', 'pending'], required: true },
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true }
 }, { timestamps: true });
 
 const Budget = mongoose.model('Budget', BudgetSchema);

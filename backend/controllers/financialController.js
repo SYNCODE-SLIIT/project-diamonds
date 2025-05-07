@@ -9,6 +9,8 @@ import Income from '../models/Income.js';
 import Expense from '../models/Expense.js';
 import Salary from '../models/Salary.js';
 import User from '../models/User.js';
+import Event from '../models/Event.js';
+import Merchandise from '../models/Merchandise.js';
 
 import cloudinary from '../config/cloudinary.js';
 import { createFinanceNotification } from './financeNotificationController.js';
@@ -98,7 +100,17 @@ export const getAllTransactionsWithUserData = async (req, res) => {
 // Create Budget Request and record transaction.
 export const createBudget = async (req, res) => {
   try {
-    const { allocatedBudget, remainingBudget, status, reason } = req.body;
+    const { allocatedBudget, remainingBudget, status, reason, event } = req.body;
+    
+    // Validate event exists and is confirmed
+    const eventDoc = await Event.findById(event);
+    if (!eventDoc) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+    if (eventDoc.status !== "confirmed") {
+      return res.status(400).json({ message: "Budget can only be requested for confirmed events" });
+    }
+
     let infoFileUrl = null;
     let fileProvider = null;
     if (req.file) {
@@ -106,13 +118,10 @@ export const createBudget = async (req, res) => {
         const uploadResult = await uploadToSupabase(req.file, 'budget_files');
         infoFileUrl = uploadResult.url;
         fileProvider = uploadResult.provider;
-        console.log('Supabase upload success (budget):', infoFileUrl);
       } catch (supabaseError) {
-        console.warn('Supabase upload failed (budget), falling back to Cloudinary:', supabaseError.message);
         const uploadResult = await uploadFile(req.file, 'budget_files');
         infoFileUrl = uploadResult.url;
         fileProvider = uploadResult.provider;
-        console.log('Cloudinary upload success (budget):', infoFileUrl);
       }
     }
     const newBudget = new Budget({
@@ -123,6 +132,7 @@ export const createBudget = async (req, res) => {
       infoFile: infoFileUrl,
       fileProvider,
       user: req.user._id,
+      event: event
     });
     await newBudget.save();
     const budgetTransaction = new Transaction({
@@ -144,7 +154,6 @@ export const createBudget = async (req, res) => {
 
 // Make Payment: auto-create an invoice and record the payment/transaction. 
 export const makePayment = async (req, res) => {
-  console.log('makePayment controller called');
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
@@ -156,13 +165,10 @@ export const makePayment = async (req, res) => {
         const uploadResult = await uploadToSupabase(req.file, 'bank_slips');
         bankSlipFileUrl = uploadResult.url;
         fileProvider = uploadResult.provider;
-        console.log('Supabase upload success (payment):', bankSlipFileUrl);
       } catch (supabaseError) {
-        console.warn('Supabase upload failed (payment), falling back to Cloudinary:', supabaseError.message);
         const uploadResult = await uploadFile(req.file, 'bank_slips');
         bankSlipFileUrl = uploadResult.url;
         fileProvider = uploadResult.provider;
-        console.log('Cloudinary upload success (payment):', bankSlipFileUrl);
       }
     }
     const user = req.user;
@@ -232,7 +238,6 @@ export const makePayment = async (req, res) => {
       transaction: paymentTransaction,
     });
   } catch (error) {
-    console.error('Error in makePayment:', error);
     await session.abortTransaction();
     session.endSession();
     res.status(500).json({ message: "Error processing payment", error: error.message });
@@ -329,7 +334,6 @@ export const generateExcelReport = async (req, res) => {
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.send(excelBuffer);
   } catch (error) {
-    console.error('Error generating Excel report:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -379,7 +383,6 @@ export const getDashboardData = async (req, res) => {
       dailyTrends, // New field: daily trends for transactions.
     });
   } catch (error) {
-    console.error("Error fetching dashboard data:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -439,8 +442,7 @@ export const deleteFinancialRecord = async (req, res) => {
     });
     
   } catch (error) {
-    console.error(`Error deleting ${req.params.recordType || 'financial'} record:`, error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: "Server error while deleting record",
       error: error.message
@@ -475,6 +477,8 @@ export const updateFinancialRecord = async (req, res) => {
               ? 'Merchandise Payment'
               : payment.paymentFor === 'package'
                 ? 'Package Payment'
+                : payment.paymentFor === 'ticket'
+                  ? 'Ticket Payment'
                 : 'Other Payment';
           
           // Set specific icons based on payment type
@@ -482,7 +486,9 @@ export const updateFinancialRecord = async (req, res) => {
             ? 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f6cd.png'  // Shopping bag emoji for merchandise
             : payment.paymentFor === 'package'
               ? 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f9f3.png'  // Package emoji for package
-              : 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4b0.png'; // Money bag emoji for other payments
+              : payment.paymentFor === 'ticket'
+                ? 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f3ab.png' // Ticket emoji for ticket
+                : 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4b0.png'; // Money bag emoji for other payments
 
           const expense = new Expense({
             userId: payment.user,
@@ -571,8 +577,7 @@ export const updateFinancialRecord = async (req, res) => {
     }
     return res.status(200).json({ success: true, data: updatedRecord });
   } catch (error) {
-    console.error("Error updating record:", error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: "Server error while updating record",
       error: error.message
@@ -585,8 +590,7 @@ export const getAllMembers = async (req, res) => {
     const members = await User.find({ role: 'member' }).lean();
     return res.status(200).json({ success: true, data: members });
   } catch (error) {
-    console.error("Error fetching members:", error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: "Server error while fetching members",
       error: error.message,
@@ -645,8 +649,7 @@ export const paySalary = async (req, res) => {
       data: { salaryRecord, incomeRecord },
     });
   } catch (error) {
-    console.error("Error paying salary:", error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: "Server error while paying salary",
       error: error.message,
@@ -693,8 +696,7 @@ export const getFinancialReport = async (req, res) => {
       transactions: transactionsFormatted,
     });
   } catch (error) {
-    console.error("Error in getFinancialReport:", error);
-    return res
+    res
       .status(500)
       .json({ success: false, message: error.message || "Internal Server Error" });
   }
@@ -723,13 +725,10 @@ export const requestRefund = async (req, res) => {
         const uploadResult = await uploadToSupabase(req.file, 'refund_receipts');
         receiptFileUrl = uploadResult.url;
         fileProvider = uploadResult.provider;
-        console.log('Supabase upload success (refund):', receiptFileUrl);
       } catch (supabaseError) {
-        console.warn('Supabase upload failed (refund), falling back to Cloudinary:', supabaseError.message);
         const uploadResult = await uploadFile(req.file, 'refund_receipts');
         receiptFileUrl = uploadResult.url;
         fileProvider = uploadResult.provider;
-        console.log('Cloudinary upload success (refund):', receiptFileUrl);
       }
     }
     const refund = new Refund({
@@ -831,8 +830,8 @@ export const getAnomalies = async (req, res) => {
         severity: 'medium'
       };
 
-      // Check for amount-based anomaly
-      if (std !== 0) {
+      // Check for amount-based anomaly, but skip for budget and salary
+      if (std !== 0 && transaction.transactionType !== 'budget' && transaction.transactionType !== 'salary') {
         const z = (transaction.totalAmount - mean) / std;
         if (Math.abs(z) > threshold) {
           anomaly.anomalyTypes.push('amount');
@@ -908,12 +907,213 @@ export const getAnomalies = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error detecting anomalies:', error);
-    return res.status(500).json({ 
+    res.status(500).json({ 
       success: false, 
       message: 'Error detecting anomalies', 
       error: error.message 
     });
+  }
+};
+
+// Ticket Payment: auto-create an invoice and record the payment/transaction.
+export const ticketPayment = async (req, res) => {
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+    const { amount, paymentMethod, paymentFor } = req.body;
+    let bankSlipFileUrl = null;
+    let fileProvider = null;
+    if (req.file) {
+      try {
+        const uploadResult = await uploadToSupabase(req.file, 'bank_slips');
+        bankSlipFileUrl = uploadResult.url;
+        fileProvider = uploadResult.provider;
+      } catch (supabaseError) {
+        const uploadResult = await uploadFile(req.file, 'bank_slips');
+        bankSlipFileUrl = uploadResult.url;
+        fileProvider = uploadResult.provider;
+      }
+    }
+    const user = req.user;
+    const invoiceNumber = `INV-${Date.now()}`;
+    const invoice = new Invoice({
+      invoiceNumber,
+      amount,
+      category: "payment",
+      paymentStatus: "paid",
+      user: user._id,
+    });
+    await invoice.save({ session });
+    const payment = new Payment({
+      invoiceId: invoice._id,
+      user: user._id,
+      amount,
+      paymentMethod,
+      bankSlipFile: bankSlipFileUrl,
+      fileProvider,
+      status: "pending",
+      paymentFor,
+      ticketId: req.body.ticketId || undefined,
+      ticketName: req.body.ticketName || undefined,
+      quantity: req.body.quantity || undefined,
+      orderId: req.body.orderId || undefined,
+      fullName: req.body.fullName || undefined,
+      email: req.body.email || undefined,
+      contact: req.body.contact || undefined,
+    });
+    await payment.save({ session });
+    const paymentTransaction = new Transaction({
+      transactionType: "payment",
+      invoiceId: invoice._id,
+      user: user._id,
+      totalAmount: amount,
+      details: { note: "Ticket payment processed automatically with invoice creation" },
+    });
+    await paymentTransaction.save({ session });
+    await session.commitTransaction();
+    session.endSession();
+    const populatedPayment = await Payment.findById(payment._id)
+      .populate("user")
+      .lean();
+    try {
+      const manager = await User.findOne({ role: 'financial_manager' });
+      if (manager) {
+        await createFinanceNotification({
+          userId: manager._id,
+          message: `A new ticket payment was made by ${user.fullName || user.email}. Invoice #${invoice.invoiceNumber}`,
+          type: 'info',
+        });
+      }
+    } catch (notifErr) {
+      console.error('Error creating finance notification:', notifErr);
+    }
+    try {
+      await createFinanceNotification({
+        userId: user._id,
+        message: `Your ticket payment was successful. Invoice #${invoice.invoiceNumber} has been generated. Amount: RS. ${invoice.amount}`,
+        type: 'success',
+        invoiceId: invoice._id,
+      });
+    } catch (notifErr) {
+      console.error('Error creating user invoice notification:', notifErr);
+    }
+    res.status(201).json({
+      message: "Ticket payment processed successfully",
+      invoice,
+      payment: populatedPayment,
+      transaction: paymentTransaction,
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    res.status(500).json({ message: "Error processing ticket payment", error: error.message });
+  }
+};
+
+// Get confirmed events for budget requests
+export const getConfirmedEvents = async (req, res) => {
+  try {
+    const events = await Event.find({ status: 'confirmed' })
+      .populate('packageID')
+      .populate('additionalServices.serviceID')
+      .sort({ eventDate: 1 }); // Sort by event date ascending
+
+    return res.status(200).json({
+      success: true,
+      data: events
+    });
+  } catch (error) {
+    console.error("Error fetching confirmed events:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching confirmed events",
+      error: error.message
+    });
+  }
+};
+
+// Get a single event by ID (for budget view modal)
+export const getEventById = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id)
+      .populate('packageID')
+      .populate('additionalServices.serviceID');
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+    res.status(200).json({ data: event });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching event', error: error.message });
+  }
+};
+
+// GET transaction details with documents
+export const getTransactionDetails = async (req, res) => {
+  try {
+    // Try to find by transaction _id
+    let transaction = await Transaction.findById(req.params.id)
+      .populate('user')
+      .populate('invoiceId');
+
+    // If not found, try by invoiceId
+    if (!transaction) {
+      transaction = await Transaction.findOne({ invoiceId: req.params.id })
+        .populate('user')
+        .populate('invoiceId');
+    }
+
+    // If still not found, try by payment._id (for direct payment lookups)
+    if (!transaction) {
+      // Find payment by _id, then get its invoiceId
+      const payment = await Payment.findById(req.params.id);
+      if (payment && payment.invoiceId) {
+        transaction = await Transaction.findOne({ invoiceId: payment.invoiceId })
+          .populate('user')
+          .populate('invoiceId');
+      }
+    }
+
+    if (!transaction) {
+      return res.status(404).json({ message: 'Transaction not found' });
+    }
+
+    // Get associated payment if exists
+    const payment = await Payment.findOne({ invoiceId: transaction.invoiceId })
+      .populate('user')
+      .lean();
+
+    // Get associated documents
+    const documents = [];
+    if (payment?.bankSlipFile) {
+      documents.push({
+        type: 'Bank Slip',
+        url: payment.bankSlipFile,
+        uploadDate: payment.createdAt
+      });
+    }
+
+    // Fetch product details if payment is for merchandise
+    let productDetails = null;
+    if (payment?.paymentFor === 'merchandise' && payment.productId) {
+      productDetails = await Merchandise.findById(payment.productId).lean();
+    }
+
+    // Combine all data
+    const transactionDetails = {
+      ...transaction.toObject(),
+      payment: payment || null,
+      invoice: transaction.invoiceId || null,
+      documents,
+      productDetails,
+      invoiceDownloadUrl: transaction.invoiceId
+        ? `/api/finance/invoice/${transaction.invoiceId._id}/download`
+        : null,
+    };
+
+    res.json(transactionDetails);
+  } catch (error) {
+    console.error('Error fetching transaction details:', error);
+    res.status(500).json({ message: 'Error fetching transaction details', error: error.message });
   }
 };
  
