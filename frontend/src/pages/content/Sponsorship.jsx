@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import axiosInstance from '../../utils/axiosInstance';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 
 const Sponsorship = () => {
@@ -18,6 +19,22 @@ const Sponsorship = () => {
   const [lineData, setLineData] = useState([]);
   const [typeData, setTypeData] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Function to download the sponsorship report
+  const downloadSponsorshipReport = async () => {
+    try {
+      const res = await axiosInstance.get('/api/sponsorships/report', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'Sponsorships_Report.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error('Error downloading sponsorship report:', err);
+    }
+  };
 
   const fetchSponsorships = async () => {
     const res = await axios.get('/api/sponsorships');
@@ -95,85 +112,95 @@ const Sponsorship = () => {
   };
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Sponsorship Tracker</h2>
-
-      <form onSubmit={handleSubmit} className="space-y-2">
-        <input type="text" placeholder="Sponsor Name" value={form.sponsorName} onChange={(e) => setForm({ ...form, sponsorName: e.target.value })} className="border p-2 w-full" required />
-        <select value={form.sponsorType} onChange={(e) => setForm({ ...form, sponsorType: e.target.value })} className="border p-2 w-full">
-          <option>Financial</option>
-          <option>Product-based</option>
-          <option>Venue</option>
-          <option>Media/PR</option>
-          <option>Food & Beverages</option>
-          <option>Technical/Equipment</option>
-        </select>
-        <textarea placeholder="Contribution Details" value={form.contributionDetails} onChange={(e) => setForm({ ...form, contributionDetails: e.target.value })} className="border p-2 w-full" rows={2} />
-        <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="border p-2 w-full">
-          <option>Gold</option>
-          <option>Silver</option>
-          <option>Bronze</option>
-          <option>Supporter</option>
-        </select>
-        <input type="text" placeholder="Sponsorship Duration (e.g., 6 months)" value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} className="border p-2 w-full" />
-        <input type="text" placeholder="Contact Person" value={form.contactPerson} onChange={(e) => setForm({ ...form, contactPerson: e.target.value })} className="border p-2 w-full" />
-        <input type="text" placeholder="Contact Email or Phone" value={form.contactInfo} onChange={(e) => setForm({ ...form, contactInfo: e.target.value })} className="border p-2 w-full" />
-        <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="border p-2 w-full">
-          <option>Pending</option>
-          <option>Active</option>
-          <option>Completed</option>
-        </select>
-        <button type="submit" className="bg-blue-600 text-white p-2 rounded">{editId ? 'Update Sponsorship' : 'Add Sponsorship'}</button>
-      </form>
-
-      <div className="mt-6">
-        <h3 className="font-semibold mb-2">Existing Sponsors</h3>
-        <h4 className="text-lg font-semibold my-2">Month-wise Sponsorships by Category</h4>
-        <div className="bg-white p-4 rounded shadow">
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={lineData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid vertical={false} stroke="#e0e0e0" strokeDasharray="5 5" />
-              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#555" }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#555" }} />
-              <Tooltip contentStyle={{ backgroundColor: '#fff', border: 'none', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }} />
-              <Legend verticalAlign="bottom" height={36} />
-              <Line
-                type="monotone"
-                dataKey="Gold"
-                stroke="#FFD700"
-                strokeWidth={2}
-                dot={{ r: 4, stroke: '#FFD700', strokeWidth: 2, fill: '#fff' }}
-                activeDot={{ r: 6, fill: '#FFD700' }}
-              />
-              <Line
-                type="monotone"
-                dataKey="Silver"
-                stroke="#C0C0C0"
-                strokeWidth={2}
-                dot={{ r: 4, stroke: '#C0C0C0', strokeWidth: 2, fill: '#fff' }}
-                activeDot={{ r: 6, fill: '#C0C0C0' }}
-              />
-              <Line
-                type="monotone"
-                dataKey="Bronze"
-                stroke="#CD7F32"
-                strokeWidth={2}
-                dot={{ r: 4, stroke: '#CD7F32', strokeWidth: 2, fill: '#fff' }}
-                activeDot={{ r: 6, fill: '#CD7F32' }}
-              />
-              <Line
-                type="monotone"
-                dataKey="Supporter"
-                stroke="#32CD32"
-                strokeWidth={2}
-                dot={{ r: 4, stroke: '#32CD32', strokeWidth: 2, fill: '#fff' }}
-                activeDot={{ r: 6, fill: '#32CD32' }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+    <div className="bg-gray-50 min-h-screen p-6">
+      {/* Form Card */}
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 mb-8">
+        <h2 className="text-2xl font-extrabold text-indigo-600 mb-6 text-center">Sponsorship Tracker</h2>
+        <button onClick={downloadSponsorshipReport} className="mb-6 inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg transition">Download Sponsorship Report</button>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" placeholder="Sponsor Name" value={form.sponsorName} onChange={(e) => setForm({ ...form, sponsorName: e.target.value })} className="border p-2 w-full" required />
+            <select value={form.sponsorType} onChange={(e) => setForm({ ...form, sponsorType: e.target.value })} className="border p-2 w-full">
+              <option>Financial</option>
+              <option>Product-based</option>
+              <option>Venue</option>
+              <option>Media/PR</option>
+              <option>Food & Beverages</option>
+              <option>Technical/Equipment</option>
+            </select>
+            <textarea placeholder="Contribution Details" value={form.contributionDetails} onChange={(e) => setForm({ ...form, contributionDetails: e.target.value })} className="border p-2 w-full" rows={2} />
+            <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="border p-2 w-full">
+              <option>Gold</option>
+              <option>Silver</option>
+              <option>Bronze</option>
+              <option>Supporter</option>
+            </select>
+            <input type="text" placeholder="Sponsorship Duration (e.g., 6 months)" value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} className="border p-2 w-full" />
+            <input type="text" placeholder="Contact Person" value={form.contactPerson} onChange={(e) => setForm({ ...form, contactPerson: e.target.value })} className="border p-2 w-full" />
+            <input type="text" placeholder="Contact Email or Phone" value={form.contactInfo} onChange={(e) => setForm({ ...form, contactInfo: e.target.value })} className="border p-2 w-full" />
+            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="border p-2 w-full">
+              <option>Pending</option>
+              <option>Active</option>
+              <option>Completed</option>
+            </select>
+          </div>
+          <div className="flex justify-end">
+            <button type="submit" className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition">
+              {editId ? 'Update Sponsorship' : 'Add Sponsorship'}
+            </button>
+          </div>
+        </form>
+      </div>
+      {/* Charts Section */}
+      <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="text-lg font-semibold mb-4">Month-wise Sponsorships by Category</h3>
+          <div className="bg-white p-4 rounded shadow">
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={lineData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid vertical={false} stroke="#e0e0e0" strokeDasharray="5 5" />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#555" }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#555" }} />
+                <Tooltip contentStyle={{ backgroundColor: '#fff', border: 'none', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }} />
+                <Legend verticalAlign="bottom" height={36} />
+                <Line
+                  type="monotone"
+                  dataKey="Gold"
+                  stroke="#FFD700"
+                  strokeWidth={2}
+                  dot={{ r: 4, stroke: '#FFD700', strokeWidth: 2, fill: '#fff' }}
+                  activeDot={{ r: 6, fill: '#FFD700' }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="Silver"
+                  stroke="#C0C0C0"
+                  strokeWidth={2}
+                  dot={{ r: 4, stroke: '#C0C0C0', strokeWidth: 2, fill: '#fff' }}
+                  activeDot={{ r: 6, fill: '#C0C0C0' }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="Bronze"
+                  stroke="#CD7F32"
+                  strokeWidth={2}
+                  dot={{ r: 4, stroke: '#CD7F32', strokeWidth: 2, fill: '#fff' }}
+                  activeDot={{ r: 6, fill: '#CD7F32' }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="Supporter"
+                  stroke="#32CD32"
+                  strokeWidth={2}
+                  dot={{ r: 4, stroke: '#32CD32', strokeWidth: 2, fill: '#fff' }}
+                  activeDot={{ r: 6, fill: '#32CD32' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-        <div className="mt-6">
-          <h4 className="text-lg font-semibold mb-2">Sponsor Count by Type</h4>
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="text-lg font-semibold mb-4">Sponsor Count by Type</h3>
           <div className="bg-white p-4 rounded shadow">
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={typeData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
@@ -190,13 +217,16 @@ const Sponsorship = () => {
             </ResponsiveContainer>
           </div>
         </div>
-        <div className="flex items-center justify-center mt-6">
-          <button onClick={prevSponsor} className="text-2xl px-4">{'⟨'}</button>
+      </div>
+      {/* Slider Card */}
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 flex items-center justify-center mb-8">
+        <button onClick={prevSponsor} className="text-3xl text-indigo-600 hover:text-indigo-800 transition px-4">⟨</button>
+        <div className="mx-4 flex-shrink-0 bg-gray-100 rounded-lg p-4 shadow-inner w-full max-w-md text-center">
           {sponsorships.length > 0 ? (
             (() => {
               const s = sponsorships[currentIndex];
               return (
-                <div key={s._id} className={`border-2 p-4 mx-4 rounded ${getCategoryStyles(s.category)}`} style={{ minWidth: '300px' }}>
+                <>
                   <p><strong>Name:</strong> {s.sponsorName}</p>
                   <p><strong>Type:</strong> {s.sponsorType}</p>
                   <p><strong>Contribution:</strong> {s.contributionDetails}</p>
@@ -205,18 +235,21 @@ const Sponsorship = () => {
                   <p><strong>Contact Person:</strong> {s.contactPerson}</p>
                   <p><strong>Contact:</strong> {s.contactInfo}</p>
                   <p><strong>Status:</strong> {s.status}</p>
-                </div>
+                </>
               );
             })()
           ) : (
             <p className="text-gray-500">No sponsors available</p>
           )}
-          <button onClick={nextSponsor} className="text-2xl px-4">{'⟩'}</button>
         </div>
-        <div className="mt-8">
-          <h4 className="text-lg font-semibold mb-2">Manage Sponsors</h4>
-          <table className="min-w-full bg-white border">
-            <thead>
+        <button onClick={nextSponsor} className="text-3xl text-indigo-600 hover:text-indigo-800 transition px-4">⟩</button>
+      </div>
+      {/* Manage Sponsors Table Card */}
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6">
+        <h3 className="text-xl font-semibold mb-4">Manage Sponsors</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full table-auto">
+            <thead className="bg-indigo-100">
               <tr>
                 <th className="py-2 px-4 border">Name</th>
                 <th className="py-2 px-4 border">Type</th>
@@ -229,7 +262,7 @@ const Sponsorship = () => {
             </thead>
             <tbody>
               {sponsorships.map((s) => (
-                <tr key={s._id} className="text-center">
+                <tr key={s._id} className="hover:bg-gray-50">
                   <td className="py-2 px-4 border">{s.sponsorName}</td>
                   <td className="py-2 px-4 border">{s.sponsorType}</td>
                   <td className="py-2 px-4 border">{s.category}</td>

@@ -83,6 +83,7 @@ app.use(express.json());
 app.use(cors());
 app.use('/uploads', express.static('uploads'));
 
+
 // Special middleware for Stripe webhooks
 app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
 

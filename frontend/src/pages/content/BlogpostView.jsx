@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from '../../utils/axiosInstance';
 import { useNavigate, Link } from "react-router-dom";
 
 const BlogPosts = () => {
@@ -14,35 +14,22 @@ const BlogPosts = () => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:4000/api/blogposts/all", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        setPosts(data);
+        const res = await axiosInstance.get('/api/blogposts/all');
+        setPosts(res.data);
       } catch (err) {
-        console.error("Error fetching blog posts:", err);
+        console.error('Error fetching blog posts:', err);
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-
     fetchPosts();
   }, []);
 
   const handleDelete = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:4000/api/blogposts/delete/${id}`, {
+      await axiosInstance.delete(`/api/blogposts/delete/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPosts(posts.filter((post) => post._id !== id));
