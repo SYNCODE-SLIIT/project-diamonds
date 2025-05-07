@@ -93,30 +93,29 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="my-0 mx-auto">
-        {/* Modern Welcome Section - no card/container */}
-        <div className="flex items-center justify-between gap-8 mb-4 px-2">
-          <div className="flex items-center gap-4">
-            <div className="profile-picture-container">
-              {authUser?.profilePicture ? (
-                <img
-                  src={authUser.profilePicture}
-                  alt="Profile"
-                  className="w-14 h-14 rounded-full object-cover border-2 border-blue-200"
-                />
-              ) : (
-                <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center border-2 border-blue-200">
-                  <UserCircle2 className="w-8 h-8 text-blue-600" />
-                </div>
-              )}
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 leading-tight">
+      <div className="m-0 p-0 w-full">
+        {/* Top Bar */}
+        <div className="flex items-center justify-between w-full bg-white shadow-sm rounded-3xl px-6 py-4"
+             style={{ minHeight: '64px', marginBottom: 0, paddingBottom: '1rem' }}>
+          <div className="flex items-center gap-2">
+            {authUser?.profilePicture ? (
+              <img
+                src={authUser.profilePicture}
+                alt="Profile"
+                className="w-12 h-12 rounded-full object-cover border-2 border-blue-200"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center border-2 border-blue-200">
+                <UserCircle2 className="w-7 h-7 text-blue-600" />
+              </div>
+            )}
+            <div className="flex flex-col justify-center">
+              <span className="text-base font-semibold text-gray-900 leading-tight">
                 Welcome, <span className="bg-gradient-to-r from-blue-500 to-blue-400 bg-clip-text text-transparent">{authUser?.fullName || 'User'}</span>!
-              </h1>
-              <p className="text-base text-gray-500 leading-tight">
+              </span>
+              <span className="text-xs text-gray-500 leading-tight">
                 Here's your financial overview
-              </p>
+              </span>
             </div>
           </div>
           <div className="flex items-center">
@@ -215,7 +214,7 @@ const Dashboard = () => {
         </div>
 
         {/* Rest of the dashboard content */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-2">
           <InfoCard
             icon={<IoMdCard />}
             label="Total Balance"
