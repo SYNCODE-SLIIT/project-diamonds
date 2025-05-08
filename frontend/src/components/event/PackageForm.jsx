@@ -52,6 +52,23 @@ const PackageForm = ({ package: initialPackage, onSuccess, onCancel }) => {
     }
   }, [initialPackage]);
 
+  // Determine if fields should be editable based on package type
+  const isCustomPackage = formData.type === 'custom';
+  const isEditMode = !!initialPackage;
+  
+  // Function to check if a field should be editable
+  const isFieldEditable = (fieldName) => {
+    if (!isEditMode) return true; // All fields editable for new packages
+    
+    // For custom packages, only certain fields are editable
+    if (isCustomPackage) {
+      return ['price', 'travelFees', 'bookingTerms'].includes(fieldName) || 
+             fieldName.startsWith('teamInvolvement');
+    }
+    
+    return true; // All fields editable for system packages
+  };
+
   // Handle changes for simple input fields
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -538,11 +555,17 @@ const PackageForm = ({ package: initialPackage, onSuccess, onCancel }) => {
               value={formData.packageName}
               onChange={handleChange}
               onBlur={handleBlur}
-              className={`block w-full rounded-lg border ${errors.packageName ? 'border-red-300 bg-red-50' : touched.packageName && !errors.packageName ? 'border-green-300 bg-green-50' : 'border-gray-300'}
+              readOnly={isEditMode && isCustomPackage}
+              className={`block w-full rounded-lg border ${
+                isEditMode && isCustomPackage ? 'bg-gray-50 text-gray-500' : 
+                errors.packageName ? 'border-red-300 bg-red-50' : 
+                touched.packageName && !errors.packageName ? 'border-green-300 bg-green-50' : 
+                'border-gray-300'
+              }
                 py-2.5 px-4 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200`}
               placeholder="Enter package name"
             />
-            {touched.packageName && (
+            {touched.packageName && !isCustomPackage && (
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                 {errors.packageName ? 
                   <AlertCircle className="h-5 w-5 text-red-500" /> : 
@@ -598,12 +621,18 @@ const PackageForm = ({ package: initialPackage, onSuccess, onCancel }) => {
             value={formData.description}
             onChange={handleChange}
             onBlur={handleBlur}
+            readOnly={isEditMode && isCustomPackage}
             rows={4}
-            className={`block w-full rounded-lg border ${errors.description ? 'border-red-300 bg-red-50' : touched.description && !errors.description ? 'border-green-300 bg-green-50' : 'border-gray-300'}
+            className={`block w-full rounded-lg border ${
+              isEditMode && isCustomPackage ? 'bg-gray-50 text-gray-500' : 
+              errors.description ? 'border-red-300 bg-red-50' : 
+              touched.description && !errors.description ? 'border-green-300 bg-green-50' : 
+              'border-gray-300'
+            }
               py-2.5 px-4 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200`}
             placeholder="Provide a detailed description of the package..."
           />
-          {touched.description && (
+          {touched.description && !isCustomPackage && (
             <div className="absolute top-3 right-3 pointer-events-none">
               {errors.description ? 
                 <AlertCircle className="h-5 w-5 text-red-500" /> : 
@@ -641,154 +670,169 @@ const PackageForm = ({ package: initialPackage, onSuccess, onCancel }) => {
       </div>
 
       {/* Performances */}
-      <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-        <label className="flex items-center text-sm font-medium text-gray-700 mb-3">
-          <Music className="w-4 h-4 mr-1.5 text-red-500" />
-          Performances*
-        </label>
+      <div className="space-y-4 bg-white p-5 rounded-xl border border-gray-200">
+        <h3 className="flex items-center text-base font-semibold text-gray-800">
+          <Music className="w-5 h-5 mr-2 text-red-500" />
+          Performances
+        </h3>
+        
         {formData.performances.map((performance, index) => (
-          <motion.div 
+          <div 
             key={index} 
-            className="flex flex-col sm:flex-row gap-4 mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
+            className="relative p-4 bg-white rounded-lg border border-gray-100 shadow-sm"
           >
-            <div className="flex-1">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Performance Type*</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="E.g., Traditional, Contemporary..."
-                  value={performance.type}
-                  onChange={(e) => handlePerformanceChange(index, 'type', e.target.value)}
-                  onBlur={(e) => handlePerformanceBlur(index, 'type', e.target.value)}
-                  className={`block w-full rounded-lg border ${errors[`performances.${index}.type`] ? 'border-red-300 bg-red-50' : touched[`performances.${index}.type`] && !errors[`performances.${index}.type`] ? 'border-green-300 bg-green-50' : 'border-gray-300'}
-                    py-2 px-3 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200`}
-                />
-                {touched[`performances.${index}.type`] && (
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    {errors[`performances.${index}.type`] ? 
-                      <AlertCircle className="h-4 w-4 text-red-500" /> : 
-                      <CheckCircle className="h-4 w-4 text-green-500" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Performance Type*</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={performance.type}
+                    onChange={(e) => handlePerformanceChange(index, 'type', e.target.value)}
+                    onBlur={(e) => handlePerformanceBlur(index, 'type', e.target.value)}
+                    className={`block w-full rounded-lg border ${
+                      isEditMode && isCustomPackage ? 'bg-gray-50 text-gray-500' : 
+                      errors[`performances.${index}.type`] ? 'border-red-300 bg-red-50' : 
+                      touched[`performances.${index}.type`] && !errors[`performances.${index}.type`] ? 'border-green-300 bg-green-50' : 
+                      'border-gray-300'
                     }
-                  </div>
-                )}
+                      py-2 px-3 text-gray-900 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200`}
+                    placeholder="e.g., Traditional Dance"
+                    readOnly={isEditMode && isCustomPackage}
+                  />
+                  {touched[`performances.${index}.type`] && !isCustomPackage && (
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      {errors[`performances.${index}.type`] ? 
+                        <AlertCircle className="h-4 w-4 text-red-500" /> : 
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      }
+                    </div>
+                  )}
+                </div>
+                {errors[`performances.${index}.type`] && <p className="text-red-500 text-xs mt-1">{errors[`performances.${index}.type`]}</p>}
               </div>
-              {errors[`performances.${index}.type`] && (
-                <p className="text-red-500 text-xs mt-1">{errors[`performances.${index}.type`]}</p>
-              )}
-            </div>
-            <div className="flex-1">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Duration*</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="E.g., 30 minutes, 2 hours"
-                  value={performance.duration}
-                  onChange={(e) => handlePerformanceChange(index, 'duration', e.target.value)}
-                  onBlur={(e) => handlePerformanceBlur(index, 'duration', e.target.value)}
-                  className={`block w-full rounded-lg border ${errors[`performances.${index}.duration`] ? 'border-red-300 bg-red-50' : touched[`performances.${index}.duration`] && !errors[`performances.${index}.duration`] ? 'border-green-300 bg-green-50' : 'border-gray-300'}
-                    py-2 px-3 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200`}
-                />
-                {touched[`performances.${index}.duration`] && (
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    {errors[`performances.${index}.duration`] ? 
-                      <AlertCircle className="h-4 w-4 text-red-500" /> : 
-                      <CheckCircle className="h-4 w-4 text-green-500" />
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Duration*</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={performance.duration}
+                    onChange={(e) => handlePerformanceChange(index, 'duration', e.target.value)}
+                    onBlur={(e) => handlePerformanceBlur(index, 'duration', e.target.value)}
+                    className={`block w-full rounded-lg border ${
+                      isEditMode && isCustomPackage ? 'bg-gray-50 text-gray-500' : 
+                      errors[`performances.${index}.duration`] ? 'border-red-300 bg-red-50' : 
+                      touched[`performances.${index}.duration`] && !errors[`performances.${index}.duration`] ? 'border-green-300 bg-green-50' : 
+                      'border-gray-300'
                     }
-                  </div>
-                )}
+                      py-2 px-3 text-gray-900 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200`}
+                    placeholder="e.g., 30 minutes"
+                    readOnly={isEditMode && isCustomPackage}
+                  />
+                  {touched[`performances.${index}.duration`] && !isCustomPackage && (
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      {errors[`performances.${index}.duration`] ? 
+                        <AlertCircle className="h-4 w-4 text-red-500" /> : 
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      }
+                    </div>
+                  )}
+                </div>
+                {errors[`performances.${index}.duration`] && <p className="text-red-500 text-xs mt-1">{errors[`performances.${index}.duration`]}</p>}
               </div>
-              {errors[`performances.${index}.duration`] && (
-                <p className="text-red-500 text-xs mt-1">{errors[`performances.${index}.duration`]}</p>
-              )}
             </div>
-            {formData.performances.length > 1 && (
-              <div className="flex items-center">
-                <motion.button
-                  type="button"
-                  onClick={() => removeArrayItem('performances', index)}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors"
-                >
-                  <XCircle className="w-5 h-5" />
-                </motion.button>
-              </div>
+            
+            {!isCustomPackage && formData.performances.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeArrayItem('performances', index)}
+                className="absolute -top-3 -right-3 bg-red-100 text-red-600 rounded-full p-1 hover:bg-red-200 transition-colors"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
             )}
-          </motion.div>
+          </div>
         ))}
-        <motion.button
-          type="button"
-          onClick={() => addArrayItem('performances', { type: '', duration: '' })}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="flex items-center text-red-600 mt-2 px-4 py-2 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
-        >
-          <PlusCircle className="w-4 h-4 mr-2" />
-          Add Performance
-        </motion.button>
-        {errors.performances && <p className="text-red-500 text-sm mt-2">{errors.performances}</p>}
+        
+        {!isCustomPackage && (
+          <div className="flex justify-center">
+            <motion.button
+              type="button"
+              onClick={() => addArrayItem('performances', { type: '', duration: '' })}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors text-sm font-medium"
+            >
+              <PlusCircle className="w-4 h-4 mr-1.5" />
+              Add Performance
+            </motion.button>
+          </div>
+        )}
       </div>
 
       {/* Dance Styles */}
-      <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-        <label className="flex items-center text-sm font-medium text-gray-700 mb-3">
-          <Tag className="w-4 h-4 mr-1.5 text-red-500" />
-          Dance Styles*
-        </label>
-        {formData.danceStyles.map((style, index) => (
-          <motion.div 
-            key={index} 
-            className="flex items-center gap-3 mb-3"
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                value={style}
-                onChange={(e) => handleArrayChange('danceStyles', index, e.target.value)}
-                onBlur={(e) => handleArrayBlur('danceStyles', index, e.target.value)}
-                placeholder="E.g., Contemporary, Ballet, Hip Hop..."
-                className={`block w-full rounded-lg border ${errors[`danceStyles.${index}`] ? 'border-red-300 bg-red-50' : touched[`danceStyles.${index}`] && !errors[`danceStyles.${index}`] ? 'border-green-300 bg-green-50' : 'border-gray-300'}
-                  py-2.5 px-4 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200`}
-              />
-              {touched[`danceStyles.${index}`] && (
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  {errors[`danceStyles.${index}`] ? 
-                    <AlertCircle className="h-5 w-5 text-red-500" /> : 
-                    <CheckCircle className="h-5 w-5 text-green-500" />
+      <div className="space-y-3 bg-white p-5 rounded-xl border border-gray-200">
+        <h3 className="flex items-center text-base font-semibold text-gray-800">
+          <Tag className="w-5 h-5 mr-2 text-red-500" />
+          Dance Styles
+        </h3>
+        <div className="space-y-2">
+          {formData.danceStyles.map((style, index) => (
+            <div key={index} className="relative">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={style}
+                  onChange={(e) => handleArrayChange('danceStyles', index, e.target.value)}
+                  onBlur={(e) => handleArrayBlur('danceStyles', index, e.target.value)}
+                  className={`block w-full rounded-lg border ${
+                    isEditMode && isCustomPackage ? 'bg-gray-50 text-gray-500' : 
+                    errors[`danceStyles.${index}`] ? 'border-red-300 bg-red-50' : 
+                    touched[`danceStyles.${index}`] && !errors[`danceStyles.${index}`] ? 'border-green-300 bg-green-50' : 
+                    'border-gray-300'
                   }
-                </div>
+                    py-2 px-3 text-gray-900 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200`}
+                  placeholder="e.g., Kandyan Dance"
+                  readOnly={isEditMode && isCustomPackage}
+                />
+                {touched[`danceStyles.${index}`] && !isCustomPackage && (
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    {errors[`danceStyles.${index}`] ? 
+                      <AlertCircle className="h-4 w-4 text-red-500" /> : 
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    }
+                  </div>
+                )}
+              </div>
+              {errors[`danceStyles.${index}`] && <p className="text-red-500 text-xs mt-1">{errors[`danceStyles.${index}`]}</p>}
+              
+              {!isCustomPackage && formData.danceStyles.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeArrayItem('danceStyles', index)}
+                  className="absolute top-1/2 -translate-y-1/2 -right-7 text-red-400 hover:text-red-600 transition-colors"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
               )}
             </div>
-            {formData.danceStyles.length > 1 && (
-              <motion.button
-                type="button"
-                onClick={() => removeArrayItem('danceStyles', index)}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors"
-              >
-                <XCircle className="w-5 h-5" />
-              </motion.button>
-            )}
-          </motion.div>
-        ))}
-        <motion.button
-          type="button"
-          onClick={() => addArrayItem('danceStyles', '')}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="flex items-center text-red-600 mt-2 px-4 py-2 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
-        >
-          <PlusCircle className="w-4 h-4 mr-2" />
-          Add Dance Style
-        </motion.button>
-        {errors['danceStyles.0'] && <p className="text-red-500 text-sm mt-2">{errors['danceStyles.0']}</p>}
+          ))}
+        </div>
+        
+        {!isCustomPackage && (
+          <div className="flex justify-center mt-3">
+            <motion.button
+              type="button"
+              onClick={() => addArrayItem('danceStyles', '')}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors text-sm font-medium"
+            >
+              <PlusCircle className="w-4 h-4 mr-1.5" />
+              Add Dance Style
+            </motion.button>
+          </div>
+        )}
       </div>
 
       {/* Team Involvement */}
@@ -925,7 +969,7 @@ const PackageForm = ({ package: initialPackage, onSuccess, onCancel }) => {
           {errors.travelFees && <p className="mt-1.5 text-sm text-red-600">{errors.travelFees}</p>}
         </div>
 
-        {/* Package Type (read-only for admin) */}
+        {/* Package Type */}
         <div>
           <label className="flex items-center text-sm font-medium text-gray-700 mb-1.5">
             <Package2 className="w-4 h-4 mr-1.5 text-red-500" />
@@ -934,11 +978,20 @@ const PackageForm = ({ package: initialPackage, onSuccess, onCancel }) => {
           <select
             name="type"
             value={formData.type}
-            disabled
-            className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
+            onChange={handleChange}
+            onBlur={handleBlur}
+            disabled={isEditMode} // Only editable when creating a new package
+            className={`w-full p-2.5 border rounded-lg ${
+              isEditMode ? 'bg-gray-50 text-gray-500 border-gray-300' : 
+              'border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent'
+            }`}
           >
             <option value="system">System</option>
+            <option value="custom">Custom</option>
           </select>
+          <p className="text-xs text-gray-500 mt-1">
+            {isEditMode ? "Package type cannot be changed after creation" : "Select 'Custom' for client-specific packages"}
+          </p>
         </div>
       </div>
 
