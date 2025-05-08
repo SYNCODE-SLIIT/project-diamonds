@@ -49,6 +49,160 @@ export const uploadEventFeatureImage = async (eventId, imageFile) => {
 };
 
 /**
+ * Upload event poster image(s)
+ * @param {string} eventId - ID of the event
+ * @param {FileList|File} posterFiles - Single poster file or multiple poster files
+ * @returns {Promise<Object>} - Updated event media data
+ */
+export const uploadEventPoster = async (eventId, posterFiles) => {
+  try {
+    const formData = new FormData();
+    formData.append('eventId', eventId);
+    
+    // Handle both single file and multiple files
+    if (posterFiles instanceof FileList || Array.isArray(posterFiles)) {
+      Array.from(posterFiles).forEach(file => {
+        formData.append('posterImages', file);
+      });
+    } else {
+      // Single file case
+      formData.append('posterImages', posterFiles);
+    }
+    
+    // Include existing media data to prevent overwrite
+    const currentMedia = await fetchEventMedia(eventId);
+    
+    // Preserve feature image and other data
+    if (currentMedia.featureImage) {
+      formData.append('preserveFeatureImage', 'true');
+    }
+    
+    // Add social media links to prevent overwrite
+    formData.append('socialMediaLinks', JSON.stringify(currentMedia.socialMediaLinks || {}));
+    
+    // Include existing event images and videos
+    if (currentMedia.eventImages && currentMedia.eventImages.length > 0) {
+      formData.append('preserveEventImages', 'true');
+    }
+    
+    if (currentMedia.eventVideos && currentMedia.eventVideos.length > 0) {
+      formData.append('preserveEventVideos', 'true');
+    }
+    
+    const response = await axiosInstance.post('/api/event-media/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error uploading event poster:', error);
+    throw error;
+  }
+};
+
+/**
+ * Upload multiple event images
+ * @param {string} eventId - ID of the event
+ * @param {FileList} imageFiles - The image files to upload
+ * @returns {Promise<Object>} - Updated event media data
+ */
+export const uploadEventImages = async (eventId, imageFiles) => {
+  try {
+    const formData = new FormData();
+    formData.append('eventId', eventId);
+    
+    // Append each image file to the form data
+    Array.from(imageFiles).forEach(file => {
+      formData.append('eventImages', file);
+    });
+    
+    // Include existing media data to prevent overwrite
+    const currentMedia = await fetchEventMedia(eventId);
+    
+    // Preserve feature image
+    if (currentMedia.featureImage) {
+      formData.append('preserveFeatureImage', 'true');
+    }
+    
+    // Preserve poster
+    if (currentMedia.poster) {
+      formData.append('preservePoster', 'true');
+    }
+    
+    // Preserve event videos
+    if (currentMedia.eventVideos && currentMedia.eventVideos.length > 0) {
+      formData.append('preserveEventVideos', 'true');
+    }
+    
+    // Add social media links to prevent overwrite
+    formData.append('socialMediaLinks', JSON.stringify(currentMedia.socialMediaLinks || {}));
+    
+    const response = await axiosInstance.post('/api/event-media/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error uploading event images:', error);
+    throw error;
+  }
+};
+
+/**
+ * Upload multiple event videos
+ * @param {string} eventId - ID of the event
+ * @param {FileList} videoFiles - The video files to upload
+ * @returns {Promise<Object>} - Updated event media data
+ */
+export const uploadEventVideos = async (eventId, videoFiles) => {
+  try {
+    const formData = new FormData();
+    formData.append('eventId', eventId);
+    
+    // Append each video file to the form data
+    Array.from(videoFiles).forEach(file => {
+      formData.append('eventVideos', file);
+    });
+    
+    // Include existing media data to prevent overwrite
+    const currentMedia = await fetchEventMedia(eventId);
+    
+    // Preserve feature image
+    if (currentMedia.featureImage) {
+      formData.append('preserveFeatureImage', 'true');
+    }
+    
+    // Preserve poster
+    if (currentMedia.poster) {
+      formData.append('preservePoster', 'true');
+    }
+    
+    // Preserve event images
+    if (currentMedia.eventImages && currentMedia.eventImages.length > 0) {
+      formData.append('preserveEventImages', 'true');
+    }
+    
+    // Add social media links to prevent overwrite
+    formData.append('socialMediaLinks', JSON.stringify(currentMedia.socialMediaLinks || {}));
+    
+    const response = await axiosInstance.post('/api/event-media/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error uploading event videos:', error);
+    throw error;
+  }
+};
+
+/**
  * Update social media links for an event
  * @param {string} eventId - ID of the event
  * @param {Object} links - Object containing social media links

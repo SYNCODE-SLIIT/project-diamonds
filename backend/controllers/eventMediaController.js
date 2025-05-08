@@ -2,6 +2,10 @@
 import EventMedia from '../models/EventMedia.js';
 import cloudinary from '../config/cloudinary.js';
 
+// Default image URLs
+const DEFAULT_FEATURE_IMAGE_URL = "https://res.cloudinary.com/du5c9fw6s/image/upload/v1746620459/default_event_j82gdq.jpg";
+const DEFAULT_POSTER_IMAGE_URL = "https://res.cloudinary.com/du5c9fw6s/image/upload/v1746620459/default_poster_smflli.jpg";
+
 // Upload helper
 const uploadToCloudinary = async (file, folder) => {
   const uploaded = await cloudinary.uploader.upload(file.path, {
@@ -20,12 +24,17 @@ export const uploadEventMedia = async (req, res) => {
     // Prepare upload URLs
     const uploadPromises = [];
 
+    // Find existing event media to preserve existing data if needed
+    let existingMedia = await EventMedia.findOne({ eventId });
+    
+    // Initialize media object with existing data or defaults
     const media = {
       eventId,
-      featureImage: "",
-      eventImages: [],
-      eventVideos: [],
-      poster: "",
+      featureImage: (req.body.preserveFeatureImage && existingMedia?.featureImage) ? existingMedia.featureImage : DEFAULT_FEATURE_IMAGE_URL,
+      eventImages: (req.body.preserveEventImages && existingMedia?.eventImages) ? [...existingMedia.eventImages] : [],
+      eventVideos: (req.body.preserveEventVideos && existingMedia?.eventVideos) ? [...existingMedia.eventVideos] : [],
+      poster: (req.body.preservePoster && existingMedia?.poster) ? existingMedia.poster : '',
+      posterImages: (req.body.preservePosterImages && existingMedia?.posterImages) ? [...existingMedia.posterImages] : [],
       socialMediaLinks: JSON.parse(req.body.socialMediaLinks || "{}")
     };
 
@@ -38,13 +47,24 @@ export const uploadEventMedia = async (req, res) => {
       );
     }
 
-    // Poster
+    // Legacy single poster
     if (req.files.poster) {
       uploadPromises.push(
         uploadToCloudinary(req.files.poster[0], folderName).then(url => {
           media.poster = url;
         })
       );
+    }
+    
+    // Multiple poster images (new field)
+    if (req.files.posterImages) {
+      for (const file of req.files.posterImages) {
+        uploadPromises.push(
+          uploadToCloudinary(file, folderName).then(url => {
+            media.posterImages.push(url);
+          })
+        );
+      }
     }
 
     // Event Images

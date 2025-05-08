@@ -41,8 +41,8 @@ const EventRequestSchema = new mongoose.Schema({
     default: 'private' 
   },
   eventTime: {
-    startDate: { type: Date, required: true },
-    endDate: { type: Date, required: true }
+    startDate: { type: Date },
+    endDate: { type: Date}
   },
   guestCount: {
     type: Number,
@@ -69,6 +69,10 @@ const EventRequestSchema = new mongoose.Schema({
   },
   approvalDate: {
     type: Date,
+    default: null,
+  },
+  rejectionReason: {
+    type: String,
     default: null,
   },
   createdAt: {

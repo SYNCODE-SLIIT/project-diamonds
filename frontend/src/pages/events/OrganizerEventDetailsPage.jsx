@@ -35,7 +35,9 @@ import {
   Phone,
   Save,
   CalendarIcon,
-  RefreshCw
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { 
   Facebook,
@@ -44,7 +46,7 @@ import {
   Twitter
 } from 'lucide-react';
 import { fetchAllEvents, addNoteToEvent, updateEventNote, deleteEventNote, updateEventDetails } from '../../services/eventService';
-import { fetchEventMedia, uploadEventFeatureImage, updateSocialMediaLinks } from '../../services/eventMediaService';
+import { fetchEventMedia, uploadEventFeatureImage, uploadEventPoster, uploadEventImages, uploadEventVideos, updateSocialMediaLinks } from '../../services/eventMediaService';
 import { getPackageById, getPackages } from '../../services/packageService';
 import { getAdditionalServices } from '../../services/additionalServiceService';
 import PackageDetailsModal from '../../components/event/PackageDetailsModal';
@@ -93,6 +95,9 @@ const EventDetailPage = () => {
   const [editedEventDetails, setEditedEventDetails] = useState({});
   const [validationErrors, setValidationErrors] = useState({});
   const [updatingEvent, setUpdatingEvent] = useState(false);
+  
+  const [currentPosterIndex, setCurrentPosterIndex] = useState(0);
+  const [uploadingPoster, setUploadingPoster] = useState(false);
   
   // Check if we're in the admin path to determine where to navigate back to
   const isAdminPath = window.location.pathname.includes('/admin/');
@@ -414,6 +419,171 @@ const EventDetailPage = () => {
       toast.error('An error occurred while uploading the image');
     } finally {
       setUploadingImage(false);
+    }
+  };
+  
+  // Handle poster upload
+  const handlePosterUpload = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    // Validate file types and sizes
+    let isValid = true;
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      
+      // Check file type
+      if (!validTypes.includes(file.type)) {
+        toast.error(`${file.name} is not a valid image file (JPEG, PNG, WebP)`);
+        isValid = false;
+        break;
+      }
+      
+      // Check file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name} exceeds the maximum size of 5MB`);
+        isValid = false;
+        break;
+      }
+    }
+    
+    if (!isValid) return;
+    
+    try {
+      setUploadingPoster(true);
+      const uploadingToast = toast.loading(`Uploading ${files.length} poster image${files.length > 1 ? 's' : ''}...`);
+      const response = await uploadEventPoster(id, files);
+      
+      if (response.success) {
+        // Update the event media state with the new poster images
+        const updatedEventMedia = {
+          ...eventMedia,
+          posterImages: response.data.posterImages
+        };
+        
+        setEventMedia(updatedEventMedia);
+        toast.success('Poster images uploaded successfully!', { id: uploadingToast });
+        
+        // Refresh event data to ensure all state is consistent
+        await refreshEventData(false);
+      } else {
+        toast.error('Failed to upload poster images', { id: uploadingToast });
+      }
+    } catch (error) {
+      console.error('Error uploading poster images:', error);
+      toast.error('An error occurred while uploading the poster images');
+    } finally {
+      setUploadingPoster(false);
+    }
+  };
+  
+  // Handle event images upload
+  const handleImagesUpload = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    // Validate file types and sizes
+    let isValid = true;
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      
+      // Check file type
+      if (!validTypes.includes(file.type)) {
+        toast.error(`${file.name} is not a valid image file (JPEG, PNG, WebP)`);
+        isValid = false;
+        break;
+      }
+      
+      // Check file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name} exceeds the maximum size of 5MB`);
+        isValid = false;
+        break;
+      }
+    }
+    
+    if (!isValid) return;
+    
+    try {
+      const uploadingToast = toast.loading(`Uploading ${files.length} images...`);
+      const response = await uploadEventImages(id, files);
+      
+      if (response.success) {
+        // Update the event media state with the new images
+        const updatedEventMedia = {
+          ...eventMedia,
+          eventImages: response.data.eventImages
+        };
+        
+        setEventMedia(updatedEventMedia);
+        toast.success('Images uploaded successfully!', { id: uploadingToast });
+        
+        // Refresh event data to ensure all state is consistent
+        await refreshEventData(false);
+      } else {
+        toast.error('Failed to upload images', { id: uploadingToast });
+      }
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      toast.error('An error occurred while uploading the images');
+    }
+  };
+  
+  // Handle event videos upload
+  const handleVideosUpload = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    // Validate file types and sizes
+    let isValid = true;
+    const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm'];
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      
+      // Check file type
+      if (!validTypes.includes(file.type)) {
+        toast.error(`${file.name} is not a valid video file (MP4, MOV, AVI, WebM)`);
+        isValid = false;
+        break;
+      }
+      
+      // Check file size (50MB max)
+      if (file.size > 50 * 1024 * 1024) {
+        toast.error(`${file.name} exceeds the maximum size of 50MB`);
+        isValid = false;
+        break;
+      }
+    }
+    
+    if (!isValid) return;
+    
+    try {
+      const uploadingToast = toast.loading(`Uploading ${files.length} videos... This may take a while`);
+      const response = await uploadEventVideos(id, files);
+      
+      if (response.success) {
+        // Update the event media state with the new videos
+        const updatedEventMedia = {
+          ...eventMedia,
+          eventVideos: response.data.eventVideos
+        };
+        
+        setEventMedia(updatedEventMedia);
+        toast.success('Videos uploaded successfully!', { id: uploadingToast });
+        
+        // Refresh event data to ensure all state is consistent
+        await refreshEventData(false);
+      } else {
+        toast.error('Failed to upload videos', { id: uploadingToast });
+      }
+    } catch (error) {
+      console.error('Error uploading videos:', error);
+      toast.error('An error occurred while uploading the videos');
     }
   };
   
@@ -1038,6 +1208,24 @@ const EventDetailPage = () => {
     }
   };
 
+  // Navigate to the previous poster in the carousel
+  const goToPreviousPoster = () => {
+    if (!eventMedia?.posterImages || eventMedia.posterImages.length <= 1) return;
+    
+    setCurrentPosterIndex(prevIndex => 
+      prevIndex === 0 ? eventMedia.posterImages.length - 1 : prevIndex - 1
+    );
+  };
+
+  // Navigate to the next poster in the carousel
+  const goToNextPoster = () => {
+    if (!eventMedia?.posterImages || eventMedia.posterImages.length <= 1) return;
+    
+    setCurrentPosterIndex(prevIndex => 
+      prevIndex === eventMedia.posterImages.length - 1 ? 0 : prevIndex + 1
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -1121,6 +1309,8 @@ const EventDetailPage = () => {
         ref={posterInputRef} 
         className="hidden" 
         accept="image/*" 
+        onChange={handlePosterUpload}
+        multiple
       />
       
       <input 
@@ -1129,6 +1319,7 @@ const EventDetailPage = () => {
         className="hidden" 
         accept="image/*" 
         multiple 
+        onChange={handleImagesUpload}
       />
       
       <input 
@@ -1137,6 +1328,7 @@ const EventDetailPage = () => {
         className="hidden" 
         accept="video/*" 
         multiple 
+        onChange={handleVideosUpload}
       />
       
       {/* Feature Image Hero Section - removing the navbar space and increasing height to 75vh */}
@@ -1810,42 +2002,106 @@ const EventDetailPage = () => {
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center">
                     <FileText className="w-5 h-5 mr-2 text-red-600" />
-                    <h2 className="text-xl font-bold text-gray-800">Event Poster</h2>
+                    <h2 className="text-xl font-bold text-gray-800">Event Posters</h2>
                   </div>
                   
                   <button 
                     onClick={() => posterInputRef.current.click()}
-                    className={`mt-4 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm ${event.status === 'cancelled' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    disabled={event.status === 'cancelled'}
-                    title={event.status === 'cancelled' ? "Cannot edit cancelled events" : "Upload Poster"}
+                    className={`mt-4 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm ${event.status === 'cancelled' || uploadingPoster ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={event.status === 'cancelled' || uploadingPoster}
+                    title={event.status === 'cancelled' ? "Cannot edit cancelled events" : "Upload Posters"}
                   >
-                    <Plus className="w-4 h-4 mr-1 inline" />
-                    Upload Poster
+                    {uploadingPoster ? (
+                      <span className="flex items-center">
+                        <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-red-700 mr-2"></span>
+                        Uploading...
+                      </span>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4 mr-1 inline" />
+                        Upload Posters
+                      </>
+                    )}
                   </button>
                 </div>
                 
-                {eventMedia?.poster ? (
-                  <div className="aspect-[3/4] w-full">
-                    <img 
-                      src={eventMedia.poster} 
-                      alt="Event poster" 
-                      className="w-full h-full object-contain rounded-lg"
-                    />
+                {eventMedia?.posterImages && eventMedia.posterImages.length > 0 ? (
+                  <div className="h-[32rem] relative">
+                    {/* Image carousel */}
+                    <div className="w-full h-full flex justify-center">
+                      <img 
+                        src={eventMedia.posterImages[currentPosterIndex]} 
+                        alt={`Event poster ${currentPosterIndex + 1}`} 
+                        className="h-full object-contain rounded-lg"
+                      />
+                    </div>
+                    
+                    {/* Navigation arrows - only show if there are multiple images */}
+                    {eventMedia.posterImages.length > 1 && (
+                      <>
+                        <button 
+                          onClick={goToPreviousPoster}
+                          className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-r-lg"
+                        >
+                          <ChevronLeft className="w-6 h-6" />
+                        </button>
+                        
+                        <button 
+                          onClick={goToNextPoster}
+                          className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-l-lg"
+                        >
+                          <ChevronRight className="w-6 h-6" />
+                        </button>
+                      </>
+                    )}
+                    
+                    {/* Indicator dots */}
+                    {eventMedia.posterImages.length > 1 && (
+                      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                        {eventMedia.posterImages.map((_, index) => (
+                          <button 
+                            key={index}
+                            onClick={() => setCurrentPosterIndex(index)}
+                            className={`w-3 h-3 rounded-full ${index === currentPosterIndex ? 'bg-red-600' : 'bg-gray-300'}`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Image counter */}
+                    <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                      {currentPosterIndex + 1}/{eventMedia.posterImages.length}
+                    </div>
                   </div>
                 ) : (
-                  <div className="aspect-[3/4] flex flex-col items-center justify-center bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                    <FileText className="w-12 h-12 text-gray-400 mb-2" />
-                    <p className="text-gray-500">No poster uploaded yet</p>
-                    <button 
-                      className={`mt-4 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm ${event.status === 'cancelled' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      onClick={() => posterInputRef.current.click()}
-                      disabled={event.status === 'cancelled'}
-                      title={event.status === 'cancelled' ? "Cannot edit cancelled events" : "Upload Poster"}
-                    >
-                      <Plus className="w-4 h-4 mr-1 inline" />
-                      Upload Poster
-                    </button>
-                  </div>
+                  eventMedia?.poster ? (
+                    // Fallback for legacy poster field
+                    <div className="h-[32rem] flex justify-center">
+                      <img 
+                        src={eventMedia.poster} 
+                        alt="Event poster" 
+                        className="h-full object-contain rounded-lg"
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-60 flex flex-col items-center justify-center bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                      <FileText className="w-12 h-12 text-gray-400 mb-2" />
+                      <p className="text-gray-500">No poster uploaded yet</p>
+                      <button 
+                        className={`mt-4 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm ${event.status === 'cancelled' || uploadingPoster ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        onClick={() => posterInputRef.current.click()}
+                        disabled={event.status === 'cancelled' || uploadingPoster}
+                        title={event.status === 'cancelled' ? "Cannot edit cancelled events" : "Upload Poster"}
+                      >
+                        {uploadingPoster ? "Uploading..." : (
+                          <>
+                            <Plus className="w-4 h-4 mr-1 inline" />
+                            Upload Posters
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )
                 )}
               </div>
             </div>

@@ -140,11 +140,25 @@ export const updateRequestStatus = async (req, res) => {
     const request = await EventRequest.findById(id);
     if (!request) return res.status(404).json({ message: 'Request not found' });
 
-    request.status = status;
-    request.reviewedBy = reviewedBy;
-    request.approvalDate = new Date();
-
-    await request.save();
+    // Update only specific fields, rather than the entire document
+    // to avoid overwriting required fields like eventTime
+    const updateFields = {
+      status: status,
+      reviewedBy: reviewedBy,
+      approvalDate: new Date()
+    };
+    
+    // Add rejection reason if applicable
+    if (status === 'rejected' && rejectionReason) {
+      updateFields.rejectionReason = rejectionReason;
+    }
+    
+    // Update the document with findByIdAndUpdate to avoid validation issues
+    const updatedRequest = await EventRequest.findByIdAndUpdate(
+      id,
+      updateFields,
+      { new: true, runValidators: false }
+    );
 
     // If approved, create new Event
     if (status === 'approved') {

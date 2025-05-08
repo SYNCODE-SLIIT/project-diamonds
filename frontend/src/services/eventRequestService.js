@@ -23,5 +23,9 @@ export const updateRequest = (id, data) =>
 export const deleteRequest = (id) =>
   axios.delete(`${API}/${id}`).then(res => res.data);
 
-export const updateStatus = (id, status, reviewedBy) =>
-  axios.patch(`${API}/${id}/status`, { status, reviewedBy }).then(res => res.data);
+export const updateStatus = (id, status, reviewedBy, rejectionReason) =>
+  axios.patch(`${API}/${id}/status`, { 
+    status, 
+    reviewedBy, 
+    rejectionReason 
+  }).then(res => res.data);
