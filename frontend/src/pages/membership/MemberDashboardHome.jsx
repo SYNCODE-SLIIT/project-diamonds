@@ -29,6 +29,7 @@ const MemberDashboardHome = () => {
   const [approvedEvents, setApprovedEvents] = useState([]);
   const [showApprovedEvents, setShowApprovedEvents] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [groupUnread, setGroupUnread] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifLoading, setNotifLoading] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
@@ -41,8 +42,8 @@ const MemberDashboardHome = () => {
   const unreadCount = notifications.filter(n => !n.isRead).length;
   
   // Calculate total notifications that need attention
-  const hasImportantNotifications = unreadMessages > 0 || assignmentRequests.length > 0;
-  const totalUnreadNotifications = unreadCount + unreadMessages + assignmentRequests.length;
+  const hasImportantNotifications = unreadMessages > 0 || assignmentRequests.length > 0 || approvedEvents.length > 0;
+  const totalUnreadNotifications = unreadCount + unreadMessages + assignmentRequests.length + approvedEvents.length;
 
   // Fetch dashboard data
   const fetchDashboardData = async () => {
@@ -121,11 +122,9 @@ const MemberDashboardHome = () => {
       const gs = data.groups || [];
       setGroups(gs);
       
-      // Calculate unread group messages
-      const groupUnread = gs.reduce((total, group) => total + (group.unreadCount || 0), 0);
-      
-      // Combine with manager unread messages
-      setUnreadMessages(groupUnread + managerUnread);
+      // Calculate and store unread group messages
+      const count = gs.reduce((total, group) => total + (group.unreadCount || 0), 0);
+      setGroupUnread(count);
     } catch (err) {
       console.error('Error fetching message groups:', err);
     }
@@ -156,15 +155,16 @@ const MemberDashboardHome = () => {
       if (thread) {
         setManagerThread(thread);
         setManagerUnread(thread.unreadCount || 0);
-        
-        // Update total unread count when manager thread is found
-        const groupUnread = groups.reduce((total, group) => total + (group.unreadCount || 0), 0);
-        setUnreadMessages(groupUnread + (thread.unreadCount || 0));
       }
     } catch (err) {
       console.error('Error fetching manager thread:', err);
     }
   };
+
+  // Derive unreadMessages from groupUnread and managerUnread
+  useEffect(() => {
+    setUnreadMessages(groupUnread + managerUnread);
+  }, [groupUnread, managerUnread]);
 
   // Load all data
   useEffect(() => {
@@ -296,7 +296,7 @@ const MemberDashboardHome = () => {
                   </div>
                 ) : (
                   <>
-                    {(!notifications.length && !assignmentRequests.length && !unreadMessages) ? (
+                    {(!notifications.length && !assignmentRequests.length && !unreadMessages && !approvedEvents.length) ? (
                       <div className="p-8 text-center">
                         <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 mb-3">
                           <FiBell className="h-6 w-6 text-gray-400" />
@@ -306,7 +306,7 @@ const MemberDashboardHome = () => {
                     ) : (
                       <ul className="divide-y divide-gray-100">
                         {/* Priority notifications section */}
-                        {(unreadMessages > 0 || assignmentRequests.length > 0) && (
+                        {(unreadMessages > 0 || assignmentRequests.length > 0 || approvedEvents.length > 0) && (
                           <li className="p-3 bg-purple-50">
                             <h3 className="text-xs uppercase text-purple-700 font-semibold mb-2">Priority Updates</h3>
                             <div className="space-y-2">
@@ -338,6 +338,21 @@ const MemberDashboardHome = () => {
                                     <p className="text-xs text-gray-500">
                                       {managerUnread > 0 ? `Including ${managerUnread} from your manager` : 'From your conversations'}
                                     </p>
+                                  </div>
+                                </Link>
+                              )}
+                              
+                              {/* Upcoming Events notifications */}
+                              {approvedEvents.length > 0 && (
+                                <Link to="/member-dashboard/upcoming-events" className="flex items-center p-2 rounded-md bg-white hover:bg-green-50 transition-colors">
+                                  <div className="rounded-full p-2 bg-green-100 mr-2">
+                                    <Calendar className="w-4 h-4 text-green-600" />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-800">
+                                      {approvedEvents.length} Upcoming Event{approvedEvents.length > 1 ? 's' : ''}
+                                    </p>
+                                    <p className="text-xs text-gray-500">Confirmed events</p>
                                   </div>
                                 </Link>
                               )}
@@ -389,7 +404,7 @@ const MemberDashboardHome = () => {
                     )}
                     
                     {/* View all link */}
-                    {(notifications.length > 0 || unreadMessages > 0 || assignmentRequests.length > 0) && (
+                    {(notifications.length > 0 || unreadMessages > 0 || assignmentRequests.length > 0 || approvedEvents.length > 0) && (
                       <div className="p-3 text-center border-t border-gray-100">
                         <button 
                           className="text-sm text-[#25105A] hover:underline font-medium"
