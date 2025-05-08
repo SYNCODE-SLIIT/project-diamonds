@@ -339,10 +339,10 @@ const MerchandisePaymentForm = ({ product, onClose }) => {
       <div className="max-w-6xl mx-auto bg-white shadow-xl rounded-2xl p-8 mt-8 mb-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left side - Product Details */}
-          <div className="bg-gray-50 rounded-xl p-6">
+          <div className="bg-gray-50 rounded-xl p-5">
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-32 h-32 rounded-xl bg-white shadow-sm flex items-center justify-center">
-                <img src={selectedPackage.image} alt={selectedPackage.name} className="w-24 h-24 object-contain" />
+              <div className="flex items-center justify-center">
+                <img src={selectedPackage.image} alt={selectedPackage.name} className="w-96 h-96 object-contain" />
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-gray-900">{selectedPackage.name}</h3>
@@ -562,4 +562,4 @@ const MerchandisePaymentForm = ({ product, onClose }) => {
   );
 };
 
-export default MerchandisePaymentForm; 
+export default MerchandisePaymentForm;
