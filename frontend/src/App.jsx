@@ -1,9 +1,10 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import { Toaster } from 'react-hot-toast';
 import AdminApplicationsCombinedList from './pages/authentication/AdminApplicationsCombinedList';
 import Calendar from './components/Calendar';
+import AdminBudgetRequests from './pages/admin/AdminBudgetRequests';
 // Content Management Imports
 import AboutUs from './pages/aboutUs';
 import ContentMediaDashboard from "./pages/ContentMediaDashboard";
@@ -14,7 +15,7 @@ import Events from './pages/content/Events';
 import UploadMedia from './pages/content/UploadMedia';
 import Merchandise from './pages/content/Merchandise';
 import OurFounderPage from './pages/OurFounderPage';
-
+import SocialMediaFeed from './pages/content/SocialMediaFeed';
 // User Management Imports
 import MemberApplication from './pages/authentication/MemberApplication';
 // import AdminApplicationsList from './pages/authentication/AdminApplicationsList';
@@ -39,8 +40,7 @@ import ApplicationSubmitted from './pages/authentication/ApplicationSubmitted';
 import AdminInviteApplicant from './pages/authentication/AdminInviteApplicant';
 import AdminProfile from './pages/authentication/AdminProfile';
 import GroupMembers from './pages/admin/GroupMembers';
-import AdminBudgetRequests from './pages/admin/AdminBudgetRequests';
-// import AdminInvitedApplicationsList from './pages/authentication/AdminInvitedApplicationsList';
+
 import FinalizedDetails from './pages/authentication/FinalizedDetails';
  
 
@@ -64,20 +64,27 @@ import FinancialReport from './components/Financial/FinancialReport';
 import BudgetForm from './components/Financial/BudgetForm';
 import RefundForm from './components/Financial/RefundForm';
 import PaymentOptions from './components/Financial/PaymentOptions';
+import AnomalyDetection from './components/Financial/AnomalyDetection';
+import PaymentSuccess from './components/Financial/PaymentSuccess';
+import PaymentCancel from './components/Financial/PaymentCancel';
+import TicketPaymentCancel from './components/Financial/TicketPaymentCancel';
 // public layout and pages
 import PublicLayout from './components/layout/PublicLayout';
-import Home from './pages/home';
+import Home from './pages/Home';
 import Contactus from './pages/Contactus';
 
 import OrganizerProfile from './pages/EventOrganizerProfile';
 
 
 import EventBookingPage from './pages/EventBookingPage';
+import DonationPage from './components/Donation/DonationPage';
 
 
 import EventRequestForm from './components/event/EventRequestForm';
 
 import OrganizerEventRequests from './components/event/OrganizerEventRequests';
+import EventRequestDetailsPage from './pages/events/EventRequestDetailsPage';
+import EventRequestEditPage from './pages/events/EventRequestEditPage';
 
 import MemberDashboardLayout from './components/layout/MemberDashboardLayout';
 
@@ -102,7 +109,8 @@ import EditContentCreator from './pages/content/EditContentCreator';
 import CalendarEvents from './pages/CalendarEvents';
 
 import AdminDashboard from './components/team/AdminDashboard';
-import MyEvents  from './components/event/MyEvents';
+
+import EventDashboard from './components/event/EventDashboard';
 
 import EventAssign from './components/team/EventAssign';
 import EventAssignmentRequests from './components/team/EventAssignmentRequests';
@@ -116,8 +124,21 @@ import DirectChatRoom from './pages/shared/DirectChatRoom';
 
 
 
+
 import MerchandiseAdmin from './pages/admin/MerchandiseAdmin';
 import Collabaration from './pages/content/Collaboration';
+
+import CertificateGenerator from './pages/content/CertificateGenerator';
+import Sponsorship from './pages/content/Sponsorship';
+import PublicBlogSlideShow from './pages/content/PublicBlogSlideShow';
+import PublicBlogDetail from './pages/content/PublicBlogDetail';
+import WhyJoinUs from './pages/WhyJoinUs';
+
+import AdminEventRequestDetailsPage from './pages/admin/AdminEventRequestDetailsPage';
+
+import FundraisePage from './components/Fundraise/FundraisePage';
+import EventDetailPage from './components/Fundraise/EventDetailPage';
+
 
 const App = () => {
   return (
@@ -129,9 +150,11 @@ const App = () => {
           <Routes>
           
             <Route path='/financial' element={<FinancialDashboard />} />
+
             <Route path='/bform' exact element={<BudgetForm/>} />
             <Route path='/rform' exact element={<RefundForm/>} />
             <Route path='/pform' exact element={<PaymentOptions />} />
+
 
             <Route path="/media/:id" element={<ViewMedia />} />
             <Route path="/media/edit/:id" element={<EditMedia />} />
@@ -152,7 +175,9 @@ const App = () => {
               <Route path='/organizer-profile' element={<OrganizerProfile />} />
               <Route path='/login' element={<Login />} />
               <Route path='/our-founder' element={<OurFounderPage />} />
-
+              <Route path='/blogs' element={<PublicBlogSlideShow />} />
+              <Route path='/blogs/:id' element={<PublicBlogDetail />} />
+              <Route path='/why-join' element={<WhyJoinUs />} />
               {/* <Route path='/event-request' element={<EventRequestForm />} /> */}
               <Route path='/register/member/application' element={<MemberApplication />} />
 
@@ -163,9 +188,11 @@ const App = () => {
 
               <Route path='/events' element={<EventBookingPage />} />
               <Route path="/event-requests" element={<OrganizerEventRequests />} />
-              <Route path="/event-dashboard" element={<MyEvents />} />
-              {/* <Route path='/organizer/new-event' element={<OrganizerNewEvent />} />
-              <Route path='/organizer/manage-events' element={<OrganizerManageEvents />} /> */}
+              <Route path="/event-requests/:id" element={<EventRequestDetailsPage />} />
+              <Route path="/event-requests/:id/edit" element={<EventRequestEditPage />} />
+              <Route path="/event-dashboard" element={<EventDashboard />} />
+              <Route path="/event-dashboard/:id" element={<EventDetailPage />} />
+              
 
             </Route>
 
@@ -195,7 +222,12 @@ const App = () => {
             <Route path="content-creators" element={<ContentCreatorList />} />
             <Route path="create-blog-post" element={<CreateBlogPost />} />
             <Route path="media" element={<ViewAllMedia />} />
+
+            <Route path="social-media" element={<SocialMediaFeed />} />
+          
+
             <Route path="event-calendar" element={<CalendarOverview />} />
+
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="practice-assignments" element={<PracticeAssignments />} />
             {/* All admin routes are now relative to /admin */}
@@ -214,11 +246,17 @@ const App = () => {
             <Route path="packages" element={<PackageList />} />
             <Route path="events" element={<EventsDashboard />} />
             <Route path="event-requests" element={<EventRequestDashboard />} />
+            <Route path="event-requests/:id" element={<AdminEventRequestDetailsPage />} />
             <Route path="financial" element={<FinancialDashboard />} />
             <Route path="applications/combined" element={<AdminApplicationsCombinedList />} />
             <Route path="finalized/:id" element={<FinalizedDetails />} />
             <Route path="budget-requests" element={<AdminBudgetRequests />} />
             <Route path="merchandise" element={<MerchandiseAdmin />} />
+            <Route path="certificate-generator" element={<CertificateGenerator />} />
+            <Route path="sponsorship" element={<Sponsorship />} />
+
+            <Route path="financial/anomalies" element={<AnomalyDetection />} />
+
           </Route>
        
 
@@ -232,9 +270,6 @@ const App = () => {
           {/* Financial Routes */}
 
 
-          <Route path='/bform' element={<BudgetForm/>} />
-          <Route path='/rform' element={<RefundForm/>} />
-          <Route path='/pform' element={<PaymentOptions />} />
           <Route path='/report' element={<FinancialReport />} />
 
           {/* Content Management Routes */}
@@ -249,7 +284,12 @@ const App = () => {
           <Route path="/Cmanager" element={<ContentMediaDashboard />} />
 
           <Route path="/merchandise" element={<Merchandise />} />
-
+          <Route path="/donate" element={<DonationPage />} />
+          <Route path="/fundraising" element={<FundraisePage />} />
+          <Route path="/events/:eventSlug" element={<EventDetailPage />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/payment-cancel" element={<PaymentCancel />} />
+          <Route path="/ticket-payment-cancel" element={<TicketPaymentCancel />} />
 
         </Routes>
 

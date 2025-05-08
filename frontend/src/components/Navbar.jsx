@@ -200,48 +200,52 @@ const Navbar = () => {
       title: 'JOIN US',
       submenu: [
         { 
-          name: 'Why Join?', 
-          description: 'Join our in-depth workshops.',
+          name: 'Why Join Us', 
+          description: 'Discover the benefits of joining Team Diamonds.',
           bulletPoints: [
             'Professional development opportunities',
             'Network with industry professionals',
             'Access to exclusive resources',
             'Performance opportunities',
             'Personal growth and artistic expression'
-          ]
+          ],
+          path: '/why-join'
         },
         { 
-          name: 'Audition Process', 
-          description: 'Learn from anywhere.',
+          name: 'How to Join Us', 
+          description: 'Learn about our audition process.',
           bulletPoints: [
             'Audition preparation workshops',
             'Submission guidelines and requirements',
             'What to expect during auditions',
             'Feedback and follow-up process',
             'Timelines and important dates'
-          ]
+          ],
+          path: '/why-join#audition-process'
         },
         { 
           name: 'Training & Development', 
-          description: 'Get certified with us.',
+          description: 'Our professional training programs.',
           bulletPoints: [
             'Comprehensive skills development',
             'Personalized training tracks',
             'Technical and artistic advancement',
             'Mentorship opportunities',
             'Professional certification programs'
-          ]
+          ],
+          path: '/why-join#training-development'
         },
         { 
           name: 'Apply Now', 
-          description: 'Get certified with us.',
+          description: 'Start your application today.',
           bulletPoints: [
             'Online application process',
             'Required documentation',
             'Application deadlines',
             'Interview preparation tips',
             'Next steps after submission'
-          ]
+          ],
+          path: '/register/member/application'
         },
       ],
       image: assets.navbar_joinUs,
@@ -512,7 +516,7 @@ const Navbar = () => {
                         animate="visible"
                       >
                         <Link 
-                          to={`/${submenuItem.name.toLowerCase().replace(/\s+/g, '-')}`} 
+                          to={submenuItem.path || `/${submenuItem.name.toLowerCase().replace(/\s+/g, '-')}`} 
                           className={`text-2xl font-medium text-white hover:text-white block py-3 px-4 border-l-2 relative group transition-all duration-300 ${
                             activeSubmenu === subIndex 
                               ? "border-white text-white bg-black bg-opacity-40" 
@@ -600,7 +604,10 @@ const Navbar = () => {
                           transition={{ duration: 0.3, delay: 0.3 }}
                         >
                           <Link 
-                            to={`/${menuItems[dropdown]?.submenu[activeSubmenu]?.name.toLowerCase().replace(/\s+/g, '-')}`} 
+                            to={
+                              menuItems[dropdown]?.submenu[activeSubmenu]?.path 
+                              || `/${menuItems[dropdown]?.submenu[activeSubmenu]?.name.toLowerCase().replace(/\s+/g, '-')}`
+                            } 
                             className="inline-block px-6 py-3 text-lg text-white hover:bg-white hover:text-black transition-all duration-300 rounded-xl"
                           >
                             Learn More

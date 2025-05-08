@@ -15,17 +15,19 @@ import Last30DaysExpenses from '../../components/Dashboard/Last30DaysExpenses';
 import RecentIncomeWithChart from '../../components/Dashboard/RecentIncomeWithChart';
 import RecentIncome from '../../components/Dashboard/RecentIncome';
 import { FiBell } from 'react-icons/fi';
+import Chatbot from './Chatbot';
+import { UserCircle2 } from 'lucide-react';
 
 const Dashboard = () => {
   // Make sure the user is authenticated before rendering this page
-  useUserAuth();
-
+  const { user: authUser } = useUserAuth();
   const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifLoading, setNotifLoading] = useState(false);
+  const [showChatbot, setShowChatbot] = useState(false);
 
   const fetchDashboardData = async () => {
     if (loading) return;
@@ -90,65 +92,129 @@ const Dashboard = () => {
   };
 
   return (
-    
-      <div className="my-5 mx-auto">
-        {/* Notification Bell */}
-        <div className="flex justify-end mb-4">
-          <div className="relative ml-4">
-            <button
-              className="relative focus:outline-none"
-              onClick={() => setShowNotifications(v => !v)}
-              aria-label="Show notifications"
-            >
-              <FiBell className="w-7 h-7 text-gray-700" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 font-bold">{unreadCount}</span>
-              )}
-            </button>
-            {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg z-50 border border-gray-200 max-h-96 overflow-y-auto">
-                <div className="p-3 border-b font-semibold text-gray-700 flex justify-between items-center">
-                  Notifications
-                  <button className="text-xs text-blue-500 hover:underline" onClick={fetchNotifications} disabled={notifLoading}>
-                    Refresh
-                  </button>
+    <>
+      <div className="my-0 mx-auto">
+        {/* Modern Welcome Section - no card/container */}
+        <div className="flex items-center justify-between gap-8 mb-4 px-2">
+          <div className="flex items-center gap-4">
+            <div className="profile-picture-container">
+              {authUser?.profilePicture ? (
+                <img
+                  src={authUser.profilePicture}
+                  alt="Profile"
+                  className="w-14 h-14 rounded-full object-cover border-2 border-blue-200"
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center border-2 border-blue-200">
+                  <UserCircle2 className="w-8 h-8 text-blue-600" />
                 </div>
-                {notifLoading ? (
-                  <div className="p-4 text-center text-gray-500">Loading...</div>
-                ) : notifications.length === 0 ? (
-                  <div className="p-4 text-center text-gray-500">No notifications</div>
-                ) : (
-                  <ul className="divide-y divide-gray-100">
-                    {notifications.map(n => (
-                      <li key={n._id} className={`p-3 flex flex-col gap-1 ${n.isRead ? 'bg-gray-50' : 'bg-blue-50'}`}>
-                        <div className="flex items-center gap-2">
-                          <span className={`inline-block w-2 h-2 rounded-full ${n.isRead ? 'bg-gray-300' : 'bg-blue-500'}`}></span>
-                          <span className="text-sm text-gray-800 flex-1">{n.message}</span>
-                          {!n.isRead && (
-                            <button
-                              className="ml-2 text-xs text-blue-600 hover:underline"
-                              onClick={() => handleMarkAsRead(n._id)}
-                            >Mark as read</button>
-                          )}
-                        </div>
-                        <span className="text-xs text-gray-400">{new Date(n.createdAt).toLocaleString()}</span>
-                        {n.invoiceId && (
-                          <button
-                            className="text-xs text-blue-700 hover:underline mt-1"
-                            onClick={() => handleDownloadInvoice(n.invoiceId)}
-                            type="button"
-                          >
-                            Download Invoice
-                          </button>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
+              )}
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900 leading-tight">
+                Welcome, <span className="bg-gradient-to-r from-blue-500 to-blue-400 bg-clip-text text-transparent">{authUser?.fullName || 'User'}</span>!
+              </h1>
+              <p className="text-base text-gray-500 leading-tight">
+                Here's your financial overview
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center">
+            <div className="relative">
+              <button
+                className="relative p-2 text-gray-600 hover:bg-blue-50 rounded-full transition-colors duration-200 focus:outline-none"
+                onClick={() => setShowNotifications(v => !v)}
+                aria-label="Show notifications"
+              >
+                <FiBell className="w-6 h-6" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-semibold">
+                    {unreadCount}
+                  </span>
                 )}
-              </div>
-            )}
+              </button>
+              
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg z-50 border border-gray-100 overflow-hidden">
+                  <div className="p-4 bg-gradient-to-r from-blue-500 to-blue-600">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-white">Notifications</h3>
+                      <button 
+                        className="text-sm text-white/80 hover:text-white transition-colors flex items-center gap-1"
+                        onClick={fetchNotifications} 
+                        disabled={notifLoading}
+                      >
+                        <span>Refresh</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="max-h-[400px] overflow-y-auto">
+                    {notifLoading ? (
+                      <div className="p-6 text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                        <p className="mt-2 text-gray-500">Loading notifications...</p>
+                      </div>
+                    ) : notifications.length === 0 ? (
+                      <div className="p-6 text-center">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <FiBell className="w-8 h-8 text-gray-400" />
+                        </div>
+                        <p className="text-gray-500">No notifications yet</p>
+                      </div>
+                    ) : (
+                      <ul className="divide-y divide-gray-100">
+                        {notifications.map(n => (
+                          <li 
+                            key={n._id} 
+                            className={`p-4 hover:bg-gray-50 transition-colors ${
+                              n.isRead ? 'bg-white' : 'bg-blue-50'
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${
+                                n.type === 'success' ? 'bg-green-500' :
+                                n.type === 'warning' ? 'bg-yellow-500' :
+                                n.type === 'error' ? 'bg-red-500' :
+                                'bg-blue-500'
+                              }`} />
+                              <div className="flex-1">
+                                <p className="text-sm text-gray-800">{n.message}</p>
+                                <div className="mt-1 flex items-center gap-3">
+                                  <span className="text-xs text-gray-500">
+                                    {new Date(n.createdAt).toLocaleString()}
+                                  </span>
+                                  {!n.isRead && (
+                                    <button
+                                      onClick={() => handleMarkAsRead(n._id)}
+                                      className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                                    >
+                                      Mark as read
+                                    </button>
+                                  )}
+                                </div>
+                                {n.invoiceId && (
+                                  <button
+                                    onClick={() => handleDownloadInvoice(n.invoiceId)}
+                                    className="mt-2 text-xs bg-blue-50 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-100 transition-colors"
+                                  >
+                                    Download Invoice
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Rest of the dashboard content */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <InfoCard
             icon={<IoMdCard />}
@@ -203,7 +269,19 @@ const Dashboard = () => {
 
         </div>
       </div>
-  
+      {/* Floating Chatbot Button */}
+      <button
+        className="fixed bottom-6 right-6 z-40 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg w-14 h-14 flex items-center justify-center text-3xl focus:outline-none"
+        onClick={() => setShowChatbot(true)}
+        aria-label="Open Chatbot"
+        style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}
+      >
+        <span role="img" aria-label="Chat">💬</span>
+      </button>
+      {showChatbot && (
+        <Chatbot onClose={() => setShowChatbot(false)} />
+      )}
+    </>
   );
 };
 

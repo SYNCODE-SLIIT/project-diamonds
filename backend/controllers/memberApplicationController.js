@@ -4,20 +4,12 @@ import MemberApplication from '../models/MemberApplication.js';
 import emailService from '../services/emailService.js';
 import multer from 'multer';
 import path from 'path';
+import cloudinary from '../config/cloudinary.js';
+import streamifier from 'streamifier';
 import User from '../models/User.js';
 
-// Set up multer storage for profile picture uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
-  }
-});
-
-export const upload = multer({ storage: storage });
-
+// Using memory storage for Cloudinary upload
+export const upload = multer({ storage: multer.memoryStorage() });
 
 // GET endpoint: Fetch application details for account creation
 export const getApplicationDetailsForAccountCreation = async (req, res) => {
@@ -160,24 +152,56 @@ export const getApplicationById = async (req, res) => {
   }
 };
 
-
 // Function to update profile picture in both collections
 export const updateProfilePicture = async (req, res) => {
   try {
     const { userId } = req.body;
-    const profilePicture = req.file ? `/uploads/${req.file.filename}` : null;
-
-    if (!profilePicture) {
-      return res.status(400).json({ message: "No file uploaded" });
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
     }
+    // Upload buffer to Cloudinary
+    const streamUpload = (buffer) => {
+      return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: 'member_profile_images' },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          }
+        );
+        streamifier.createReadStream(buffer).pipe(stream);
+      });
+    };
+    const result = await streamUpload(req.file.buffer);
+    const profilePicture = result.secure_url;
 
     // Update profile picture in both collections
-    await MemberApplication.findOneAndUpdate({ _id: userId }, { profilePicture });
+    await MemberApplication.findByIdAndUpdate(userId, { profilePicture });
     await User.findOneAndUpdate({ profileId: userId }, { profilePicture });
 
-    res.status(200).json({ message: "Profile picture updated successfully", profilePicture });
+    res.status(200).json({ message: 'Profile picture updated successfully', profilePicture });
   } catch (error) {
-    res.status(500).json({ message: "Error updating profile picture", error: error.message });
+    res.status(500).json({ message: 'Error updating profile picture', error: error.message });
+  }
+};
+
+// Delete profile picture by clearing the field in both collections
+export const deleteProfilePicture = async (req, res) => {
+  try {
+    console.log('deleteProfilePicture called with', req.method, req.path, 'query:', req.query);
+    const userId = req.body.userId || req.query.userId;
+    if (!userId) {
+      console.log('deleteProfilePicture missing userId');
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+    console.log('Deleting profilePicture for userId=', userId);
+    // Clear profilePicture in MemberApplication and User
+    await MemberApplication.findByIdAndUpdate(userId, { $unset: { profilePicture: '' } });
+    await User.findOneAndUpdate({ profileId: userId }, { $unset: { profilePicture: '' } });
+    res.status(200).json({ message: 'Profile picture removed successfully' });
+  } catch (error) {
+    console.error('deleteProfilePicture error:', error);
+    res.status(500).json({ message: 'Error removing profile picture', error: error.message });
   }
 };
 

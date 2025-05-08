@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/mongodb.js';
+import { handleMulterError } from './middleware/uploadmiddleware.js';
 
 import crypto from 'crypto';
 
@@ -15,6 +16,7 @@ import financeNotificationRoutes from './routes/financeNotificationRoutes.js';
 import transactionRoutes from "./routes/transactionRoutes.js";
 import packageRoutes from './routes/packageRoutes.js';
 import userRoutes from "./routes/userRoutes.js";
+import stripeRoutes from './routes/stripeRoutes.js';
 
 import blogPostRoutes from "./routes/blogPostRoutes.js";
 import managePostRoutes from "./routes/managePostRoutes.js";
@@ -54,7 +56,11 @@ import sponsorshipRoutes from './routes/sponsorshipRoutes.js';
 
 import merchandiseRoutes from './routes/merchandiseRoutes.js';
 
+
 import collaborationRoutes from './routes/collaborationRoutes.js'
+
+import chatbotRoutes from './routes/chatbot.js';
+
 
 // Load environment variables
 dotenv.config();
@@ -76,20 +82,9 @@ app.use(express.json());
 app.use(cors());
 app.use('/uploads', express.static('uploads'));
 
-// Multer error handling middleware
-const handleMulterError = (err, req, res, next) => {
-  if (err.name === 'MulterError') {
-    if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({
-        error: 'File size is too large. Maximum size is 5MB'
-      });
-    }
-    return res.status(400).json({
-      error: err.message
-    });
-  }
-  next(err);
-};
+
+// Special middleware for Stripe webhooks
+app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
 
 // Add multer error handling middleware
 app.use(handleMulterError);
@@ -121,7 +116,6 @@ app.use('/api/organizers', organizerRoutes);
 app.use('/api/finance', financialRoutes);
 app.use('/api/finance/notifications', financeNotificationRoutes);
 
-
 app.use('/api/assignments', assignmentRoutes);
 
 // Mount Routes
@@ -137,7 +131,6 @@ app.use('/api/packages', packageRoutes);
 app.use('/api/services', additionalServiceRoutes);
 app.use('/api/event-requests', eventRequestRoutes);
 
-app.use("/api/finance", financialRoutes);
 app.use("/api/member-applications", memberApplicationRoutes);
 app.use("/api/admin/applications", adminApplicationRoutes);
 app.use("/api/users", userRoutes);
@@ -153,6 +146,10 @@ app.use('/api/practice-requests', practiceRequestRoutes);
 
 
 app.use('/api/merchandise', merchandiseRoutes);
+app.use('/api/chatbot', chatbotRoutes);
+
+// Stripe Routes
+app.use('/api/stripe', stripeRoutes);
 
 
 // API Endpoints

@@ -1,87 +1,48 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import axiosInstance from '../../utils/axiosInstance.js';
 import { toast } from 'react-hot-toast';
+import { Calendar, Clock, MapPin, Users } from 'lucide-react';
 import { UserContext } from '../../context/userContext';
 
-// Get current logged-in member ID from UserContext/localStorage
-const getCurrentMemberId = () => {
-  try {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      const user = JSON.parse(storedUser);
-      return user.profileId || '';
-    }
-  } catch {}
-  return '';
-};
-
 const MemberDashboardUpcomingEvents = () => {
-  const [assignmentRequests, setAssignmentRequests] = useState([]);
+  const [approvedEvents, setApprovedEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const memberId = getCurrentMemberId();
-
+  const { user } = useContext(UserContext); // Use context to get current user
+  
   useEffect(() => {
-    fetchAssignmentRequests();
-  }, []);
+    if (user) {
+      fetchApprovedEvents();
+    }
+  }, [user]);
 
-  const fetchAssignmentRequests = async () => {
+  const fetchApprovedEvents = async () => {
     try {
-      // Fetch all assignment requests from the team endpoint
-      const response = await axios.get('http://localhost:4000/api/assignments/requests');
-      // Filter for the current logged-in member using member._id
-      const filtered = response.data.filter(req => req.member && req.member._id === memberId);
-      setAssignmentRequests(filtered);
+      // Fetch only approved events from backend
+      const response = await axiosInstance.get('/api/assignments/approved');
+      // Only show events for this member
+      const memberApproved = response.data.filter(req => String(req.member?._id) === String(user.profileId));
+      setApprovedEvents(memberApproved);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching assignment requests:', error);
-      toast.error('Failed to load assignment requests.');
-      setAssignmentRequests([]);
+      console.error('Error fetching approved events:', error);
+      toast.error('Failed to load upcoming events.');
+      setApprovedEvents([]);
       setLoading(false);
     }
   };
 
-  const handleAcceptRequest = async (requestId) => {
+  // Helper function to format date
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Date not specified';
     try {
-      await axios.put(`http://localhost:4000/api/assignments/requests/${requestId}/status`, { status: 'accepted' });
-      toast.success('Assignment request accepted successfully');
-      setAssignmentRequests(prevRequests =>
-        prevRequests.map(request =>
-          request._id === requestId
-            ? { ...request, status: 'accepted' }
-            : request
-        )
-      );
-    } catch (error) {
-      toast.error('Failed to accept assignment request');
-    }
-  };
-
-  const handleRejectRequest = async (requestId) => {
-    try {
-      await axios.put(`http://localhost:4000/api/assignments/requests/${requestId}/status`, { status: 'rejected' });
-      toast.success('Assignment request rejected successfully');
-      setAssignmentRequests(prevRequests =>
-        prevRequests.map(request =>
-          request._id === requestId
-            ? { ...request, status: 'rejected' }
-            : request
-        )
-      );
-    } catch (error) {
-      toast.error('Failed to reject assignment request');
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'accepted':
-        return 'bg-green-100 text-green-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      return new Date(dateString).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long', 
+        day: 'numeric'
+      });
+    } catch (err) {
+      return dateString || 'Date not specified';
     }
   };
 
@@ -95,63 +56,61 @@ const MemberDashboardUpcomingEvents = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">Assignment Requests</h1>
-      {assignmentRequests.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-gray-500">No assignment requests found.</p>
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">Upcoming Events</h1>
+      
+      {approvedEvents.length === 0 ? (
+        <div className="bg-white rounded-lg shadow-md p-8 text-center">
+          <div className="mb-4">
+            <Calendar className="w-12 h-12 mx-auto text-blue-500" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-700 mb-2">No Upcoming Events</h2>
+          <p className="text-gray-500">You don't have any confirmed events scheduled at the moment.</p>
         </div>
       ) : (
-        <div className="grid gap-6">
-          {assignmentRequests.map((request) => (
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {approvedEvents.map((event) => (
             <div
-              key={request._id}
-              className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+              key={event._id}
+              className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all duration-300 border-l-4 border-green-500"
             >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-800 mb-2">
-                    {request.event?.eventName || 'Event'}
-                  </h2>
-                  <p className="text-gray-600 mb-2">
-                    <span className="font-medium">Date:</span>{' '}
-                    {request.event?.eventDate ? new Date(request.event.eventDate).toLocaleDateString() : 'N/A'}
-                  </p>
-                  <p className="text-gray-600 mb-2">
-                    <span className="font-medium">Location:</span>{' '}
-                    {request.event?.eventLocation || 'N/A'}
-                  </p>
-                  <p className="text-gray-600 mb-2">
-                    <span className="font-medium">Guest Count:</span>{' '}
-                    {request.event?.guestCount || 'N/A'}
-                  </p>
-                  <p className="text-gray-600 mb-4">
-                    <span className="font-medium">Assigned By:</span>{' '}
-                    {request.assignedBy || 'N/A'}
-                  </p>
-                  <span
-                    className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                      request.status
-                    )}`}
-                  >
-                    {request.status ? request.status.charAt(0).toUpperCase() + request.status.slice(1) : 'Pending'}
+              <h2 className="text-xl font-semibold text-gray-800 mb-3">
+                {event.event?.eventName || 'Event'}
+              </h2>
+              
+              <div className="space-y-3 mb-4">
+                <div className="flex items-center text-gray-600">
+                  <Calendar className="w-4 h-4 mr-2 text-green-600" />
+                  <span>
+                    {formatDate(event.event?.eventDate)}
                   </span>
                 </div>
-                {request.status === 'pending' && (
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => handleAcceptRequest(request._id)}
-                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
-                    >
-                      Accept
-                    </button>
-                    <button
-                      onClick={() => handleRejectRequest(request._id)}
-                      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                )}
+                
+                <div className="flex items-center text-gray-600">
+                  <Clock className="w-4 h-4 mr-2 text-green-600" />
+                  <span>
+                    {event.event?.eventTime || 'Time not specified'}
+                  </span>
+                </div>
+                
+                <div className="flex items-center text-gray-600">
+                  <MapPin className="w-4 h-4 mr-2 text-green-600" />
+                  <span>
+                    {event.event?.eventLocation || 'Location not specified'}
+                  </span>
+                </div>
+                
+                <div className="flex items-center text-gray-600">
+                  <Users className="w-4 h-4 mr-2 text-green-600" />
+                  <span>
+                    Guests: {event.event?.guestCount || 'Not specified'}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="pt-3 border-t border-gray-100">
+                <span className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                  Confirmed
+                </span>
               </div>
             </div>
           ))}

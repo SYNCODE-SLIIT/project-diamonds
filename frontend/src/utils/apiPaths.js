@@ -7,6 +7,7 @@ export const API_PATHS = {
     LOGIN: "/api/auth/login",
     REGISTER: "/api/auth/register",
     GET_USER_INFO: "/api/auth/getUser",
+    UPDATE_PASSWORD: "/api/users/password",
   },
   DASHBOARD: {
     GET_DATA: "/api/v1/dashboard",
@@ -30,7 +31,7 @@ export const API_PATHS = {
     DOWNLOAD_ALL: "/api/v1/transaction/downloadall",
   },
   REFUND: {
-    GET_ALL_REFUNDS: "/api/v1/refund/get",
+    GET_ALL_REFUNDS: "/api/finance/getr",
     ADD_REFUND: "/api/finance/ef",
     UPDATE_REFUND: (refundId) => `/api/v1/refund/${refundId}`,
   },

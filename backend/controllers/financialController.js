@@ -9,10 +9,13 @@ import Income from '../models/Income.js';
 import Expense from '../models/Expense.js';
 import Salary from '../models/Salary.js';
 import User from '../models/User.js';
+import Event from '../models/Event.js';
+import Merchandise from '../models/Merchandise.js';
 
 import cloudinary from '../config/cloudinary.js';
 import { createFinanceNotification } from './financeNotificationController.js';
 import { uploadFile, deleteFile } from '../utils/fileUpload.js';
+import { uploadToSupabase, deleteFromSupabase } from '../utils/supabaseUpload.js';
 
 
 // GET all payments with user data
@@ -97,30 +100,41 @@ export const getAllTransactionsWithUserData = async (req, res) => {
 // Create Budget Request and record transaction.
 export const createBudget = async (req, res) => {
   try {
-    const { allocatedBudget, remainingBudget, status, reason } = req.body;
-    let infoFileUrl = null;
-
-    // If a file is uploaded, upload it to Cloudinary using resource_type "auto"
-    if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        resource_type: req.file.mimetype === 'application/pdf' ? 'raw' : 'image',
-        folder: "budget_files", // Optional: Organize budget files under a specific folder in Cloudinary
-        use_filename: true,     // Optionally keep the original filename
-        unique_filename: false, // Optionally disable Cloudinary's automatic renaming
-      });
-      infoFileUrl = result.secure_url;
+    const { allocatedBudget, remainingBudget, status, reason, event } = req.body;
+    
+    // Validate event exists and is confirmed
+    const eventDoc = await Event.findById(event);
+    if (!eventDoc) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+    if (eventDoc.status !== "confirmed") {
+      return res.status(400).json({ message: "Budget can only be requested for confirmed events" });
     }
 
+    let infoFileUrl = null;
+    let fileProvider = null;
+    if (req.file) {
+      try {
+        const uploadResult = await uploadToSupabase(req.file, 'budget_files');
+        infoFileUrl = uploadResult.url;
+        fileProvider = uploadResult.provider;
+      } catch (supabaseError) {
+        const uploadResult = await uploadFile(req.file, 'budget_files');
+        infoFileUrl = uploadResult.url;
+        fileProvider = uploadResult.provider;
+      }
+    }
     const newBudget = new Budget({
       allocatedBudget,
       remainingBudget,
       status,
       reason,
-      infoFile: infoFileUrl, // Save the Cloudinary URL (or null if no file was provided)
+      infoFile: infoFileUrl,
+      fileProvider,
       user: req.user._id,
+      event: event
     });
     await newBudget.save();
-
     const budgetTransaction = new Transaction({
       transactionType: "budget",
       user: req.user._id,
@@ -128,7 +142,6 @@ export const createBudget = async (req, res) => {
       details: { note: "Budget request created" },
     });
     await budgetTransaction.save();
-
     res.status(201).json({
       message: "Budget created successfully",
       budget: newBudget,
@@ -144,22 +157,22 @@ export const makePayment = async (req, res) => {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
-
     const { amount, paymentMethod, paymentFor } = req.body;
     let bankSlipFileUrl = null;
     let fileProvider = null;
-
-    // Upload file if available using the new utility
     if (req.file) {
-      const uploadResult = await uploadFile(req.file, 'bank_slips');
-      bankSlipFileUrl = uploadResult.url;
-      fileProvider = uploadResult.provider;
+      try {
+        const uploadResult = await uploadToSupabase(req.file, 'bank_slips');
+        bankSlipFileUrl = uploadResult.url;
+        fileProvider = uploadResult.provider;
+      } catch (supabaseError) {
+        const uploadResult = await uploadFile(req.file, 'bank_slips');
+        bankSlipFileUrl = uploadResult.url;
+        fileProvider = uploadResult.provider;
+      }
     }
-    
     const user = req.user;
     const invoiceNumber = `INV-${Date.now()}`;
-
-    // Create and save the Invoice document
     const invoice = new Invoice({
       invoiceNumber,
       amount,
@@ -168,16 +181,14 @@ export const makePayment = async (req, res) => {
       user: user._id,
     });
     await invoice.save({ session });
-    
-    // Create and save the Payment document
     const payment = new Payment({
       invoiceId: invoice._id,
       user: user._id,
       amount,
       paymentMethod,
       bankSlipFile: bankSlipFileUrl,
-      fileProvider, // Store the provider information
-      status: "Pending",
+      fileProvider,
+      status: "pending",
       paymentFor,
       productId: req.body.productId || undefined,
       productName: req.body.productName || undefined,
@@ -185,8 +196,6 @@ export const makePayment = async (req, res) => {
       orderId: req.body.orderId || undefined,
     });
     await payment.save({ session });
-    
-    // Create and save the Transaction document for auditing
     const paymentTransaction = new Transaction({
       transactionType: "payment",
       invoiceId: invoice._id,
@@ -195,21 +204,11 @@ export const makePayment = async (req, res) => {
       details: { note: "Payment processed automatically with invoice creation" },
     });
     await paymentTransaction.save({ session });
-    
-    // Do NOT create an Expense record here.
-    // Expense record creation should only occur when the payment status is changed to "approved"
-    // (for example, in your PATCH update logic).
-    
-    // Commit the transaction and end the session
     await session.commitTransaction();
     session.endSession();
-    
-    // Populate payment for response clarity
     const populatedPayment = await Payment.findById(payment._id)
       .populate("user")
       .lean();
-    
-    // After payment, notify the financial manager
     try {
       const manager = await User.findOne({ role: 'financial_manager' });
       if (manager) {
@@ -222,8 +221,6 @@ export const makePayment = async (req, res) => {
     } catch (notifErr) {
       console.error('Error creating finance notification:', notifErr);
     }
-    
-    // Notify the user who made the payment
     try {
       await createFinanceNotification({
         userId: user._id,
@@ -234,18 +231,13 @@ export const makePayment = async (req, res) => {
     } catch (notifErr) {
       console.error('Error creating user invoice notification:', notifErr);
     }
-    
     res.status(201).json({
       message: "Payment processed successfully",
       invoice,
       payment: populatedPayment,
       transaction: paymentTransaction,
-      // No expense record is returned here.
     });
   } catch (error) {
-    if (req.file && bankSlipFileUrl) {
-      await deleteFile(bankSlipFileUrl).catch(console.error);
-    }
     await session.abortTransaction();
     session.endSession();
     res.status(500).json({ message: "Error processing payment", error: error.message });
@@ -342,7 +334,6 @@ export const generateExcelReport = async (req, res) => {
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.send(excelBuffer);
   } catch (error) {
-    console.error('Error generating Excel report:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -392,7 +383,6 @@ export const getDashboardData = async (req, res) => {
       dailyTrends, // New field: daily trends for transactions.
     });
   } catch (error) {
-    console.error("Error fetching dashboard data:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -452,8 +442,7 @@ export const deleteFinancialRecord = async (req, res) => {
     });
     
   } catch (error) {
-    console.error(`Error deleting ${req.params.recordType || 'financial'} record:`, error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: "Server error while deleting record",
       error: error.message
@@ -488,10 +477,22 @@ export const updateFinancialRecord = async (req, res) => {
               ? 'Merchandise Payment'
               : payment.paymentFor === 'package'
                 ? 'Package Payment'
+                : payment.paymentFor === 'ticket'
+                  ? 'Ticket Payment'
                 : 'Other Payment';
+          
+          // Set specific icons based on payment type
+          const expenseIcon = payment.paymentFor === 'merchandise'
+            ? 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f6cd.png'  // Shopping bag emoji for merchandise
+            : payment.paymentFor === 'package'
+              ? 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f9f3.png'  // Package emoji for package
+              : payment.paymentFor === 'ticket'
+                ? 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f3ab.png' // Ticket emoji for ticket
+                : 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4b0.png'; // Money bag emoji for other payments
+
           const expense = new Expense({
             userId: payment.user,
-            icon: payment.bankSlipFile || "default_payment_icon_url",
+            icon: expenseIcon,
             category: expenseCategory,
             amount: payment.amount,
             date: new Date(),
@@ -554,7 +555,11 @@ export const updateFinancialRecord = async (req, res) => {
           message: `No budget record found with id: ${id}`
         });
       }
-      updatedRecord = await Budget.findByIdAndUpdate(id, updateData, { new: true });
+      updatedRecord = await Budget.findByIdAndUpdate(
+        id, 
+        { ...updateData, lastUpdated: new Date() }, 
+        { new: true }
+      );
     } else if (recordType === 'i') { // Invoice
       const invoice = await Invoice.findById(id);
       if (!invoice) {
@@ -572,8 +577,7 @@ export const updateFinancialRecord = async (req, res) => {
     }
     return res.status(200).json({ success: true, data: updatedRecord });
   } catch (error) {
-    console.error("Error updating record:", error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: "Server error while updating record",
       error: error.message
@@ -586,8 +590,7 @@ export const getAllMembers = async (req, res) => {
     const members = await User.find({ role: 'member' }).lean();
     return res.status(200).json({ success: true, data: members });
   } catch (error) {
-    console.error("Error fetching members:", error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: "Server error while fetching members",
       error: error.message,
@@ -617,9 +620,24 @@ export const paySalary = async (req, res) => {
     });
     
     // Create an Income record with the specified icon, source, and note/description
+    const getIncomeIcon = (type) => {
+      switch (type?.toLowerCase()) {
+        case 'salary':
+          return 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4b0.png'; // Money bag emoji for salary
+        case 'bonus':
+          return 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f381.png'; // Gift emoji for bonus
+        case 'workshop':
+          return 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f393.png'; // Graduation cap emoji for workshop
+        case 'event payment':
+          return 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f3aa.png'; // Circus tent emoji for event payment
+        default:
+          return 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4b5.png'; // Money emoji for other types
+      }
+    };
+
     const incomeRecord = await Income.create({
       userId: member._id,
-      icon: "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f483.png",
+      icon: getIncomeIcon(incomeType),
       source: incomeType || "Team Diamond Salary",
       amount: salaryAmount,
       description: note || undefined,
@@ -631,8 +649,7 @@ export const paySalary = async (req, res) => {
       data: { salaryRecord, incomeRecord },
     });
   } catch (error) {
-    console.error("Error paying salary:", error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: "Server error while paying salary",
       error: error.message,
@@ -679,8 +696,7 @@ export const getFinancialReport = async (req, res) => {
       transactions: transactionsFormatted,
     });
   } catch (error) {
-    console.error("Error in getFinancialReport:", error);
-    return res
+    res
       .status(500)
       .json({ success: false, message: error.message || "Internal Server Error" });
   }
@@ -704,26 +720,26 @@ export const requestRefund = async (req, res) => {
     const { refundAmount, reason, invoiceNumber } = req.body;
     let receiptFileUrl = null;
     let fileProvider = null;
-
-    // If a file is uploaded, use the new upload utility
     if (req.file) {
-      const uploadResult = await uploadFile(req.file, 'refund_receipts');
-      receiptFileUrl = uploadResult.url;
-      fileProvider = uploadResult.provider;
+      try {
+        const uploadResult = await uploadToSupabase(req.file, 'refund_receipts');
+        receiptFileUrl = uploadResult.url;
+        fileProvider = uploadResult.provider;
+      } catch (supabaseError) {
+        const uploadResult = await uploadFile(req.file, 'refund_receipts');
+        receiptFileUrl = uploadResult.url;
+        fileProvider = uploadResult.provider;
+      }
     }
-
-    // Create a new Refund document
     const refund = new Refund({
       refundAmount,
       reason,
       invoiceNumber,
       receiptFile: receiptFileUrl,
-      fileProvider, // Store the provider information
+      fileProvider,
       user: req.user._id,
     });
     await refund.save();
-
-    // Record the transaction details for the refund request
     const refundTransaction = new Transaction({
       transactionType: "refund",
       user: req.user._id,
@@ -731,21 +747,373 @@ export const requestRefund = async (req, res) => {
       details: { note: "Refund requested" },
     });
     await refundTransaction.save();
-
     res.status(201).json({
       message: "Refund requested successfully",
       refund,
       transaction: refundTransaction,
     });
   } catch (error) {
-    if (req.file && receiptFileUrl) {
-      await deleteFile(receiptFileUrl).catch(console.error);
-    }
-    console.error("Refund error:", error);
     res.status(500).json({
       message: "Error requesting refund",
       error: error.message,
     });
+  }
+};
+
+// ANOMALY DETECTION: Get anomalous transactions using multiple detection methods
+export const getAnomalies = async (req, res) => {
+  try {
+    // Fetch all transactions with user data
+    const transactions = await Transaction.find({})
+      .populate('user')
+      .populate('invoiceId')
+      .sort({ date: -1 }); // Sort by date descending
+
+    if (!transactions.length) {
+      return res.status(200).json({ success: true, anomalies: [] });
+    }
+
+    const anomalies = [];
+    const now = new Date();
+    const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
+    const oneWeekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+
+    // 1. Amount-based anomalies (Z-score)
+    const amounts = transactions.map(t => t.totalAmount);
+    const mean = amounts.reduce((a, b) => a + b, 0) / amounts.length;
+    const std = Math.sqrt(amounts.map(a => Math.pow(a - mean, 2)).reduce((a, b) => a + b, 0) / amounts.length);
+    const threshold = 2.5;
+
+    // 2. Frequency-based anomalies
+    const userTransactionCounts = {};
+    transactions.forEach(t => {
+      const userId = t.user?._id?.toString();
+      if (userId) {
+        userTransactionCounts[userId] = (userTransactionCounts[userId] || 0) + 1;
+      }
+    });
+
+    // 3. Time-based anomalies (transactions outside business hours)
+    const isBusinessHour = (date) => {
+      const hour = date.getHours();
+      return hour >= 9 && hour <= 17; // 9 AM to 5 PM
+    };
+
+    // 4. User-based anomalies (unusual activity for specific users)
+    const userAverageAmounts = {};
+    transactions.forEach(t => {
+      const userId = t.user?._id?.toString();
+      if (userId) {
+        if (!userAverageAmounts[userId]) {
+          userAverageAmounts[userId] = { total: 0, count: 0 };
+        }
+        userAverageAmounts[userId].total += t.totalAmount;
+        userAverageAmounts[userId].count += 1;
+      }
+    });
+
+    // Calculate user averages
+    Object.keys(userAverageAmounts).forEach(userId => {
+      userAverageAmounts[userId].average = userAverageAmounts[userId].total / userAverageAmounts[userId].count;
+    });
+
+    // Process each transaction
+    transactions.forEach(transaction => {
+      const anomaly = {
+        _id: transaction._id,
+        user: transaction.user,
+        totalAmount: transaction.totalAmount,
+        transactionType: transaction.transactionType,
+        date: transaction.date,
+        details: transaction.details,
+        anomalyTypes: [],
+        severity: 'medium'
+      };
+
+      // Check for amount-based anomaly, but skip for budget and salary
+      if (std !== 0 && transaction.transactionType !== 'budget' && transaction.transactionType !== 'salary') {
+        const z = (transaction.totalAmount - mean) / std;
+        if (Math.abs(z) > threshold) {
+          anomaly.anomalyTypes.push('amount');
+          anomaly.severity = Math.abs(z) > 3.5 ? 'high' : 'medium';
+          anomaly.details = {
+            ...anomaly.details,
+            note: `Unusual amount: ${z > 0 ? 'significantly higher' : 'significantly lower'} than average`
+          };
+        }
+      }
+
+      // Check for frequency-based anomaly
+      const userId = transaction.user?._id?.toString();
+      if (userId && userTransactionCounts[userId] > 10) { // More than 10 transactions
+        const recentTransactions = transactions.filter(t => 
+          t.user?._id?.toString() === userId && 
+          new Date(t.date) > oneDayAgo
+        );
+        if (recentTransactions.length > 5) { // More than 5 transactions in 24 hours
+          anomaly.anomalyTypes.push('frequency');
+          anomaly.severity = 'high';
+          anomaly.details = {
+            ...anomaly.details,
+            note: `High frequency: ${recentTransactions.length} transactions in 24 hours`
+          };
+        }
+      }
+
+      // Check for time-based anomaly
+      if (!isBusinessHour(new Date(transaction.date))) {
+        anomaly.anomalyTypes.push('time');
+        anomaly.details = {
+          ...anomaly.details,
+          note: 'Transaction outside business hours'
+        };
+      }
+
+      // Check for user-based anomaly
+      if (userId && userAverageAmounts[userId]) {
+        const userAvg = userAverageAmounts[userId].average;
+        if (transaction.totalAmount > userAvg * 3) { // 3x user's average
+          anomaly.anomalyTypes.push('user');
+          anomaly.severity = 'high';
+          anomaly.details = {
+            ...anomaly.details,
+            note: `Amount significantly higher than user's average`
+          };
+        }
+      }
+
+      // Add to anomalies if any type detected
+      if (anomaly.anomalyTypes.length > 0) {
+        anomalies.push(anomaly);
+      }
+    });
+
+    // Sort anomalies by severity and date
+    anomalies.sort((a, b) => {
+      const severityOrder = { high: 0, medium: 1, low: 2 };
+      if (severityOrder[a.severity] !== severityOrder[b.severity]) {
+        return severityOrder[a.severity] - severityOrder[b.severity];
+      }
+      return new Date(b.date) - new Date(a.date);
+    });
+
+    return res.status(200).json({ 
+      success: true, 
+      anomalies,
+      stats: {
+        totalTransactions: transactions.length,
+        anomalyCount: anomalies.length,
+        anomalyPercentage: (anomalies.length / transactions.length * 100).toFixed(2)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error detecting anomalies', 
+      error: error.message 
+    });
+  }
+};
+
+// Ticket Payment: auto-create an invoice and record the payment/transaction.
+export const ticketPayment = async (req, res) => {
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+    const { amount, paymentMethod, paymentFor } = req.body;
+    let bankSlipFileUrl = null;
+    let fileProvider = null;
+    if (req.file) {
+      try {
+        const uploadResult = await uploadToSupabase(req.file, 'bank_slips');
+        bankSlipFileUrl = uploadResult.url;
+        fileProvider = uploadResult.provider;
+      } catch (supabaseError) {
+        const uploadResult = await uploadFile(req.file, 'bank_slips');
+        bankSlipFileUrl = uploadResult.url;
+        fileProvider = uploadResult.provider;
+      }
+    }
+    const user = req.user;
+    const invoiceNumber = `INV-${Date.now()}`;
+    const invoice = new Invoice({
+      invoiceNumber,
+      amount,
+      category: "payment",
+      paymentStatus: "paid",
+      user: user._id,
+    });
+    await invoice.save({ session });
+    const payment = new Payment({
+      invoiceId: invoice._id,
+      user: user._id,
+      amount,
+      paymentMethod,
+      bankSlipFile: bankSlipFileUrl,
+      fileProvider,
+      status: "pending",
+      paymentFor,
+      ticketId: req.body.ticketId || undefined,
+      ticketName: req.body.ticketName || undefined,
+      quantity: req.body.quantity || undefined,
+      orderId: req.body.orderId || undefined,
+      fullName: req.body.fullName || undefined,
+      email: req.body.email || undefined,
+      contact: req.body.contact || undefined,
+    });
+    await payment.save({ session });
+    const paymentTransaction = new Transaction({
+      transactionType: "payment",
+      invoiceId: invoice._id,
+      user: user._id,
+      totalAmount: amount,
+      details: { note: "Ticket payment processed automatically with invoice creation" },
+    });
+    await paymentTransaction.save({ session });
+    await session.commitTransaction();
+    session.endSession();
+    const populatedPayment = await Payment.findById(payment._id)
+      .populate("user")
+      .lean();
+    try {
+      const manager = await User.findOne({ role: 'financial_manager' });
+      if (manager) {
+        await createFinanceNotification({
+          userId: manager._id,
+          message: `A new ticket payment was made by ${user.fullName || user.email}. Invoice #${invoice.invoiceNumber}`,
+          type: 'info',
+        });
+      }
+    } catch (notifErr) {
+      console.error('Error creating finance notification:', notifErr);
+    }
+    try {
+      await createFinanceNotification({
+        userId: user._id,
+        message: `Your ticket payment was successful. Invoice #${invoice.invoiceNumber} has been generated. Amount: RS. ${invoice.amount}`,
+        type: 'success',
+        invoiceId: invoice._id,
+      });
+    } catch (notifErr) {
+      console.error('Error creating user invoice notification:', notifErr);
+    }
+    res.status(201).json({
+      message: "Ticket payment processed successfully",
+      invoice,
+      payment: populatedPayment,
+      transaction: paymentTransaction,
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    res.status(500).json({ message: "Error processing ticket payment", error: error.message });
+  }
+};
+
+// Get confirmed events for budget requests
+export const getConfirmedEvents = async (req, res) => {
+  try {
+    const events = await Event.find({ status: 'confirmed' })
+      .populate('packageID')
+      .populate('additionalServices.serviceID')
+      .sort({ eventDate: 1 }); // Sort by event date ascending
+
+    return res.status(200).json({
+      success: true,
+      data: events
+    });
+  } catch (error) {
+    console.error("Error fetching confirmed events:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching confirmed events",
+      error: error.message
+    });
+  }
+};
+
+// Get a single event by ID (for budget view modal)
+export const getEventById = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id)
+      .populate('packageID')
+      .populate('additionalServices.serviceID');
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+    res.status(200).json({ data: event });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching event', error: error.message });
+  }
+};
+
+// GET transaction details with documents
+export const getTransactionDetails = async (req, res) => {
+  try {
+    // Try to find by transaction _id
+    let transaction = await Transaction.findById(req.params.id)
+      .populate('user')
+      .populate('invoiceId');
+
+    // If not found, try by invoiceId
+    if (!transaction) {
+      transaction = await Transaction.findOne({ invoiceId: req.params.id })
+        .populate('user')
+        .populate('invoiceId');
+    }
+
+    // If still not found, try by payment._id (for direct payment lookups)
+    if (!transaction) {
+      // Find payment by _id, then get its invoiceId
+      const payment = await Payment.findById(req.params.id);
+      if (payment && payment.invoiceId) {
+        transaction = await Transaction.findOne({ invoiceId: payment.invoiceId })
+          .populate('user')
+          .populate('invoiceId');
+      }
+    }
+
+    if (!transaction) {
+      return res.status(404).json({ message: 'Transaction not found' });
+    }
+
+    // Get associated payment if exists
+    const payment = await Payment.findOne({ invoiceId: transaction.invoiceId })
+      .populate('user')
+      .lean();
+
+    // Get associated documents
+    const documents = [];
+    if (payment?.bankSlipFile) {
+      documents.push({
+        type: 'Bank Slip',
+        url: payment.bankSlipFile,
+        uploadDate: payment.createdAt
+      });
+    }
+
+    // Fetch product details if payment is for merchandise
+    let productDetails = null;
+    if (payment?.paymentFor === 'merchandise' && payment.productId) {
+      productDetails = await Merchandise.findById(payment.productId).lean();
+    }
+
+    // Combine all data
+    const transactionDetails = {
+      ...transaction.toObject(),
+      payment: payment || null,
+      invoice: transaction.invoiceId || null,
+      documents,
+      productDetails,
+      invoiceDownloadUrl: transaction.invoiceId
+        ? `/api/finance/invoice/${transaction.invoiceId._id}/download`
+        : null,
+    };
+
+    res.json(transactionDetails);
+  } catch (error) {
+    console.error('Error fetching transaction details:', error);
+    res.status(500).json({ message: 'Error fetching transaction details', error: error.message });
   }
 };
  

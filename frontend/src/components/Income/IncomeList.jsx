@@ -27,7 +27,7 @@ const IncomeList = ({transactions, onDelete, onDownload, onViewDetails}) => {
                         amount={income.amount}
                         type="income"
                         onDelete={() => onDelete(income._id)}
-                        onViewDetails={onViewDetails ? () => onViewDetails(income._id) : undefined}
+                        onViewDetails={onViewDetails}
                     />
                     ))}
                 </div>

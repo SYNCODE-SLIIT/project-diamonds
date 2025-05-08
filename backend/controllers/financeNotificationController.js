@@ -32,8 +32,9 @@ export const markFinanceNotificationAsRead = async (req, res) => {
 // Create a finance notification (for use in payment/invoice events)
 export const createFinanceNotification = async ({ userId, message, type = 'info', invoiceId = null }) => {
   try {
-    await FinanceNotification.create({ user: userId, message, type, invoiceId });
+    const notification = await FinanceNotification.create({ user: userId, message, type, invoiceId });
+    return notification;
   } catch (error) {
-    console.error('Error creating finance notification:', error);
+    throw error;
   }
 }; 
