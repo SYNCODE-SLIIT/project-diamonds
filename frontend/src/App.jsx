@@ -242,6 +242,7 @@ const App = () => {
 
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="practice-assignments" element={<PracticeAssignments />} />
+            <Route path="practice-assign" element={<PracticeAssign />} />
             {/* All admin routes are now relative to /admin */}
             <Route path="messaging/create-group" element={<GroupCreation />} />
             <Route path="inbox" element={<AdminInbox />} />
