@@ -707,10 +707,10 @@ const AdminSidebar = () => {
             </NavLink>
           </div>
 
-          {/* Profile and Logout */}
+          {/* Admin Dashboard and Logout */}
           <div className="mt-auto pt-3 border-t border-cyan-400/30 px-3">
             <NavLink
-              to="/admin/profile"
+              to="/admin/dashboard-overview"
               className={({ isActive }) => `
                 flex items-center px-3 py-2.5 rounded-xl mb-1
                 ${isActive 
@@ -720,20 +720,12 @@ const AdminSidebar = () => {
               `}
             >
               <div className="flex-shrink-0 w-9 h-9 flex items-center justify-center relative">
-                {user && user.profilePicture ? (
-                  <img
-                    src={user.profilePicture}
-                    alt="Profile"
-                    className="w-7 h-7 rounded-full object-cover border border-blue-700"
-                  />
-                ) : (
-                  <box-icon name="user" type="solid" color="currentColor"></box-icon>
-                )}
+                <box-icon name="grid-alt" type="solid" color="currentColor"></box-icon>
                 <span className="absolute inset-0 rounded-lg group-hover:bg-blue-500/10 transition-colors duration-200"></span>
               </div>
               
               <span className={`ml-3 whitespace-nowrap truncate transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto max-w-[150px]' : 'opacity-0 w-0'}`}>
-                {user ? user.fullName : "Admin Profile"}
+                Admin Dashboard
               </span>
             </NavLink>
             

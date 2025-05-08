@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom';
 import { UserContext } from '../../context/userContext';
 import axiosInstance from '../../utils/axiosInstance';
 import assets from '../../assets/assets.js';
+import { fetchEventMedia } from '../../services/eventMediaService';
+
+// Default feature image from Cloudinary
+const DEFAULT_FEATURE_IMAGE_URL = "https://res.cloudinary.com/du5c9fw6s/image/upload/v1746620459/default_event_j82gdq.jpg";
 
 // Create a date utility function at the top of the file
 const getDateWithoutTime = (date) => {
@@ -11,7 +15,41 @@ const getDateWithoutTime = (date) => {
 };
 
 // Event Card Component - Redesigned to match the image layout
-const EventCard = ({ event }) => {
+const EventCard = ({ event, featureImageUrl }) => {
+  const [featureImage, setFeatureImage] = useState(featureImageUrl || DEFAULT_FEATURE_IMAGE_URL);
+  const [loading, setLoading] = useState(!featureImageUrl);
+  
+  useEffect(() => {
+    // If we already have the feature image from parent props, use it
+    if (featureImageUrl) {
+      setFeatureImage(featureImageUrl);
+      setLoading(false);
+      return;
+    }
+    
+    // Otherwise fetch it individually
+    const getEventMedia = async () => {
+      try {
+        setLoading(true);
+        const media = await fetchEventMedia(event._id);
+        if (media && media.featureImage) {
+          setFeatureImage(media.featureImage);
+        } else {
+          // Use default Cloudinary image if no feature image is found
+          setFeatureImage(DEFAULT_FEATURE_IMAGE_URL);
+        }
+      } catch (error) {
+        console.error('Error fetching event media:', error);
+        // Use default Cloudinary image in case of error
+        setFeatureImage(DEFAULT_FEATURE_IMAGE_URL);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    getEventMedia();
+  }, [event._id, featureImageUrl]);
+
   const date = new Date(event.eventDate);
   const month = date.toLocaleString('default', { month: 'short' }).toUpperCase();
   const day = date.getDate();
@@ -81,18 +119,33 @@ const EventCard = ({ event }) => {
             {getStatusText()}
           </div>
           
-          {/* Date box */}
+          {/* Date box - Keep it on top of the image */}
           <div className="absolute top-0 right-0 w-16 h-16 bg-white rounded-bl-lg shadow flex flex-col items-center justify-center m-2 z-10">
             <span className="text-xs font-bold text-red-500">{month}</span>
             <span className="text-xl font-bold text-gray-800">{day}</span>
           </div>
           
-          {/* Image */}
-          <img
-            className="w-full h-full object-cover"
-            src={assets.event_banner}
-            alt={event.eventName}
-          />
+          {/* Image with loading state - square crop */}
+          {loading ? (
+            <div className="w-full h-full aspect-square bg-gray-200 animate-pulse flex items-center justify-center">
+              <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+          ) : (
+            <div className="w-full aspect-square overflow-hidden">
+              <img
+                className="w-full h-full object-cover"
+                src={featureImage || DEFAULT_FEATURE_IMAGE_URL}
+                alt={event.eventName}
+                onError={(e) => {
+                  console.log('Image failed to load, falling back to default Cloudinary image');
+                  e.target.src = DEFAULT_FEATURE_IMAGE_URL;
+                  setFeatureImage(DEFAULT_FEATURE_IMAGE_URL);
+                }}
+              />
+            </div>
+          )}
         </div>
         
         {/* Right side - Event details */}
@@ -280,6 +333,7 @@ const EventDashboard = () => {
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [eventMediaMap, setEventMediaMap] = useState({});
   
   // Search and Filter States
   const [searchTerm, setSearchTerm] = useState('');
@@ -305,6 +359,29 @@ const EventDashboard = () => {
     return eventDate < today && event.status !== 'cancelled';
   };
 
+  // Prefetch media for all events in batches
+  const prefetchEventMedia = async (eventIds) => {
+    try {
+      // Process in batches of 5 to prevent too many concurrent requests
+      const batchSize = 5;
+      const mediaMap = {};
+      
+      for (let i = 0; i < eventIds.length; i += batchSize) {
+        const batch = eventIds.slice(i, i + batchSize);
+        const promises = batch.map(id => fetchEventMedia(id));
+        const results = await Promise.all(promises);
+        
+        batch.forEach((id, index) => {
+          mediaMap[id] = results[index]?.featureImage || DEFAULT_FEATURE_IMAGE_URL;
+        });
+      }
+      
+      setEventMediaMap(mediaMap);
+    } catch (error) {
+      console.error('Error prefetching event media:', error);
+    }
+  };
+
   useEffect(() => {
     const fetchUserEvents = async () => {
       if (!user?._id) return;
@@ -314,6 +391,13 @@ const EventDashboard = () => {
         const res = await axiosInstance.get(`/api/admin/events/organizer/${user._id}`);
         setEvents(res.data);
         setFilteredEvents(res.data);
+        
+        // Prefetch media for all events
+        if (res.data.length > 0) {
+          const eventIds = res.data.map(event => event._id);
+          prefetchEventMedia(eventIds);
+        }
+        
         setError(null);
       } catch (err) {
         console.error('Failed to load events:', err);
@@ -548,7 +632,7 @@ const EventDashboard = () => {
                 ) : filteredEvents.length > 0 ? (
                   <div className="space-y-4">
                     {filteredEvents.map(event => (
-                      <EventCard key={event._id} event={event} />
+                      <EventCard key={event._id} event={event} featureImageUrl={eventMediaMap[event._id]} />
                     ))}
                   </div>
                 ) : (
