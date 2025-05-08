@@ -1,6 +1,8 @@
 // src/components/event/PackageForm.jsx
 import React, { useState, useEffect } from 'react';
 import { createPackage, updatePackage } from '../../services/packageService.js';
+import { motion } from 'framer-motion';
+import { CheckCircle, AlertCircle, Package2, DollarSign, FileText, User, Music, Tag, Users, Clock, Upload, PlusCircle, XCircle, Image, MessageSquare } from 'lucide-react';
 
 const PackageForm = ({ package: initialPackage, onSuccess, onCancel }) => {
   const DEFAULT_IMAGE =
@@ -31,6 +33,7 @@ const PackageForm = ({ package: initialPackage, onSuccess, onCancel }) => {
   const [formData, setFormData] = useState(defaultFormData);
   const [imagePreview, setImagePreview] = useState(DEFAULT_IMAGE);
   const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState(null);
 
@@ -56,6 +59,19 @@ const PackageForm = ({ package: initialPackage, onSuccess, onCancel }) => {
       ...prev,
       [name]: value
     }));
+    
+    // Mark field as touched
+    if (!touched[name]) {
+      setTouched((prev) => ({
+        ...prev,
+        [name]: true
+      }));
+    }
+    
+    // Validate on change for better UX
+    if (touched[name]) {
+      validateField(name, value);
+    }
   };
 
   // Handle changes for nested objects (e.g., teamInvolvement)
@@ -67,6 +83,20 @@ const PackageForm = ({ package: initialPackage, onSuccess, onCancel }) => {
         [field]: value
       }
     }));
+    
+    // Mark field as touched
+    const fieldKey = `${parent}.${field}`;
+    if (!touched[fieldKey]) {
+      setTouched((prev) => ({
+        ...prev,
+        [fieldKey]: true
+      }));
+    }
+    
+    // Validate on change
+    if (touched[fieldKey]) {
+      validateNestedField(parent, field, value);
+    }
   };
 
   // Handle changes for array fields (e.g., danceStyles)
@@ -79,6 +109,20 @@ const PackageForm = ({ package: initialPackage, onSuccess, onCancel }) => {
         [field]: newArray
       };
     });
+    
+    // Mark field as touched
+    const fieldKey = `${field}.${index}`;
+    if (!touched[fieldKey]) {
+      setTouched((prev) => ({
+        ...prev,
+        [fieldKey]: true
+      }));
+    }
+    
+    // Validate array field
+    if (touched[fieldKey]) {
+      validateArrayField(field, index, value);
+    }
   };
 
   // Handle changes for performance objects
@@ -94,6 +138,60 @@ const PackageForm = ({ package: initialPackage, onSuccess, onCancel }) => {
         performances: newPerformances
       };
     });
+    
+    // Mark field as touched
+    const fieldKey = `performances.${index}.${field}`;
+    if (!touched[fieldKey]) {
+      setTouched((prev) => ({
+        ...prev,
+        [fieldKey]: true
+      }));
+    }
+    
+    // Validate on change
+    if (touched[fieldKey]) {
+      validatePerformanceField(index, field, value);
+    }
+  };
+
+  // Add blur handler for better validation UX
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched((prev) => ({
+      ...prev,
+      [name]: true
+    }));
+    validateField(name, value);
+  };
+  
+  // Handle blur for nested fields
+  const handleNestedBlur = (parent, field, value) => {
+    const fieldKey = `${parent}.${field}`;
+    setTouched((prev) => ({
+      ...prev,
+      [fieldKey]: true
+    }));
+    validateNestedField(parent, field, value);
+  };
+  
+  // Handle blur for array fields
+  const handleArrayBlur = (field, index, value) => {
+    const fieldKey = `${field}.${index}`;
+    setTouched((prev) => ({
+      ...prev,
+      [fieldKey]: true
+    }));
+    validateArrayField(field, index, value);
+  };
+  
+  // Handle blur for performance fields
+  const handlePerformanceBlur = (index, field, value) => {
+    const fieldKey = `performances.${index}.${field}`;
+    setTouched((prev) => ({
+      ...prev,
+      [fieldKey]: true
+    }));
+    validatePerformanceField(index, field, value);
   };
 
   // Add new item to an array field
@@ -114,6 +212,25 @@ const PackageForm = ({ package: initialPackage, onSuccess, onCancel }) => {
         [field]: newArray
       };
     });
+    
+    // Clean up any touched or error state for the removed item
+    const updatedTouched = { ...touched };
+    const updatedErrors = { ...errors };
+    
+    Object.keys(updatedTouched).forEach(key => {
+      if (key.startsWith(`${field}.${index}`)) {
+        delete updatedTouched[key];
+      }
+    });
+    
+    Object.keys(updatedErrors).forEach(key => {
+      if (key.startsWith(`${field}.${index}`)) {
+        delete updatedErrors[key];
+      }
+    });
+    
+    setTouched(updatedTouched);
+    setErrors(updatedErrors);
   };
 
   // Handle file input change for image upload
@@ -129,77 +246,213 @@ const PackageForm = ({ package: initialPackage, onSuccess, onCancel }) => {
       setImagePreview(URL.createObjectURL(file));
     }
   };
+  
+  // Validate a single field
+  const validateField = (name, value) => {
+    let error = '';
+    
+    switch(name) {
+      case 'packageID':
+        // Only validate packageID in edit mode
+        if (initialPackage && !value) error = 'Package ID is required';
+        break;
+      case 'packageName':
+        if (!value) error = 'Package name is required';
+        else if (value.length < 3 || value.length > 100) 
+          error = 'Package name must be between 3 and 100 characters';
+        break;
+      case 'description':
+        if (!value) error = 'Description is required';
+        else if (value.length < 10 || value.length > 500) 
+          error = 'Description must be between 10 and 500 characters';
+        break;
+      case 'bookingTerms':
+        if (!value) error = 'Booking terms are required';
+        else if (value.length < 10) 
+          error = 'Booking terms must be at least 10 characters';
+        break;
+      case 'price':
+        if (value !== '' && Number(value) < 0) error = 'Price cannot be negative';
+        break;
+      case 'travelFees':
+        if (Number(value) < 0) error = 'Travel fees cannot be negative';
+        break;
+      case 'type':
+        if (!value) error = 'Package type is required';
+        break;
+      default:
+        break;
+    }
+    
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }));
+    
+    return error === '';
+  };
+  
+  // Validate a nested field
+  const validateNestedField = (parent, field, value) => {
+    let error = '';
+    const fieldKey = `${parent}.${field}`;
+    
+    if (parent === 'teamInvolvement') {
+      switch(field) {
+        case 'maleDancers':
+          if (value < 0) error = 'Male dancers count cannot be negative';
+          break;
+        case 'femaleDancers':
+          if (value < 0) error = 'Female dancers count cannot be negative';
+          break;
+        case 'choreographers':
+          if (value < 1) error = 'At least one choreographer is required';
+          break;
+        case 'MC':
+          if (value < 0) error = 'MC count cannot be negative';
+          break;
+        default:
+          break;
+      }
+    }
+    
+    setErrors(prev => ({
+      ...prev,
+      [fieldKey]: error
+    }));
+    
+    return error === '';
+  };
+  
+  // Validate an array field
+  const validateArrayField = (field, index, value) => {
+    let error = '';
+    const fieldKey = `${field}.${index}`;
+    
+    if (field === 'danceStyles') {
+      // Only validate if it's the first item and it's empty
+      if (index === 0 && !value.trim()) {
+        error = 'At least one dance style is required';
+      }
+    }
+    
+    setErrors(prev => ({
+      ...prev,
+      [fieldKey]: error
+    }));
+    
+    return error === '';
+  };
+  
+  // Validate a performance field
+  const validatePerformanceField = (index, field, value) => {
+    let error = '';
+    const fieldKey = `performances.${index}.${field}`;
+    
+    switch(field) {
+      case 'type':
+        if (!value) error = 'Performance type is required';
+        break;
+      case 'duration':
+        if (!value) {
+          error = 'Duration is required';
+        } else if (!/^[1-9]\d*\s?(minutes|minute|hours|hour)$/.test(value)) {
+          error = 'Duration must be in format "X minutes" or "X hours"';
+        }
+        break;
+      default:
+        break;
+    }
+    
+    setErrors(prev => ({
+      ...prev,
+      [fieldKey]: error
+    }));
+    
+    return error === '';
+  };
 
-  // Validate the form inputs
+  // Validate the entire form at once
   const validateForm = () => {
     const newErrors = {};
-
-    // Only validate packageID in edit mode (when initialPackage exists)
-    if (initialPackage && !formData.packageID) {
-      newErrors.packageID = 'Package ID is required';
+    let isValid = true;
+    
+    // Validate simple fields
+    ['packageName', 'description', 'bookingTerms', 'price', 'travelFees', 'type'].forEach(field => {
+      if (!validateField(field, formData[field])) {
+        isValid = false;
+      }
+    });
+    
+    // Validate packageID in edit mode
+    if (initialPackage && !validateField('packageID', formData.packageID)) {
+      isValid = false;
     }
-    if (!formData.packageName) newErrors.packageName = 'Package name is required';
-    if (formData.packageName && (formData.packageName.length < 3 || formData.packageName.length > 100)) {
-      newErrors.packageName = 'Package name must be between 3 and 100 characters';
+    
+    // Validate team involvement
+    Object.keys(formData.teamInvolvement).forEach(field => {
+      if (!validateNestedField('teamInvolvement', field, formData.teamInvolvement[field])) {
+        isValid = false;
+      }
+    });
+    
+    // Validate dance styles (at least one is required)
+    const validDanceStyles = formData.danceStyles.filter(style => style.trim() !== '');
+    if (validDanceStyles.length === 0) {
+      newErrors['danceStyles.0'] = 'At least one dance style is required';
+      isValid = false;
     }
-    if (!formData.description) newErrors.description = 'Description is required';
-    if (formData.description && (formData.description.length < 10 || formData.description.length > 500)) {
-      newErrors.description = 'Description must be between 10 and 500 characters';
-    }
-    if (!formData.performances.length) {
+    
+    // Validate performances
+    if (formData.performances.length === 0) {
       newErrors.performances = 'At least one performance is required';
+      isValid = false;
     } else {
       formData.performances.forEach((perf, index) => {
-        if (!perf.type) {
-          newErrors[`performance_${index}_type`] = 'Performance type is required';
+        if (!validatePerformanceField(index, 'type', perf.type)) {
+          isValid = false;
         }
-        if (!perf.duration) {
-          newErrors[`performance_${index}_duration`] = 'Duration is required';
-        } else if (!/^[1-9]\d*\s?(minutes|minute|hours|hour)$/.test(perf.duration)) {
-          newErrors[`performance_${index}_duration`] = 'Duration must be in format "X minutes" or "X hours"';
+        if (!validatePerformanceField(index, 'duration', perf.duration)) {
+          isValid = false;
         }
       });
     }
-    const validDanceStyles = formData.danceStyles.filter(style => style.trim() !== '');
-    if (!validDanceStyles.length) {
-      newErrors.danceStyles = 'At least one dance style is required';
-    }
-    if (formData.teamInvolvement.maleDancers < 0) {
-      newErrors.maleDancers = 'Male dancers count cannot be negative';
-    }
-    if (formData.teamInvolvement.femaleDancers < 0) {
-      newErrors.femaleDancers = 'Female dancers count cannot be negative';
-    }
-    if (formData.teamInvolvement.choreographers < 1) {
-      newErrors.choreographers = 'At least one choreographer is required';
-    }
-    if (formData.teamInvolvement.MC < 0) {
-      newErrors.mc = 'MC count cannot be negative';
-    }
-    if (formData.travelFees < 0) {
-      newErrors.travelFees = 'Travel fees cannot be negative';
-    }
-    if (!formData.bookingTerms) {
-      newErrors.bookingTerms = 'Booking terms are required';
-    }
-    if (formData.bookingTerms && formData.bookingTerms.length < 10) {
-      newErrors.bookingTerms = 'Booking terms must be at least 10 characters';
-    }
-    if (formData.price !== '' && formData.price < 0) {
-      newErrors.price = 'Price cannot be negative';
-    }
-    if (!formData.type) {
-      newErrors.type = 'Package type is required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    
+    // Mark all fields as touched
+    const allTouched = {};
+    
+    // Simple fields
+    ['packageID', 'packageName', 'description', 'bookingTerms', 'price', 'travelFees', 'type'].forEach(field => {
+      allTouched[field] = true;
+    });
+    
+    // Team involvement fields
+    Object.keys(formData.teamInvolvement).forEach(field => {
+      allTouched[`teamInvolvement.${field}`] = true;
+    });
+    
+    // Dance styles
+    formData.danceStyles.forEach((_, index) => {
+      allTouched[`danceStyles.${index}`] = true;
+    });
+    
+    // Performances
+    formData.performances.forEach((_, index) => {
+      allTouched[`performances.${index}.type`] = true;
+      allTouched[`performances.${index}.duration`] = true;
+    });
+    
+    setTouched(allTouched);
+    setErrors(prev => ({ ...prev, ...newErrors }));
+    
+    return isValid;
   };
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setApiError(null);
+    
     if (!validateForm()) return;
 
     setIsSubmitting(true);
@@ -229,301 +482,521 @@ const PackageForm = ({ package: initialPackage, onSuccess, onCancel }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <motion.form 
+      onSubmit={handleSubmit}
+      className="space-y-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
       {apiError && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {apiError}
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-6 flex items-start">
+          <div className="text-red-500 mr-3 mt-0.5">
+            <AlertCircle className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="font-medium text-red-800">Error</h3>
+            <p className="text-red-700">{apiError}</p>
+          </div>
         </div>
       )}
 
       {/* Show Package ID only in edit mode */}
       {initialPackage && (
         <div className="mb-4">
-          <label className="block mb-1 font-medium">Package ID*</label>
-          <input
-            type="text"
-            name="packageID"
-            value={formData.packageID}
-            readOnly
-            className="w-full p-2 border rounded bg-gray-100"
-          />
-          {errors.packageID && <p className="text-red-500 text-sm mt-1">{errors.packageID}</p>}
+          <label className="flex items-center text-sm font-medium text-gray-700 mb-1.5">
+            <Package2 className="w-4 h-4 mr-1.5 text-red-500" />
+            Package ID
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              name="packageID"
+              value={formData.packageID}
+              readOnly
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 bg-gray-50 rounded-lg text-gray-500"
+            />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Tag className="h-5 w-5 text-gray-400" />
+            </div>
+          </div>
+          {errors.packageID && <p className="mt-1.5 text-sm text-red-600">{errors.packageID}</p>}
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Package Name */}
-        <div>
-          <label className="block mb-1 font-medium">Package Name*</label>
-          <input
-            type="text"
-            name="packageName"
-            value={formData.packageName}
-            onChange={handleChange}
-            className={`w-full p-2 border rounded ${errors.packageName ? 'border-red-500' : 'border-gray-300'}`}
-          />
-          {errors.packageName && <p className="text-red-500 text-sm mt-1">{errors.packageName}</p>}
+        <div className="col-span-1">
+          <label className="flex items-center text-sm font-medium text-gray-700 mb-1.5">
+            <Package2 className="w-4 h-4 mr-1.5 text-red-500" />
+            Package Name*
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              name="packageName"
+              value={formData.packageName}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className={`block w-full rounded-lg border ${errors.packageName ? 'border-red-300 bg-red-50' : touched.packageName && !errors.packageName ? 'border-green-300 bg-green-50' : 'border-gray-300'}
+                py-2.5 px-4 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200`}
+              placeholder="Enter package name"
+            />
+            {touched.packageName && (
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                {errors.packageName ? 
+                  <AlertCircle className="h-5 w-5 text-red-500" /> : 
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                }
+              </div>
+            )}
+          </div>
+          {errors.packageName && <p className="mt-1.5 text-sm text-red-600">{errors.packageName}</p>}
+        </div>
+
+        {/* Price */}
+        <div className="col-span-1">
+          <label className="flex items-center text-sm font-medium text-gray-700 mb-1.5">
+            <DollarSign className="w-4 h-4 mr-1.5 text-red-500" />
+            Price (Rs.)
+          </label>
+          <div className="relative">
+            <input
+              type="number"
+              name="price"
+              min="0"
+              step="0.01"
+              value={formData.price}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className={`block w-full rounded-lg border ${errors.price ? 'border-red-300 bg-red-50' : touched.price && !errors.price ? 'border-green-300 bg-green-50' : 'border-gray-300'}
+                py-2.5 px-4 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200`}
+              placeholder="Leave empty for custom quotes"
+            />
+            {touched.price && (
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                {errors.price ? 
+                  <AlertCircle className="h-5 w-5 text-red-500" /> : 
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                }
+              </div>
+            )}
+          </div>
+          {errors.price && <p className="mt-1.5 text-sm text-red-600">{errors.price}</p>}
         </div>
       </div>
 
       {/* Description */}
       <div>
-        <label className="block mb-1 font-medium">Description*</label>
-        <textarea
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
-          rows="3"
-          className={`w-full p-2 border rounded ${errors.description ? 'border-red-500' : 'border-gray-300'}`}
-        ></textarea>
-        {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+        <label className="flex items-center text-sm font-medium text-gray-700 mb-1.5">
+          <FileText className="w-4 h-4 mr-1.5 text-red-500" />
+          Description*
+        </label>
+        <div className="relative">
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            rows={4}
+            className={`block w-full rounded-lg border ${errors.description ? 'border-red-300 bg-red-50' : touched.description && !errors.description ? 'border-green-300 bg-green-50' : 'border-gray-300'}
+              py-2.5 px-4 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200`}
+            placeholder="Provide a detailed description of the package..."
+          />
+          {touched.description && (
+            <div className="absolute top-3 right-3 pointer-events-none">
+              {errors.description ? 
+                <AlertCircle className="h-5 w-5 text-red-500" /> : 
+                <CheckCircle className="h-5 w-5 text-green-500" />
+              }
+            </div>
+          )}
+        </div>
+        {errors.description ? (
+          <p className="mt-1.5 text-sm text-red-600">{errors.description}</p>
+        ) : (
+          <p className="mt-1.5 text-xs text-gray-500">Minimum 10 characters required</p>
+        )}
       </div>
 
       {/* Image Upload Section */}
-      <div>
-        <label className="block mb-1 font-medium">Upload Image</label>
-        <div className="flex items-center gap-4">
-          <div className="w-32 h-32 border rounded overflow-hidden">
-            <img src={imagePreview} alt="Preview" className="object-cover w-full h-full" />
+      <div className="bg-gray-50 rounded-xl p-5">
+        <label className="flex items-center text-sm font-medium text-gray-700 mb-3">
+          <Image className="w-4 h-4 mr-1.5 text-red-500" />
+          Upload Image
+        </label>
+        <div className="flex flex-col sm:flex-row items-center gap-5">
+          <div className="w-32 h-32 border rounded-lg overflow-hidden bg-white shadow-sm">
+            <img src={imagePreview} alt="Preview" className="object-cover w-full h-full transition-all duration-300 hover:scale-110" />
           </div>
-          <label className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-            Choose File
-            <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
-          </label>
+          <div className="flex-1">
+            <label className="cursor-pointer inline-flex items-center px-4 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 shadow-sm transition-all duration-200">
+              <Upload className="w-4 h-4 mr-2" />
+              Choose File
+              <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+            </label>
+            <p className="text-xs text-gray-500 mt-2">Recommended size: 800x600px, max 2MB</p>
+          </div>
         </div>
       </div>
 
       {/* Performances */}
-      <div>
-        <label className="block mb-2 font-medium">Performances*</label>
+      <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+        <label className="flex items-center text-sm font-medium text-gray-700 mb-3">
+          <Music className="w-4 h-4 mr-1.5 text-red-500" />
+          Performances*
+        </label>
         {formData.performances.map((performance, index) => (
-          <div key={index} className="flex flex-col md:flex-row gap-2 mb-2 p-2 border rounded">
+          <motion.div 
+            key={index} 
+            className="flex flex-col sm:flex-row gap-4 mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
             <div className="flex-1">
-              <input
-                type="text"
-                placeholder="Performance Type"
-                value={performance.type}
-                onChange={(e) => handlePerformanceChange(index, 'type', e.target.value)}
-                className={`w-full p-2 border rounded ${errors[`performance_${index}_type`] ? 'border-red-500' : 'border-gray-300'}`}
-              />
-              {errors[`performance_${index}_type`] && (
-                <p className="text-red-500 text-sm mt-1">{errors[`performance_${index}_type`]}</p>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Performance Type*</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="E.g., Traditional, Contemporary..."
+                  value={performance.type}
+                  onChange={(e) => handlePerformanceChange(index, 'type', e.target.value)}
+                  onBlur={(e) => handlePerformanceBlur(index, 'type', e.target.value)}
+                  className={`block w-full rounded-lg border ${errors[`performances.${index}.type`] ? 'border-red-300 bg-red-50' : touched[`performances.${index}.type`] && !errors[`performances.${index}.type`] ? 'border-green-300 bg-green-50' : 'border-gray-300'}
+                    py-2 px-3 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200`}
+                />
+                {touched[`performances.${index}.type`] && (
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    {errors[`performances.${index}.type`] ? 
+                      <AlertCircle className="h-4 w-4 text-red-500" /> : 
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    }
+                  </div>
+                )}
+              </div>
+              {errors[`performances.${index}.type`] && (
+                <p className="text-red-500 text-xs mt-1">{errors[`performances.${index}.type`]}</p>
               )}
             </div>
             <div className="flex-1">
-              <input
-                type="text"
-                placeholder="Duration (e.g., 30 minutes)"
-                value={performance.duration}
-                onChange={(e) => handlePerformanceChange(index, 'duration', e.target.value)}
-                className={`w-full p-2 border rounded ${errors[`performance_${index}_duration`] ? 'border-red-500' : 'border-gray-300'}`}
-              />
-              {errors[`performance_${index}_duration`] && (
-                <p className="text-red-500 text-sm mt-1">{errors[`performance_${index}_duration`]}</p>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Duration*</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="E.g., 30 minutes, 2 hours"
+                  value={performance.duration}
+                  onChange={(e) => handlePerformanceChange(index, 'duration', e.target.value)}
+                  onBlur={(e) => handlePerformanceBlur(index, 'duration', e.target.value)}
+                  className={`block w-full rounded-lg border ${errors[`performances.${index}.duration`] ? 'border-red-300 bg-red-50' : touched[`performances.${index}.duration`] && !errors[`performances.${index}.duration`] ? 'border-green-300 bg-green-50' : 'border-gray-300'}
+                    py-2 px-3 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200`}
+                />
+                {touched[`performances.${index}.duration`] && (
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    {errors[`performances.${index}.duration`] ? 
+                      <AlertCircle className="h-4 w-4 text-red-500" /> : 
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    }
+                  </div>
+                )}
+              </div>
+              {errors[`performances.${index}.duration`] && (
+                <p className="text-red-500 text-xs mt-1">{errors[`performances.${index}.duration`]}</p>
               )}
             </div>
             {formData.performances.length > 1 && (
-              <button
-                type="button"
-                onClick={() => removeArrayItem('performances', index)}
-                className="text-red-500 p-2"
-              >
-                ✕
-              </button>
+              <div className="flex items-center">
+                <motion.button
+                  type="button"
+                  onClick={() => removeArrayItem('performances', index)}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors"
+                >
+                  <XCircle className="w-5 h-5" />
+                </motion.button>
+              </div>
             )}
-          </div>
+          </motion.div>
         ))}
-        <button
+        <motion.button
           type="button"
           onClick={() => addArrayItem('performances', { type: '', duration: '' })}
-          className="text-blue-500 mt-2"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="flex items-center text-red-600 mt-2 px-4 py-2 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
         >
-          + Add Performance
-        </button>
-        {errors.performances && <p className="text-red-500 text-sm mt-1">{errors.performances}</p>}
+          <PlusCircle className="w-4 h-4 mr-2" />
+          Add Performance
+        </motion.button>
+        {errors.performances && <p className="text-red-500 text-sm mt-2">{errors.performances}</p>}
       </div>
 
       {/* Dance Styles */}
-      <div>
-        <label className="block mb-2 font-medium">Dance Styles*</label>
+      <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+        <label className="flex items-center text-sm font-medium text-gray-700 mb-3">
+          <Tag className="w-4 h-4 mr-1.5 text-red-500" />
+          Dance Styles*
+        </label>
         {formData.danceStyles.map((style, index) => (
-          <div key={index} className="flex items-center gap-2 mb-2">
-            <input
-              type="text"
-              value={style}
-              onChange={(e) => handleArrayChange('danceStyles', index, e.target.value)}
-              className={`flex-1 p-2 border rounded ${errors.danceStyles && index === 0 ? 'border-red-500' : 'border-gray-300'}`}
-            />
+          <motion.div 
+            key={index} 
+            className="flex items-center gap-3 mb-3"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={style}
+                onChange={(e) => handleArrayChange('danceStyles', index, e.target.value)}
+                onBlur={(e) => handleArrayBlur('danceStyles', index, e.target.value)}
+                placeholder="E.g., Contemporary, Ballet, Hip Hop..."
+                className={`block w-full rounded-lg border ${errors[`danceStyles.${index}`] ? 'border-red-300 bg-red-50' : touched[`danceStyles.${index}`] && !errors[`danceStyles.${index}`] ? 'border-green-300 bg-green-50' : 'border-gray-300'}
+                  py-2.5 px-4 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200`}
+              />
+              {touched[`danceStyles.${index}`] && (
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  {errors[`danceStyles.${index}`] ? 
+                    <AlertCircle className="h-5 w-5 text-red-500" /> : 
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  }
+                </div>
+              )}
+            </div>
             {formData.danceStyles.length > 1 && (
-              <button
+              <motion.button
                 type="button"
                 onClick={() => removeArrayItem('danceStyles', index)}
-                className="text-red-500 p-2"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors"
               >
-                ✕
-              </button>
+                <XCircle className="w-5 h-5" />
+              </motion.button>
             )}
-          </div>
+          </motion.div>
         ))}
-        <button
+        <motion.button
           type="button"
           onClick={() => addArrayItem('danceStyles', '')}
-          className="text-blue-500 mt-2"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="flex items-center text-red-600 mt-2 px-4 py-2 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
         >
-          + Add Dance Style
-        </button>
-        {errors.danceStyles && <p className="text-red-500 text-sm mt-1">{errors.danceStyles}</p>}
+          <PlusCircle className="w-4 h-4 mr-2" />
+          Add Dance Style
+        </motion.button>
+        {errors['danceStyles.0'] && <p className="text-red-500 text-sm mt-2">{errors['danceStyles.0']}</p>}
       </div>
 
       {/* Team Involvement */}
-      <div>
-        <label className="block mb-2 font-medium">Team Involvement*</label>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+        <label className="flex items-center text-sm font-medium text-gray-700 mb-3">
+          <Users className="w-4 h-4 mr-1.5 text-red-500" />
+          Team Involvement*
+        </label>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div>
-            <label className="block text-sm">Male Dancers</label>
-            <input
-              type="number"
-              min="0"
-              value={formData.teamInvolvement.maleDancers}
-              onChange={(e) =>
-                handleNestedChange('teamInvolvement', 'maleDancers', parseInt(e.target.value))
-              }
-              className={`w-full p-2 border rounded ${errors.maleDancers ? 'border-red-500' : 'border-gray-300'}`}
-            />
-            {errors.maleDancers && <p className="text-red-500 text-sm mt-1">{errors.maleDancers}</p>}
+            <label className="block text-xs font-medium text-gray-600 mb-1">Male Dancers</label>
+            <div className="relative">
+              <input
+                type="number"
+                min="0"
+                value={formData.teamInvolvement.maleDancers}
+                onChange={(e) => handleNestedChange('teamInvolvement', 'maleDancers', parseInt(e.target.value))}
+                onBlur={(e) => handleNestedBlur('teamInvolvement', 'maleDancers', parseInt(e.target.value))}
+                className={`block w-full rounded-lg border ${errors['teamInvolvement.maleDancers'] ? 'border-red-300 bg-red-50' : touched['teamInvolvement.maleDancers'] && !errors['teamInvolvement.maleDancers'] ? 'border-green-300 bg-green-50' : 'border-gray-300'}
+                  py-2 px-3 text-gray-900 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200`}
+              />
+              {touched['teamInvolvement.maleDancers'] && (
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  {errors['teamInvolvement.maleDancers'] ? 
+                    <AlertCircle className="h-4 w-4 text-red-500" /> : 
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  }
+                </div>
+              )}
+            </div>
+            {errors['teamInvolvement.maleDancers'] && <p className="text-red-500 text-xs mt-1">{errors['teamInvolvement.maleDancers']}</p>}
           </div>
           <div>
-            <label className="block text-sm">Female Dancers</label>
-            <input
-              type="number"
-              min="0"
-              value={formData.teamInvolvement.femaleDancers}
-              onChange={(e) =>
-                handleNestedChange('teamInvolvement', 'femaleDancers', parseInt(e.target.value))
-              }
-              className={`w-full p-2 border rounded ${errors.femaleDancers ? 'border-red-500' : 'border-gray-300'}`}
-            />
-            {errors.femaleDancers && <p className="text-red-500 text-sm mt-1">{errors.femaleDancers}</p>}
+            <label className="block text-xs font-medium text-gray-600 mb-1">Female Dancers</label>
+            <div className="relative">
+              <input
+                type="number"
+                min="0"
+                value={formData.teamInvolvement.femaleDancers}
+                onChange={(e) => handleNestedChange('teamInvolvement', 'femaleDancers', parseInt(e.target.value))}
+                onBlur={(e) => handleNestedBlur('teamInvolvement', 'femaleDancers', parseInt(e.target.value))}
+                className={`block w-full rounded-lg border ${errors['teamInvolvement.femaleDancers'] ? 'border-red-300 bg-red-50' : touched['teamInvolvement.femaleDancers'] && !errors['teamInvolvement.femaleDancers'] ? 'border-green-300 bg-green-50' : 'border-gray-300'}
+                  py-2 px-3 text-gray-900 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200`}
+              />
+              {touched['teamInvolvement.femaleDancers'] && (
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  {errors['teamInvolvement.femaleDancers'] ? 
+                    <AlertCircle className="h-4 w-4 text-red-500" /> : 
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  }
+                </div>
+              )}
+            </div>
+            {errors['teamInvolvement.femaleDancers'] && <p className="text-red-500 text-xs mt-1">{errors['teamInvolvement.femaleDancers']}</p>}
           </div>
           <div>
-            <label className="block text-sm">Choreographers*</label>
-            <input
-              type="number"
-              min="1"
-              value={formData.teamInvolvement.choreographers}
-              onChange={(e) =>
-                handleNestedChange('teamInvolvement', 'choreographers', parseInt(e.target.value))
-              }
-              className={`w-full p-2 border rounded ${errors.choreographers ? 'border-red-500' : 'border-gray-300'}`}
-            />
-            {errors.choreographers && <p className="text-red-500 text-sm mt-1">{errors.choreographers}</p>}
+            <label className="block text-xs font-medium text-gray-600 mb-1">Choreographers*</label>
+            <div className="relative">
+              <input
+                type="number"
+                min="1"
+                value={formData.teamInvolvement.choreographers}
+                onChange={(e) => handleNestedChange('teamInvolvement', 'choreographers', parseInt(e.target.value))}
+                onBlur={(e) => handleNestedBlur('teamInvolvement', 'choreographers', parseInt(e.target.value))}
+                className={`block w-full rounded-lg border ${errors['teamInvolvement.choreographers'] ? 'border-red-300 bg-red-50' : touched['teamInvolvement.choreographers'] && !errors['teamInvolvement.choreographers'] ? 'border-green-300 bg-green-50' : 'border-gray-300'}
+                  py-2 px-3 text-gray-900 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200`}
+              />
+              {touched['teamInvolvement.choreographers'] && (
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  {errors['teamInvolvement.choreographers'] ? 
+                    <AlertCircle className="h-4 w-4 text-red-500" /> : 
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  }
+                </div>
+              )}
+            </div>
+            {errors['teamInvolvement.choreographers'] && <p className="text-red-500 text-xs mt-1">{errors['teamInvolvement.choreographers']}</p>}
           </div>
           <div>
-            <label className="block text-sm">MCs</label>
-            <input
-              type="number"
-              min="0"
-              value={formData.teamInvolvement.MC}
-              onChange={(e) =>
-                handleNestedChange('teamInvolvement', 'MC', parseInt(e.target.value))
-              }
-              className={`w-full p-2 border rounded ${errors.mc ? 'border-red-500' : 'border-gray-300'}`}
-            />
-            {errors.mc && <p className="text-red-500 text-sm mt-1">{errors.mc}</p>}
+            <label className="block text-xs font-medium text-gray-600 mb-1">MCs</label>
+            <div className="relative">
+              <input
+                type="number"
+                min="0"
+                value={formData.teamInvolvement.MC}
+                onChange={(e) => handleNestedChange('teamInvolvement', 'MC', parseInt(e.target.value))}
+                onBlur={(e) => handleNestedBlur('teamInvolvement', 'MC', parseInt(e.target.value))}
+                className={`block w-full rounded-lg border ${errors['teamInvolvement.MC'] ? 'border-red-300 bg-red-50' : touched['teamInvolvement.MC'] && !errors['teamInvolvement.MC'] ? 'border-green-300 bg-green-50' : 'border-gray-300'}
+                  py-2 px-3 text-gray-900 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200`}
+              />
+              {touched['teamInvolvement.MC'] && (
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  {errors['teamInvolvement.MC'] ? 
+                    <AlertCircle className="h-4 w-4 text-red-500" /> : 
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  }
+                </div>
+              )}
+            </div>
+            {errors['teamInvolvement.MC'] && <p className="text-red-500 text-xs mt-1">{errors['teamInvolvement.MC']}</p>}
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Travel Fees */}
         <div>
-          <label className="block mb-1 font-medium">Travel Fees (Rs.)</label>
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            name="travelFees"
-            value={formData.travelFees}
-            onChange={handleChange}
-            className={`w-full p-2 border rounded ${errors.travelFees ? 'border-red-500' : 'border-gray-300'}`}
-          />
-          {errors.travelFees && <p className="text-red-500 text-sm mt-1">{errors.travelFees}</p>}
+          <label className="flex items-center text-sm font-medium text-gray-700 mb-1.5">
+            <DollarSign className="w-4 h-4 mr-1.5 text-red-500" />
+            Travel Fees (Rs.)
+          </label>
+          <div className="relative">
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              name="travelFees"
+              value={formData.travelFees}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className={`block w-full rounded-lg border ${errors.travelFees ? 'border-red-300 bg-red-50' : touched.travelFees && !errors.travelFees ? 'border-green-300 bg-green-50' : 'border-gray-300'}
+                py-2.5 px-4 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200`}
+              placeholder="0.00"
+            />
+            {touched.travelFees && (
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                {errors.travelFees ? 
+                  <AlertCircle className="h-5 w-5 text-red-500" /> : 
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                }
+              </div>
+            )}
+          </div>
+          {errors.travelFees && <p className="mt-1.5 text-sm text-red-600">{errors.travelFees}</p>}
         </div>
-        {/* Price */}
+
+        {/* Package Type (read-only for admin) */}
         <div>
-          <label className="block mb-1 font-medium">Price (Rs.)</label>
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            name="price"
-            value={formData.price}
-            onChange={handleChange}
-            className={`w-full p-2 border rounded ${errors.price ? 'border-red-500' : 'border-gray-300'}`}
-            placeholder="Leave empty for custom quotes"
-          />
-          {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
+          <label className="flex items-center text-sm font-medium text-gray-700 mb-1.5">
+            <Package2 className="w-4 h-4 mr-1.5 text-red-500" />
+            Package Type
+          </label>
+          <select
+            name="type"
+            value={formData.type}
+            disabled
+            className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
+          >
+            <option value="system">System</option>
+          </select>
         </div>
       </div>
 
       {/* Booking Terms */}
       <div>
-        <label className="block mb-1 font-medium">Booking Terms*</label>
-        <textarea
-          name="bookingTerms"
-          value={formData.bookingTerms}
-          onChange={handleChange}
-          rows="3"
-          className={`w-full p-2 border rounded ${errors.bookingTerms ? 'border-red-500' : 'border-gray-300'}`}
-        ></textarea>
-        {errors.bookingTerms && <p className="text-red-500 text-sm mt-1">{errors.bookingTerms}</p>}
+        <label className="flex items-center text-sm font-medium text-gray-700 mb-1.5">
+          <MessageSquare className="w-4 h-4 mr-1.5 text-red-500" />
+          Booking Terms*
+        </label>
+        <div className="relative">
+          <textarea
+            name="bookingTerms"
+            value={formData.bookingTerms}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            rows={3}
+            className={`block w-full rounded-lg border ${errors.bookingTerms ? 'border-red-300 bg-red-50' : touched.bookingTerms && !errors.bookingTerms ? 'border-green-300 bg-green-50' : 'border-gray-300'}
+              py-2.5 px-4 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200`}
+            placeholder="Enter the terms and conditions for booking this package..."
+          />
+          {touched.bookingTerms && (
+            <div className="absolute top-3 right-3 pointer-events-none">
+              {errors.bookingTerms ? 
+                <AlertCircle className="h-5 w-5 text-red-500" /> : 
+                <CheckCircle className="h-5 w-5 text-green-500" />
+              }
+            </div>
+          )}
+        </div>
+        {errors.bookingTerms ? (
+          <p className="mt-1.5 text-sm text-red-600">{errors.bookingTerms}</p>
+        ) : (
+          <p className="mt-1.5 text-xs text-gray-500">Minimum 10 characters required</p>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Package Type (read-only for admin) */}
-        <div>
-          <label className="block mb-1 font-medium">Package Type*</label>
-          <select
-            name="type"
-            value={formData.type}
-            disabled
-            className="w-full p-2 border rounded bg-gray-100"
-          >
-            <option value="system">System</option>
-          </select>
-        </div>
-        {/* Status (read-only for admin) */}
-        <div>
-          <label className="block mb-1 font-medium">Status</label>
-          <select
-            name="status"
-            value={formData.status}
-            disabled
-            className="w-full p-2 border rounded bg-gray-100"
-          >
-            <option value="approved">Approved</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="flex justify-end gap-3 pt-4">
-        <button
+      <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-gray-200">
+        <motion.button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-100 transition-colors"
           disabled={isSubmitting}
         >
           Cancel
-        </button>
-        <button
+        </motion.button>
+        <motion.button
           type="submit"
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className={`px-5 py-2.5 rounded-lg bg-gradient-to-r from-red-500 to-red-600 text-white font-medium shadow-md hover:shadow-lg transition-all ${isSubmitting ? 'opacity-70' : ''}`}
           disabled={isSubmitting}
         >
           {isSubmitting ? 'Saving...' : (initialPackage ? 'Update Package' : 'Create Package')}
-        </button>
+        </motion.button>
       </div>
-    </form>
+    </motion.form>
   );
 };
 
