@@ -19,3 +19,15 @@ export const deleteEventNote = async (eventId, noteIndex) => {
   const response = await axios.delete(`/api/events/${eventId}/notes/${noteIndex}`);
   return response.data;
 };
+
+export const updateEventDetails = async (eventId, eventData) => {
+  try {
+    const response = await axios.put(`/api/events/${eventId}`, eventData);
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      throw error.response.data;
+    }
+    throw { message: 'Failed to update event details' };
+  }
+};

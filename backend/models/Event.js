@@ -12,7 +12,7 @@ const EventSchema = new mongoose.Schema({
     eventName: { type: String, required: true, trim: true },
     eventDate: { type: Date, required: true },
     eventLocation: { type: String, required: true, trim: true },
-    eventType: { 
+    eventType: {  
       type: String, 
       enum: ['public', 'private'], 
       required: true, 
@@ -41,6 +41,7 @@ const EventSchema = new mongoose.Schema({
 
   notes: [{
     author: { type: String },
+    authorId: { type: String },
     content: { type: String  },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date }

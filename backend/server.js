@@ -52,7 +52,7 @@ import practiceRequestRoutes from './routes/practiceRequestRoutes.js';
 import certificateRoutes from './routes/certificateRoutes.js';
 import sponsorshipRoutes from './routes/sponsorshipRoutes.js';
 
-
+import eventMediaRoutes from './routes/eventMediaRoutes.js';
 
 import merchandiseRoutes from './routes/merchandiseRoutes.js';
 
@@ -151,6 +151,8 @@ app.use('/api/chatbot', chatbotRoutes);
 // Stripe Routes
 app.use('/api/stripe', stripeRoutes);
 
+//event media routes
+app.use('/api/event-media', eventMediaRoutes);
 
 // API Endpoints
 app.get('/register/member/application', (req, res) => {

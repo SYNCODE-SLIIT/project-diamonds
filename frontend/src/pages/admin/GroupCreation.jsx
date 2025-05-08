@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  UserPlusIcon, 
-  InformationCircleIcon, 
-  UsersIcon, 
-  CheckCircleIcon, 
-  ExclamationTriangleIcon 
-} from '@heroicons/react/24/outline';
+import { Link, useNavigate } from 'react-router-dom';
 
 const GroupCreation = () => {
   const navigate = useNavigate();
@@ -24,7 +17,6 @@ const GroupCreation = () => {
       try {
         const res = await fetch('http://localhost:4000/api/users');
         const data = await res.json();
-        // Filter for members only
         const members = data.filter((u) => u.role === 'member');
         setAllMembers(members);
       } catch (err) {
@@ -52,23 +44,21 @@ const GroupCreation = () => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
-  
-    // Default admin ID to be included in the members list.
+
     const adminId = "67e0f270314253356851facb";
-  
-    // Ensure the admin is included in the group members by default.
+
     let groupMembers = [...selectedMembers];
     if (!groupMembers.includes(adminId)) {
       groupMembers.unshift(adminId);
     }
-    
+
     const payload = {
       groupName: formData.groupName,
       description: formData.description,
       createdBy: adminId,
       members: groupMembers
     };
-  
+
     try {
       const res = await fetch('http://localhost:4000/api/chat-groups', {
         method: 'POST',
@@ -91,36 +81,55 @@ const GroupCreation = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-xl bg-white shadow-2xl rounded-xl overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-6 flex items-center text-white">
-          <UserPlusIcon className="w-10 h-10 mr-4" />
-          <h1 className="text-2xl font-bold">Create Chat Group</h1>
+    <div className="container mx-auto px-4 py-4 max-w-7xl">
+      {/* Header Section */}
+      <div className="mb-4">
+        <div className="flex items-center mb-2">
+          <Link to="/admin/inbox" className="text-[#1c4b82] hover:underline mr-2 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Inbox
+          </Link>
+          <span className="text-gray-400 mx-2">/</span>
+          <span className="text-gray-600">Create New Group</span>
+        </div>
+        <h2 className="text-2xl font-semibold text-gray-800">Create New Chat Group</h2>
+        <p className="text-gray-500 mt-1">Set up a new group conversation</p>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-gradient-to-r from-[#0d253f] to-[#1c4b82] p-4">
+          <h3 className="text-lg font-medium text-white">Group Details</h3>
         </div>
 
         <form onSubmit={handleCreateGroup} className="p-6 space-y-6">
           {/* Error Message */}
           {errorMsg && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 flex items-center">
-              <ExclamationTriangleIcon className="w-6 h-6 text-red-500 mr-3" />
-              <p className="text-red-700">{errorMsg}</p>
+            <div className="bg-red-50 border border-red-100 rounded-lg p-4 flex items-start">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-red-700 text-sm">{errorMsg}</p>
             </div>
           )}
 
           {/* Success Message */}
           {successMsg && (
-            <div className="bg-green-50 border-l-4 border-green-500 p-4 flex items-center">
-              <CheckCircleIcon className="w-6 h-6 text-green-500 mr-3" />
-              <p className="text-green-700">{successMsg}</p>
+            <div className="bg-green-50 border border-green-100 rounded-lg p-4 flex items-start">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-green-700 text-sm">{successMsg}</p>
             </div>
           )}
 
-          {/* Group Name Input */}
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">
-              Group Name<span className="text-red-500 ml-1">*</span>
-            </label>
-            <div className="relative">
+          <div className="space-y-6">
+            {/* Group Name Input */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Group Name<span className="text-red-500 ml-1">*</span>
+              </label>
               <input
                 type="text"
                 name="groupName"
@@ -128,70 +137,109 @@ const GroupCreation = () => {
                 onChange={handleChange}
                 required
                 placeholder="Enter group name"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1c4b82] focus:border-[#1c4b82] text-sm"
               />
-              <InformationCircleIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             </div>
-          </div>
 
-          {/* Description Input */}
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">
-              Description<span className="text-red-500 ml-1">*</span>
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              required
-              placeholder="Describe your group"
-              rows="4"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300"
-            ></textarea>
-          </div>
+            {/* Description Input */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description<span className="text-red-500 ml-1">*</span>
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                required
+                placeholder="Describe the purpose of this group"
+                rows="4"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1c4b82] focus:border-[#1c4b82] text-sm"
+              ></textarea>
+            </div>
 
-          {/* Members Selection */}
-          <div>
-            <label className=" text-gray-700 font-semibold mb-2 flex items-center">
-              <UsersIcon className="w-5 h-5 mr-2" />
-              Select Members
-            </label>
-            <div className="border border-gray-300 rounded-lg max-h-60 overflow-y-auto p-3 bg-gray-50">
-              {allMembers.length === 0 ? (
-                <p className="text-gray-500 text-center">No members found.</p>
-              ) : (
-                allMembers.map((member) => (
-                  <div 
-                    key={member._id} 
-                    className="flex items-center hover:bg-blue-50 p-2 rounded transition duration-200"
-                  >
-                    <input
-                      type="checkbox"
-                      value={member._id}
-                      onChange={handleCheckboxChange}
-                      className="mr-3 text-blue-600 focus:ring-blue-500 rounded"
-                      checked={selectedMembers.includes(member._id)}
-                    />
-                    <span className="text-gray-700">
-                      {member.fullName} 
-                      <span className="text-gray-500 text-sm ml-2">({member.email})</span>
+            {/* Members Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Select Members
+              </label>
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="p-4 bg-gray-50 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">
+                      Selected: <span className="font-medium text-[#1c4b82]">{selectedMembers.length}</span> members
                     </span>
                   </div>
-                ))
-              )}
+                </div>
+                <div className="max-h-[300px] overflow-y-auto p-2 space-y-1">
+                  {allMembers.length === 0 ? (
+                    <div className="py-8 text-center">
+                      <div className="w-12 h-12 bg-blue-50 rounded-full mx-auto flex items-center justify-center mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#1c4b82]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-500 text-sm">No members found</p>
+                    </div>
+                  ) : (
+                    allMembers.map((member) => (
+                      <div 
+                        key={member._id} 
+                        className={`
+                          p-3 border rounded-lg flex items-center space-x-3 cursor-pointer
+                          ${selectedMembers.includes(member._id) 
+                            ? 'border-[#1c4b82] bg-blue-50' 
+                            : 'border-gray-200 hover:border-gray-300'}
+                          transition-colors
+                        `}
+                        onClick={() => {
+                          if (selectedMembers.includes(member._id)) {
+                            setSelectedMembers(prev => prev.filter(id => id !== member._id));
+                          } else {
+                            setSelectedMembers(prev => [...prev, member._id]);
+                          }
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          value={member._id}
+                          checked={selectedMembers.includes(member._id)}
+                          onChange={handleCheckboxChange}
+                          className="h-4 w-4 text-[#1c4b82] focus:ring-[#1c4b82] border-gray-300 rounded"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <div className="flex items-center space-x-3 flex-1">
+                          <div className="w-10 h-10 bg-gradient-to-r from-[#0d253f] to-[#1c4b82] rounded-full flex items-center justify-center text-white flex-shrink-0">
+                            <span className="text-sm font-medium">
+                              {member.fullName?.charAt(0) || "?"}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-800 truncate">{member.fullName}</p>
+                            <p className="text-xs text-gray-500 truncate">{member.email}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-400 text-white py-3 rounded-lg 
-            hover:from-blue-700 hover:to-blue-500 
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 
-            transition duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
-          >
-            Create Group
-          </button>
+          <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-100">
+            <Link
+              to="/admin/inbox"
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </Link>
+            <button
+              type="submit"
+              className="bg-gradient-to-r from-[#0d253f] to-[#1c4b82] text-white px-4 py-2 rounded-md hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-[#1c4b82] focus:ring-opacity-50 text-sm font-medium"
+            >
+              Create Group
+            </button>
+          </div>
         </form>
       </div>
     </div>

@@ -2,6 +2,7 @@
 import express from 'express';
 import EventRequest from '../models/EventRequest.js';
 import Event from '../models/Event.js';
+import { updateEventDetails } from '../controllers/eventController.js';
 
 const router = express.Router();
 
@@ -118,5 +119,8 @@ router.delete('/:id/notes/:noteIndex', async (req, res) => {
     res.status(500).json({ message: 'Error deleting note', error: error.message });
   }
 });
+
+// Route to update event details
+router.put('/:id', updateEventDetails);
 
 export default router;

@@ -60,28 +60,49 @@ const MemberApplication = () => {
         errMsg = 'Contact number should be between 10 and 15 digits.';
       }
     }
+    if (name === 'danceStyle') {
+      if (value && !/^[A-Za-z,\-\s]+$/.test(value)) {
+        errMsg = 'Dance style can only contain letters, commas, dashes, and spaces.';
+      }
+    }
     if (name === 'birthDate') {
       if (value) {
         const age = calculateAge(value);
         if (age < 18) {
           errMsg = 'You must be at least 18 years old.';
-        } else if (age > 50) {
-          errMsg = 'You must be below 50 years old.';
+        } else if (age > 35) {
+          errMsg = 'You must be below 36 years old.';
         }
       }
     }
-    if (name === 'yearsOfExperience') {
-      if (value && Number(value) < 0) {
-        errMsg = 'Years of experience cannot be negative.';
+// ── inside validateField ──────────────────────────────────────────
+if (name === 'yearsOfExperience') {
+  if (value) {
+    const num = Number(value);
+    if (isNaN(num) || num < 0) {
+      errMsg = 'Years of experience cannot be negative.';
+    } else if (formData.birthDate) {
+      const age = calculateAge(formData.birthDate);
+
+      // Case 1 – experience exceeds current age
+      if (num > age) {
+        errMsg = 'You cannot have been practicing before you were born.';
+      }
+      // Case 2 – started dancing before age 5 but after birth
+      else if (num > age - 5) {
+        const startAge = age - num;               // this will be < 5
+        errMsg = `You claim you started dancing at age ${startAge}. Please enter accurate details.`;
       }
     }
+  }
+}
     if (name === 'biography') {
-      if (value) {
-        if (value.length < 10) {
-          errMsg = 'Biography must be at least 10 characters.';
-        } else if (value.length > 500) {
-          errMsg = 'Biography must be at most 500 characters.';
-        }
+      if (!value.trim()) {
+        errMsg = 'Biography is required.';
+      } else if (value.length < 10) {
+        errMsg = 'Biography must be at least 10 characters.';
+      } else if (value.length > 500) {
+        errMsg = 'Biography must be at most 500 characters.';
       }
     }
     setErrors(prev => ({ ...prev, [name]: errMsg }));
@@ -110,6 +131,12 @@ const MemberApplication = () => {
 
   const addAvailability = () => {
     if (availabilityEntry.day && availabilityEntry.start && availabilityEntry.end) {
+      const duplicate = availabilities.some(av => av.day === availabilityEntry.day);
+      if (duplicate) {
+        setErrors(prev => ({ ...prev, availability: 'You have already added availability for that day.' }));
+        return;
+      }
+      setErrors(prev => ({ ...prev, availability: '' })); // clear any previous availability error
       setAvailabilities(prev => [...prev, availabilityEntry]);
       setAvailabilityEntry({ day: '', start: '08:00', end: '22:00' });
     }
@@ -153,6 +180,16 @@ const MemberApplication = () => {
     e.preventDefault();
     setSubmitError('');
     setResponseMsg('');
+    // Biography required check
+    if (!formData.biography.trim()) {
+      setSubmitError('Biography is required.');
+      return;
+    }
+    // Consolidated error guard
+    if (errors.yearsOfExperience || errors.biography || errors.availability) {
+      setSubmitError('Please fix the errors before submitting.');
+      return;
+    }
     const payload = {
       fullName: formData.fullName,
       email: formData.email,
@@ -298,6 +335,7 @@ const MemberApplication = () => {
                 className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-900 focus:outline-none"
                 placeholder="e.g., Ballet, Hip Hop, Contemporary"
               />
+              {errors.danceStyle && <p className="text-red-500 text-sm mt-1">{errors.danceStyle}</p>}
             </div>
             <div>
               <label className="block mb-1 font-medium">Years of Experience:</label>
@@ -364,6 +402,7 @@ const MemberApplication = () => {
                 </svg>
                 Add Availability
               </button>
+              {errors.availability && <p className="text-red-500 text-sm mt-1">{errors.availability}</p>}
               
               {availabilities.length > 0 && (
                 <div className="mt-4">
@@ -401,7 +440,8 @@ const MemberApplication = () => {
                 name="biography" 
                 value={formData.biography} 
                 onChange={handleChange} 
-                rows="4" 
+                rows="4"
+                required
                 placeholder="Tell us about yourself and your dance journey"
                 className="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-900 focus:outline-none"
               ></textarea>
