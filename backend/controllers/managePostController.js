@@ -3,7 +3,7 @@ import ManagePost from "../models/ManagePost.js";
 // Create Media (Image Upload)
 export const createMedia = async (req, res) => {
   try {
-    const { mediaTitle, description, category, privacy, tags, uploadedBy } = req.body;
+    const { mediaTitle, description, category, privacy, tags, uploadedBy, thumbnail } = req.body;
     const file = req.file ? req.file.path : null;
     // Determine media type from mimetype
     const mediaType = req.file
@@ -26,7 +26,8 @@ export const createMedia = async (req, res) => {
       privacy, 
       mediaType,
       tags: tagsArray, 
-      file, 
+      file,
+      thumbnail: mediaType === 'video' ? thumbnail : undefined,
       uploadedBy 
     });
     await newMedia.save();
@@ -46,8 +47,6 @@ export const getAllMedia = async (req, res) => {
   }
 };
 
-
-
 // Get Media by ID (with all details)
 export const getMediaById = async (req, res) => {
   try {
@@ -59,12 +58,10 @@ export const getMediaById = async (req, res) => {
   }
 };
 
-
-
 // Update Media
 export const updateMedia = async (req, res) => {
   try {
-    const { mediaTitle, description, category, privacy, tags } = req.body;
+    const { mediaTitle, description, category, privacy, tags, thumbnail } = req.body;
     const file = req.file ? req.file.path : undefined;
     // Determine new mediaType if file uploaded
     const mediaType = req.file
@@ -82,6 +79,7 @@ export const updateMedia = async (req, res) => {
     if (mediaType) updateFields.mediaType = mediaType;
     if (tagsArray !== undefined) updateFields.tags = tagsArray;
     if (file) updateFields.file = file;
+    if (thumbnail && mediaType === 'video') updateFields.thumbnail = thumbnail;
     
     const updatedMedia = await ManagePost.findByIdAndUpdate(req.params.id, updateFields, { new: true });
     if (!updatedMedia) return res.status(404).json({ message: "Media not found" });
@@ -98,6 +96,78 @@ export const deleteMedia = async (req, res) => {
     const deletedMedia = await ManagePost.findByIdAndDelete(req.params.id);
     if (!deletedMedia) return res.status(404).json({ message: "Media not found" });
     res.status(200).json({ message: "Media deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Like Media
+export const likeMedia = async (req, res) => {
+  try {
+    const media = await ManagePost.findById(req.params.id);
+    if (!media) return res.status(404).json({ message: "Media not found" });
+
+    const userId = req.user._id;
+    const isLiked = media.likes.includes(userId);
+
+    if (isLiked) {
+      media.likes = media.likes.filter(id => id.toString() !== userId.toString());
+    } else {
+      media.likes.push(userId);
+    }
+
+    await media.save();
+    res.status(200).json({ likes: media.likes.length });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Add Comment
+export const addComment = async (req, res) => {
+  try {
+    const { content } = req.body;
+    const media = await ManagePost.findById(req.params.id);
+    if (!media) return res.status(404).json({ message: "Media not found" });
+
+    const comment = {
+      user: req.user._id,
+      content,
+      createdAt: new Date()
+    };
+
+    media.comments.push(comment);
+    await media.save();
+
+    // Populate user information for the new comment
+    const populatedComment = await ManagePost.findOne(
+      { _id: media._id, "comments._id": media.comments[media.comments.length - 1]._id },
+      { "comments.$": 1 }
+    ).populate("comments.user", "name");
+
+    res.status(201).json(populatedComment.comments[0]);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Save Media
+export const saveMedia = async (req, res) => {
+  try {
+    const media = await ManagePost.findById(req.params.id);
+    if (!media) return res.status(404).json({ message: "Media not found" });
+
+    const userId = req.user._id;
+    const isSaved = media.saves.includes(userId);
+
+    if (isSaved) {
+      media.saves = media.saves.filter(id => id.toString() !== userId.toString());
+    } else {
+      media.saves.push(userId);
+    }
+
+    await media.save();
+    res.status(200).json({ saved: !isSaved });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
