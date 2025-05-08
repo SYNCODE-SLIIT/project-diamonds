@@ -83,7 +83,7 @@ const ChangePassword = ({ onClose }) => {
         <div className="modal-header">
           <h3>Change Password</h3>
           <button className="close-button" onClick={onClose}>
-            <box-icon name="x" color="#666"></box-icon>
+            <box-icon name="x" color="white"></box-icon>
           </button>
         </div>
         <form onSubmit={handleSubmit} className="change-password-form">
@@ -97,7 +97,7 @@ const ChangePassword = ({ onClose }) => {
                 required 
                 placeholder="Enter your current password"
               />
-              <box-icon name="lock" color="#4a7bfc"></box-icon>
+              <box-icon name="lock" color="#25105A"></box-icon>
             </div>
           </div>
           
@@ -111,7 +111,7 @@ const ChangePassword = ({ onClose }) => {
                 required 
                 placeholder="Create a new password"
               />
-              <box-icon name="lock-open" color="#4a7bfc"></box-icon>
+              <box-icon name="lock-open" color="#25105A"></box-icon>
             </div>
             {passwordError && <div className="error-msg">{passwordError}</div>}
             
@@ -141,7 +141,7 @@ const ChangePassword = ({ onClose }) => {
                 required 
                 placeholder="Confirm your new password"
               />
-              <box-icon name="check-shield" color="#4a7bfc"></box-icon>
+              <box-icon name="check-shield" color="#25105A"></box-icon>
             </div>
             {confirmError && <div className="error-msg">{confirmError}</div>}
           </div>
