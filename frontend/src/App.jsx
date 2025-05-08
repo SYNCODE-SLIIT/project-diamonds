@@ -138,6 +138,7 @@ import AdminEventRequestDetailsPage from './pages/admin/AdminEventRequestDetails
 
 
 import FundraisePage from './components/Fundraise/FundraisePage';
+import EventDetailPages from './components/Fundraise/EventDetailPage';
 
 
 import AdminDashboardOverview from './pages/admin/AdminDashboardOverview';
