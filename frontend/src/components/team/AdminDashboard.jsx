@@ -87,7 +87,7 @@ const AdminDashboard = () => {
         <div className="bg-white rounded-lg shadow-md p-6">
           {renderContent()}
         </div>
-
+{/* 
         <div className="mt-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Team Members</h2>
           {loading ? (
@@ -144,7 +144,7 @@ const AdminDashboard = () => {
               </table>
             </div>
           )}
-        </div>
+        </div> */}
       </div>
     </div>
   );
