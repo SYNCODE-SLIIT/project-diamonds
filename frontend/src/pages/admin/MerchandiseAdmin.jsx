@@ -171,7 +171,7 @@ const MerchandiseAdmin = () => {
                 </div>
                 <p className="text-gray-500 truncate">{item.category}</p>
                 <div className="mt-2">
-                  <span className="text-xl font-bold">${item.price}</span>
+                  <span className="text-xl font-bold">LKR{item.price}</span>
                 </div>
                 <div className="mt-4 flex space-x-2">
                   <button onClick={() => openEdit(item)} className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
