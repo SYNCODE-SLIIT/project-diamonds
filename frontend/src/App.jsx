@@ -146,6 +146,7 @@ import AdminDashboardOverview from './pages/admin/AdminDashboardOverview';
 import EventDetailPage from './pages/events/EventDetailPage';
 import OrganizerEventDetailPage from './pages/events/OrganizerEventDetailsPage';
 
+import MemberDashboardPractices from './pages/membership/MemberDashboardPractices';
 
 const App = () => {
   return (
@@ -224,7 +225,8 @@ const App = () => {
               <Route path="upcoming-events" element={<MemberDashboardUpcomingEvents />} />
               <Route path="calendar-events" element={<CalendarEvents />} />
               <Route path="refund-history" element={<RefundHistory />} />
-          </Route>
+              <Route path="practices" element={<MemberDashboardPractices />} />
+            </Route>
 
 
           <Route path="/admin" element={<AdminLayout />}>

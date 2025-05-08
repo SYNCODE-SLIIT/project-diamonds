@@ -354,15 +354,13 @@ const Sidebar = () => {
                 onClick={() => toggleSection('events')}
                 className={`
                   w-full flex items-center justify-between px-3 py-2.5 rounded-xl
-                  ${openSection === 'events'
-                    ? 'bg-gradient-to-r from-pink-500/30 to-purple-600/20 text-white font-medium'
-                    : 'text-gray-300 hover:text-white hover:bg-white/5'}
+                  ${openSection === 'events' ? 'bg-gradient-to-r from-pink-500/30 to-purple-600/20 text-white' : 'text-gray-300 hover:text-white hover:bg-white/5'}
                   group transition-all duration-200
                 `}
               >
                 <div className="flex items-center">
                   <div className="flex-shrink-0 w-9 h-9 flex items-center justify-center relative">
-                    <box-icon name="calendar-event" color="currentColor"></box-icon>
+                    <box-icon name="calendar-event" type="solid" color="currentColor"></box-icon>
                     <span className="absolute inset-0 rounded-lg group-hover:bg-pink-500/10 transition-colors duration-200"></span>
                   </div>
                   
@@ -372,13 +370,14 @@ const Sidebar = () => {
                 </div>
                 
                 {isExpanded && (
-                  <span className={`transition-transform duration-200 ${openSection === 'events' ? 'rotate-180' : ''}`}>
-                    <box-icon name="chevron-down" color="currentColor" size="sm"></box-icon>
-                  </span>
+                  <box-icon 
+                    name={openSection === 'events' ? 'chevron-up' : 'chevron-down'} 
+                    color="currentColor"
+                    className="transition-transform duration-200"
+                  ></box-icon>
                 )}
               </button>
-              
-              {/* Events Dropdown */}
+
               <div className={`overflow-hidden transition-all duration-300 ease-in-out ${openSection === 'events' && isExpanded ? 'max-h-60 opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
                 <ul className="pl-12 pr-3 pb-1 space-y-1">
                   <li>
@@ -403,6 +402,18 @@ const Sidebar = () => {
                       `}
                     >
                       Upcoming Events
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink
+                      to="/member-dashboard/practices"
+                      className={({ isActive }) => `
+                        block py-2 px-3 rounded-lg text-sm
+                        ${isActive ? 'bg-pink-500/10 text-pink-300' : 'text-gray-300 hover:text-white hover:bg-white/5'}
+                        transition-colors duration-200
+                      `}
+                    >
+                      Practices
                     </NavLink>
                   </li>
                 </ul>

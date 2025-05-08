@@ -10,6 +10,36 @@ export const getAllPractices = async (req, res) => {
   }
 };
 
+// Get all practice assignments
+export const getAllPracticeAssignments = async (req, res) => {
+  try {
+    const practices = await Practice.find()
+      .populate('assignedMembers.memberID', 'fullName email')
+      .sort({ practiceDate: 1 });
+
+    // Transform the data to group assignments by practice
+    const assignments = practices.map(practice => ({
+      _id: practice._id,
+      practiceName: practice.practiceName,
+      practiceDate: practice.practiceDate,
+      practiceTime: practice.practiceTime,
+      practiceLocation: practice.practiceLocation,
+      assignedMembers: practice.assignedMembers.map(assignment => ({
+        _id: assignment._id,
+        member: assignment.memberID,
+        status: assignment.status || 'pending',
+        assignedBy: assignment.assignedBy,
+        assignedAt: assignment.assignedAt
+      }))
+    }));
+
+    res.json(assignments);
+  } catch (error) {
+    console.error('Error fetching all practice assignments:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Create a new practice
 export const createPractice = async (req, res) => {
   try {
@@ -21,7 +51,7 @@ export const createPractice = async (req, res) => {
   }
 };
 
-// Get practice assignments
+// Get practice assignments for a specific practice
 export const getPracticeAssignments = async (req, res) => {
   try {
     const practice = await Practice.findById(req.params.id)
@@ -50,7 +80,8 @@ export const assignMembers = async (req, res) => {
     // Add new assignments
     const newAssignments = memberIDs.map(memberID => ({
       memberID,
-      assignedBy
+      assignedBy,
+      status: 'pending'
     }));
 
     practice.assignedMembers.push(...newAssignments);
