@@ -1,158 +1,149 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Calendar as CalendarIcon, 
-  Users, 
-  Clock, 
-  ChevronRight 
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
-
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
+import { ChevronRight } from 'lucide-react';
 import EventAssign from './EventAssign';
-import PracticeAssign from './PracticeAssign';
-import CalendarView from './CalendarView';
+import EventAssignmentDetails from './EventAssignmentDetails';
+import AcceptedAssignments from './AcceptedAssignments';
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState('events');
-  const [members, setMembers] = useState([]);
-  const [membersLoading, setMembersLoading] = useState(true);
-  const [membersError, setMembersError] = useState('');
+  const [activeTab, setActiveTab] = useState('assignments');
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Tab configuration for dynamic rendering
-  const tabs = [
-    { 
-      key: 'events', 
-      label: 'Event Assignment', 
-      icon: Users,
-      component: <EventAssign />
-    },
-    { 
-      key: 'practice', 
-      label: 'Practice Sessions', 
-      icon: Clock,
-      component: <PracticeAssign/>
-    },
-    { 
-      key: 'calendar', 
-      label: 'Calendar', 
-      icon: CalendarIcon,
-      component: <CalendarView />
-    },
-    { 
-      key: 'refund', 
-      label: 'Refund Request', 
-      icon: Clock,  
-      component: (
-        <Link to="/rform">
-          <button 
-            className="flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white shadow-lg transition-all duration-300 font-semibold"
-          >
-            Refund Budget
-          </button>
-        </Link>
-      )
-    }
-  ];
-
-  // Fetch members (only those with role "member")
   useEffect(() => {
-    fetch('/api/users')
-      .then(res => {
-        if (!res.ok) throw new Error(`Error: ${res.status}`);
-        return res.json();
-      })
-      .then(data => {
-        // Support both cases: if data is an array or an object with a 'users' property.
-        const allUsers = Array.isArray(data) ? data : data.users || [];
-        const teamMembers = allUsers.filter(user => user.role === 'member');
-        setMembers(teamMembers);
-        setMembersLoading(false);
-      })
-      .catch(err => {
-        setMembersError("Error fetching members: " + err.message);
-        setMembersLoading(false);
-      });
+    fetchTeamMembers();
   }, []);
 
+  const fetchTeamMembers = async () => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/team/members');
+      setTeamMembers(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching team members:', error);
+      setError('Failed to load team members');
+      setLoading(false);
+    }
+  };
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'assignments':
+        return <EventAssign />;
+      case 'pending':
+        return <EventAssignmentDetails />;
+      case 'accepted':
+        return <AcceptedAssignments />;
+      default:
+        return <EventAssign />;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="container mx-auto max-w-6xl">
-        {/* Header */}
-        <div className="mb-8 flex justify-between items-center">
-          <h2 className="text-3xl font-bold text-gray-800 flex items-center">
-            <ChevronRight className="mr-2 text-blue-600" size={36} />
-            Admin Dashboard
-          </h2>
-          <div className="text-sm text-gray-500">
-            Welcome, Admin
-          </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center mb-8">
+          <ChevronRight className="text-gray-400" size={20} />
+          <h1 className="text-3xl font-bold text-gray-800 ml-2">Event Assignments</h1>
         </div>
 
-        {/* Navigation */}
-        <div className="mb-6 flex space-x-4">
-          {tabs.map((tab) => (
+        <div className="mb-6">
+          <div className="flex space-x-4 border-b border-gray-200">
             <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`
-                flex items-center px-4 py-2 rounded-lg transition-all duration-300
-                ${activeTab === tab.key 
-                  ? 'bg-blue-600 text-white shadow-lg' 
-                  : 'bg-white text-gray-600 hover:bg-gray-100 border'}
-                space-x-2 font-semibold
-              `}
+              onClick={() => setActiveTab('assignments')}
+              className={`px-4 py-2 font-medium ${
+                activeTab === 'assignments'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
             >
-              <tab.icon size={20} />
-              <span>{tab.label}</span>
+              Assign Events
             </button>
-          ))}
-        </div>
-
-        {/* Content Area */}
-        <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
-          <div className="p-6">
-            {tabs.find(tab => tab.key === activeTab)?.component}
+            <button
+              onClick={() => setActiveTab('pending')}
+              className={`px-4 py-2 font-medium ${
+                activeTab === 'pending'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Pending Assignments
+            </button>
+            <button
+              onClick={() => setActiveTab('accepted')}
+              className={`px-4 py-2 font-medium ${
+                activeTab === 'accepted'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Accepted Assignments
+            </button>
           </div>
         </div>
 
-        {/* Team Members Section */}
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <div className="p-6">
-            <h3 className="text-2xl font-bold mb-4">Team Members</h3>
-            {membersLoading ? (
-              <p>Loading members...</p>
-            ) : membersError ? (
-              <p className="text-red-500">{membersError}</p>
-            ) : members.length === 0 ? (
-              <p className="text-gray-500">No members found.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full">
-                  <thead className="bg-gray-100">
-                    <tr>
-                      <th className="py-2 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Full Name
-                      </th>
-                      <th className="py-2 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Email
-                      </th>
-                      <th className="py-2 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Contact Number
-                      </th>
+        <div className="bg-white rounded-lg shadow-md p-6">
+          {renderContent()}
+        </div>
+
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Team Members</h2>
+          {loading ? (
+            <div className="text-center py-4">Loading team members...</div>
+          ) : error ? (
+            <div className="text-center py-4 text-red-500">{error}</div>
+          ) : (
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Role
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {teamMembers.map((member) => (
+                    <tr key={member._id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {member.fullName}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">{member.email}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">{member.role}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            member.status === 'active'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {member.status}
+                        </span>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {members.map(member => (
-                      <tr key={member._id} className="hover:bg-gray-50">
-                        <td className="py-2 px-4 text-sm">{member.fullName}</td>
-                        <td className="py-2 px-4 text-sm">{member.email}</td>
-                        <td className="py-2 px-4 text-sm">{member.contactNumber}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>

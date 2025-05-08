@@ -1,8 +1,8 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
-import PracticeAssign from './PracticeAssign';
+import CalendarView from './CalendarView';
 
-const PracticeAssignments = () => {
+const CalendarOverview = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex-1 p-6">
@@ -11,7 +11,7 @@ const PracticeAssignments = () => {
           <div className="mb-8 flex justify-between items-center">
             <h2 className="text-3xl font-bold text-gray-800 flex items-center">
               <ChevronRight className="mr-2 text-blue-600" size={36} />
-              Practice Sessions
+              Calendar Overview
             </h2>
             <div className="text-sm text-gray-500">
               Welcome, Admin
@@ -21,7 +21,7 @@ const PracticeAssignments = () => {
           {/* Content Area */}
           <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
             <div className="p-6">
-              <PracticeAssign />
+              <CalendarView />
             </div>
           </div>
         </div>
@@ -30,4 +30,4 @@ const PracticeAssignments = () => {
   );
 };
 
-export default PracticeAssignments; 
+export default CalendarOverview; 

@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "jspdf-autotable": "^5.0.2",
+
     "lucide-react": "^0.507.0",
     "react-dropzone": "^14.3.8"
   }

@@ -116,7 +116,7 @@ import EventAssign from './components/team/EventAssign';
 import EventAssignmentRequests from './components/team/EventAssignmentRequests';
 import PracticeAssign from './components/team/PracticeAssign';
 import PracticeAssignments from './components/team/PracticeAssignments';
-
+import CalendarOverview from './components/team/CalendarOverview';
 
 
 
@@ -136,10 +136,15 @@ import WhyJoinUs from './pages/WhyJoinUs';
 
 import AdminEventRequestDetailsPage from './pages/admin/AdminEventRequestDetailsPage';
 
+
 import FundraisePage from './components/Fundraise/FundraisePage';
 import EventDetailPage from './components/Fundraise/EventDetailPage';
 
 import AdminDashboardOverview from './pages/admin/AdminDashboardOverview';
+
+import EventDetailPage from './pages/events/EventDetailPage';
+import OrganizerEventDetailPage from './pages/events/OrganizerEventDetailsPage';
+
 
 const App = () => {
   return (
@@ -192,7 +197,7 @@ const App = () => {
               <Route path="/event-requests/:id" element={<EventRequestDetailsPage />} />
               <Route path="/event-requests/:id/edit" element={<EventRequestEditPage />} />
               <Route path="/event-dashboard" element={<EventDashboard />} />
-              <Route path="/event-dashboard/:id" element={<EventDetailPage />} />
+              <Route path="/event-dashboard/:id" element={<OrganizerEventDetailPage />} />
               
 
             </Route>
@@ -224,9 +229,14 @@ const App = () => {
             <Route path="content-creators" element={<ContentCreatorList />} />
             <Route path="create-blog-post" element={<CreateBlogPost />} />
             <Route path="media" element={<ViewAllMedia />} />
+
             <Route path="social-media" element={<SocialMediaFeed />} />
-            <Route path="event-calendar" element={<EventCalendar />} />
+          
+
+            <Route path="event-calendar" element={<CalendarOverview />} />
+
             <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="practice-assignments" element={<PracticeAssignments />} />
             {/* All admin routes are now relative to /admin */}
             <Route path="messaging/create-group" element={<GroupCreation />} />
             <Route path="inbox" element={<AdminInbox />} />
@@ -242,6 +252,7 @@ const App = () => {
             <Route path="members" element={<AdminMembersList />} />
             <Route path="packages" element={<PackageList />} />
             <Route path="events" element={<EventsDashboard />} />
+            <Route path="events/:id" element={<EventDetailPage />} />
             <Route path="event-requests" element={<EventRequestDashboard />} />
             <Route path="event-requests/:id" element={<AdminEventRequestDetailsPage />} />
             <Route path="financial" element={<FinancialDashboard />} />
@@ -257,16 +268,13 @@ const App = () => {
           </Route>
        
 
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          {/* Remove these duplicate routes as they're now handled in the admin layout */}
+          {/* <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/event/assign" element={<EventAssign />} />
           <Route path="/team/assignment-requests" element={<EventAssignmentRequests />} />
           <Route path="/team/practice" element={<PracticeAssign />} />
-          <Route path="/team/practice-assignments" element={<PracticeAssignments />} />
-          
-          
-        
-       
-  
+          <Route path="/team/practice-assignments" element={<PracticeAssignments />} /> */}
+
           {/* Financial Routes */}
 
 

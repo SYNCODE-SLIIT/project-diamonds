@@ -14,8 +14,13 @@ const EventRequestForm = () => {
   const [step, setStep] = useState(1);
   const [viewingPackage, setViewingPackage] = useState(null);
 const [showCustomModal, setShowCustomModal] = useState(false);
+  
+  // Separate state for original packages list and filtered packages
+  const [allPackages, setAllPackages] = useState([]);
   const [systemPackages, setSystemPackages] = useState([]);
   const [services, setServices] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOption, setSortOption] = useState('dateDesc');
   
   // Initialize with tomorrow's date + time
   const tomorrow = new Date();
@@ -24,6 +29,16 @@ const [showCustomModal, setShowCustomModal] = useState(false);
   
   const tomorrowEnd = new Date(tomorrow);
   tomorrowEnd.setHours(17, 0, 0, 0); // 5:00 PM
+  
+  // Get today's date in YYYY-MM-DD format for min attribute on date inputs
+  const today = new Date();
+  const todayFormatted = today.toISOString().split('T')[0];
+  const nowFormatted = today.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
+
+  // Calculate min booking date (5 days from now)
+  const minBookingDate = new Date();
+  minBookingDate.setDate(minBookingDate.getDate() + 5);
+  const minBookingDateFormatted = minBookingDate.toISOString().split('T')[0];
   
   const [formData, setFormData] = useState({
     eventName: '',
@@ -49,7 +64,9 @@ const [showCustomModal, setShowCustomModal] = useState(false);
     const fetchData = async () => {
       try {
         const pkgs = await getPackages();
-        setSystemPackages(pkgs.filter(p => p.type === 'system' && p.status === 'approved'));
+        const filteredPkgs = pkgs.filter(p => p.type === 'system' && p.status === 'approved');
+        setAllPackages(filteredPkgs); // Store original list
+        setSystemPackages(filteredPkgs); // Initial display list
         const services = await getAdditionalServices();
         setServices(services.filter(s => s.status === 'available'));
       } catch (error) {
@@ -59,8 +76,38 @@ const [showCustomModal, setShowCustomModal] = useState(false);
     fetchData();
   }, []);
 
+  // New function to filter and sort packages
+  const filterAndSortPackages = (search, sort) => {
+    let filtered = [...allPackages];
+    
+    // Apply search filter if search term exists
+    if (search.trim()) {
+      const searchLower = search.toLowerCase();
+      filtered = filtered.filter(pkg => 
+        pkg.packageName.toLowerCase().includes(searchLower) || 
+        (pkg.danceStyles && pkg.danceStyles.some(style => 
+          style.toLowerCase().includes(searchLower)
+        ))
+      );
+    }
+    
+    // Apply sorting
+    if (sort === 'priceAsc') {
+      filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
+    } else if (sort === 'priceDesc') {
+      filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
+    } else if (sort === 'dateAsc') {
+      filtered.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+    } else if (sort === 'dateDesc') {
+      filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    }
+    
+    return filtered;
+  };
+
   const handleCustomPackageCreated = (newPackage) => {
-    setSystemPackages(prev => [...prev, newPackage]); // append to the list
+    setAllPackages(prev => [...prev, newPackage]); // Add to original list
+    setSystemPackages(prev => [...prev, newPackage]); // Add to displayed list
     setFormData(prev => ({ ...prev, selectedPackageID: newPackage._id }));
     setShowCustomModal(false);
     setStep(3); // proceed to next step
@@ -107,11 +154,18 @@ const [showCustomModal, setShowCustomModal] = useState(false);
         } else {
           const selectedDate = new Date(value);
           const today = new Date();
-          const minDate = new Date();
-          minDate.setDate(today.getDate() + 5);
+          today.setHours(0, 0, 0, 0); // Set to beginning of day for comparison
           
-          if (selectedDate < minDate) {
-            error = 'Please book at least 5 days in advance';
+          if (selectedDate < today) {
+            error = 'Event date cannot be in the past';
+          } else {
+            const minDate = new Date();
+            minDate.setDate(today.getDate() + 5);
+            minDate.setHours(0, 0, 0, 0); // Set to beginning of day
+            
+            if (selectedDate < minDate) {
+              error = 'Please book at least 5 days in advance';
+            }
           }
         }
         break;
@@ -121,29 +175,34 @@ const [showCustomModal, setShowCustomModal] = useState(false);
           error = 'Start date and time is required';
         } else {
           const startDate = new Date(value);
-          const today = new Date();
-          const minDate = new Date();
-          minDate.setDate(today.getDate() + 5);
+          const now = new Date();
           
-          if (startDate < minDate) {
-            error = 'Please book event start at least 5 days in advance';
-          }
-          
-          // Verify that start date matches event date if event date is set
-          if (formData.eventDate) {
-            const eventDate = new Date(formData.eventDate);
-            const startDateDay = startDate.getDate();
-            const startDateMonth = startDate.getMonth();
-            const startDateYear = startDate.getFullYear();
+          if (startDate < now) {
+            error = 'Start time cannot be in the past';
+          } else {
+            const minDate = new Date();
+            minDate.setDate(minDate.getDate() + 5);
             
-            const eventDateDay = eventDate.getDate();
-            const eventDateMonth = eventDate.getMonth();
-            const eventDateYear = eventDate.getFullYear();
+            if (startDate < minDate) {
+              error = 'Please book event start at least 5 days in advance';
+            }
             
-            if (startDateDay !== eventDateDay || 
-                startDateMonth !== eventDateMonth || 
-                startDateYear !== eventDateYear) {
-              error = 'Start date must match the event date';
+            // Verify that start date matches event date if event date is set
+            if (formData.eventDate) {
+              const eventDate = new Date(formData.eventDate);
+              const startDateDay = startDate.getDate();
+              const startDateMonth = startDate.getMonth();
+              const startDateYear = startDate.getFullYear();
+              
+              const eventDateDay = eventDate.getDate();
+              const eventDateMonth = eventDate.getMonth();
+              const eventDateYear = eventDate.getFullYear();
+              
+              if (startDateDay !== eventDateDay || 
+                  startDateMonth !== eventDateMonth || 
+                  startDateYear !== eventDateYear) {
+                error = 'Start date must match the event date';
+              }
             }
           }
         }
@@ -152,41 +211,47 @@ const [showCustomModal, setShowCustomModal] = useState(false);
       case 'eventTime.endDate':
         if (!value) {
           error = 'End date and time is required';
-        } else if (formData.eventTime.startDate) {
-          // Validate end time is after start time and at least 10 minutes difference
-          const startDate = new Date(formData.eventTime.startDate);
+        } else {
           const endDate = new Date(value);
+          const now = new Date();
           
-          if (endDate <= startDate) {
-            error = 'End time must be after start time';
-          } else {
-            // Calculate difference in minutes
-            const diffMs = endDate - startDate;
-            const diffMinutes = diffMs / (1000 * 60);
+          if (endDate < now) {
+            error = 'End time cannot be in the past';
+          } else if (formData.eventTime.startDate) {
+            // Validate end time is after start time and at least 10 minutes difference
+            const startDate = new Date(formData.eventTime.startDate);
             
-            if (diffMinutes < 10) {
-              error = 'Event must last at least 10 minutes';
+            if (endDate <= startDate) {
+              error = 'End time must be after start time';
+            } else {
+              // Calculate difference in minutes
+              const diffMs = endDate - startDate;
+              const diffMinutes = diffMs / (1000 * 60);
+              
+              if (diffMinutes < 10) {
+                error = 'Event must last at least 10 minutes';
+              }
             }
-          }
 
-          // Verify that end date is not before event date
-          if (formData.eventDate) {
-            const eventDate = new Date(formData.eventDate);
-            // Reset time to beginning of day for comparison
-            eventDate.setHours(0, 0, 0, 0);
-            
-            const endDateTime = new Date(value);
-            const endDateDay = endDateTime.getDate();
-            const endDateMonth = endDateTime.getMonth();
-            const endDateYear = endDateTime.getFullYear();
-            
-            const eventDateDay = eventDate.getDate();
-            const eventDateMonth = eventDate.getMonth();
-            const eventDateYear = eventDate.getFullYear();
-            
-            // If end date is before event date
-            if (new Date(endDateYear, endDateMonth, endDateDay) < new Date(eventDateYear, eventDateMonth, eventDateDay)) {
-              error = 'End date cannot be before the event date';
+            // Verify that end date is not before event date
+            if (formData.eventDate) {
+              const eventDate = new Date(formData.eventDate);
+              // Reset time to beginning of day for comparison
+              eventDate.setHours(0, 0, 0, 0);
+              
+              const endDateTime = new Date(value);
+              const endDateDay = endDateTime.getDate();
+              const endDateMonth = endDateTime.getMonth();
+              const endDateYear = endDateTime.getFullYear();
+              
+              const eventDateDay = eventDate.getDate();
+              const eventDateMonth = eventDate.getMonth();
+              const eventDateYear = eventDate.getFullYear();
+              
+              // If end date is before event date
+              if (new Date(endDateYear, endDateMonth, endDateDay) < new Date(eventDateYear, eventDateMonth, eventDateDay)) {
+                error = 'End date cannot be before the event date';
+              }
             }
           }
         }
@@ -729,25 +794,25 @@ const [showCustomModal, setShowCustomModal] = useState(false);
               </div>
               <div>
                 <label htmlFor="eventDate" className="block text-sm font-medium text-gray-700 mb-1">
-                  Event Date <span className="text-red-500">*</span>
+                  Event Date*
                 </label>
-                <input 
+                <input
+                  type="date"
                   id="eventDate"
-                  type="date" 
-                  name="eventDate" 
-                  value={formData.eventDate} 
-                  onChange={handleChange} 
+                  name="eventDate"
+                  min={todayFormatted}
+                  value={formData.eventDate}
+                  onChange={handleChange}
                   onBlur={handleBlur}
-                  className={`input border p-2 rounded w-full ${
-                    errors.eventDate && touched.eventDate ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full p-3 border ${
+                    errors.eventDate ? 'border-red-500' : touched.eventDate ? 'border-green-500' : 'border-gray-300'
+                  } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 bg-white`}
                 />
-                {errors.eventDate && touched.eventDate && (
-                  <p className="text-red-500 text-sm mt-1">{errors.eventDate}</p>
+                {errors.eventDate ? (
+                  <p className="mt-1 text-sm text-red-500">{errors.eventDate}</p>
+                ) : (
+                  <p className="mt-1 text-sm text-gray-500">Please book at least 5 days in advance</p>
                 )}
-                <p className="text-xs text-gray-500 mt-1">
-                  Must be at least 5 days from today
-                </p>
               </div>
               
               {/* Event Type Radio Buttons */}
@@ -789,50 +854,47 @@ const [showCustomModal, setShowCustomModal] = useState(false);
               {/* Event Time Fields */}
               <div>
                 <label htmlFor="eventTimeStart" className="block text-sm font-medium text-gray-700 mb-1">
-                  Start Date & Time <span className="text-red-500">*</span>
+                  Event Start Time*
                 </label>
-                <input 
+                <input
+                  type="datetime-local"
                   id="eventTimeStart"
-                  type="datetime-local" 
-                  name="eventTime.startDate" 
+                  name="eventTime.startDate"
+                  min={formData.eventDate ? `${formData.eventDate}T00:00` : nowFormatted}
                   value={formData.eventTime.startDate}
-                  min={formData.eventDate ? `${formData.eventDate}T00:00` : undefined}
-                  max={formData.eventDate ? `${formData.eventDate}T23:59` : undefined}
-                  onChange={handleChange} 
+                  onChange={handleChange}
                   onBlur={handleBlur}
-                  className={`input border p-2 rounded w-full ${
-                    errors['eventTime.startDate'] && touched['eventTime.startDate'] ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full p-3 border ${
+                    errors['eventTime.startDate'] ? 'border-red-500' : touched['eventTime.startDate'] ? 'border-green-500' : 'border-gray-300'
+                  } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 bg-white`}
                 />
-                {errors['eventTime.startDate'] && touched['eventTime.startDate'] && (
-                  <p className="text-red-500 text-sm mt-1">{errors['eventTime.startDate']}</p>
+                {errors['eventTime.startDate'] && (
+                  <p className="mt-1 text-sm text-red-500">{errors['eventTime.startDate']}</p>
                 )}
-                <p className="text-xs text-gray-500 mt-1">
-                  Start time will use the event date selected above
-                </p>
+                <p className="mt-1 text-xs text-gray-500">Must match the selected event date</p>
               </div>
+              
+              {/* Event Time - End */}
               <div>
                 <label htmlFor="eventTimeEnd" className="block text-sm font-medium text-gray-700 mb-1">
-                  End Date & Time <span className="text-red-500">*</span>
+                  Event End Time*
                 </label>
-                <input 
+                <input
+                  type="datetime-local"
                   id="eventTimeEnd"
-                  type="datetime-local" 
-                  name="eventTime.endDate" 
+                  name="eventTime.endDate"
+                  min={formData.eventTime.startDate || (formData.eventDate ? `${formData.eventDate}T00:00` : nowFormatted)}
                   value={formData.eventTime.endDate}
-                  min={formData.eventTime.startDate || (formData.eventDate ? `${formData.eventDate}T00:00` : undefined)}
-                  onChange={handleChange} 
+                  onChange={handleChange}
                   onBlur={handleBlur}
-                  className={`input border p-2 rounded w-full ${
-                    errors['eventTime.endDate'] && touched['eventTime.endDate'] ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full p-3 border ${
+                    errors['eventTime.endDate'] ? 'border-red-500' : touched['eventTime.endDate'] ? 'border-green-500' : 'border-gray-300'
+                  } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 bg-white`}
                 />
-                {errors['eventTime.endDate'] && touched['eventTime.endDate'] && (
-                  <p className="text-red-500 text-sm mt-1">{errors['eventTime.endDate']}</p>
+                {errors['eventTime.endDate'] && (
+                  <p className="mt-1 text-sm text-red-500">{errors['eventTime.endDate']}</p>
                 )}
-                <p className="text-xs text-gray-500 mt-1">
-                  Event must last at least 10 minutes. For overnight events, select different dates.
-                </p>
+                <p className="mt-1 text-xs text-gray-500">Must be after the start time</p>
               </div>
               
               <div className="col-span-2">
@@ -881,115 +943,242 @@ const [showCustomModal, setShowCustomModal] = useState(false);
           </div>
         )}
 
-        {/* Rest of the code remains the same as before */}
+        {/* Step 2: Package Selection with Search and Sort */}
         {step === 2 && (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-700 mb-2">Choose Package</h3>
-
-      {/* Scrollable Package Container */}
-      <div className="max-h-[500px] overflow-y-auto pr-2">
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {systemPackages.map(pkg => (
-            <div
-              key={pkg._id}
-              className={`border rounded-lg overflow-hidden shadow-md group cursor-pointer relative
-                ${formData.selectedPackageID === pkg._id
-                  ? 'border-blue-500 ring-2 ring-blue-500'
-                  : 'border-gray-200 hover:border-blue-300'
-                }`}
-            >
-              {/* Package Image */}
-              <div className="relative">
-                <img 
-                  src={pkg.image || '/api/placeholder/400/250'} 
-                  alt={pkg.packageName} 
-                  className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-                  onError={(e) => {
-                    e.target.src = '/api/placeholder/400/250';
-                    e.target.onerror = null;
-                  }}
-                />
-                
-                {/* Eye Icon for Details */}
-                <button 
-                  onClick={() => setViewingPackage(pkg)}
-                  className="absolute top-2 right-2 bg-white/80 p-2 rounded-full hover:bg-white"
-                >
-                  <EyeIcon className="w-5 h-5 text-gray-700" />
-                </button>
-              </div>
-
-              {/* Package Details */}
-              <div className="p-4">
-                <div className="flex justify-between items-start">
-                  <h4 className="font-bold text-gray-800 text-lg">{pkg.packageName}</h4>
-                  
-                  {/* Radio Button */}
-                  <input
-                    type="radio"
-                    name="selectedPackageID"
-                    value={pkg._id}
-                    onChange={(e) => {
-                      handleChange(e);
-                      // Clear any previous errors
-                      setErrors(prev => ({ ...prev, selectedPackageID: undefined }));
-                    }}
-                    checked={formData.selectedPackageID === pkg._id}
-                    className="mt-1"
-                  />
-                </div>
-
-                {/* Description */}
-                <p className="text-sm text-gray-600 mt-2 line-clamp-2">
-                  {pkg.description}
-                </p>
-
-                {/* Dance Styles */}
-                <div className="mt-2">
-                  <p className="text-sm font-medium text-gray-700">Dance Styles:</p>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {pkg.danceStyles && pkg.danceStyles.slice(0, 3).map((style, idx) => (
-                      <span 
-                        key={idx} 
-                        className="bg-gray-100 px-2 py-1 rounded text-xs"
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-gray-700 mb-6">Choose Package</h3>
+            
+            {/* Search and Sort Controls */}
+            <div className="bg-gray-50 p-4 rounded-lg mb-6">
+              <div className="grid md:grid-cols-3 gap-4">
+                {/* Search Box */}
+                <div className="md:col-span-2">
+                  <label htmlFor="packageSearch" className="block text-sm font-medium text-gray-700 mb-1">
+                    Search Packages
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      id="packageSearch"
+                      placeholder="Search by package name or dance style..."
+                      value={searchTerm}
+                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                      onChange={(e) => {
+                        const newSearchTerm = e.target.value;
+                        setSearchTerm(newSearchTerm);
+                        // Filter and sort packages based on new search term and current sort option
+                        const filtered = filterAndSortPackages(newSearchTerm, sortOption);
+                        setSystemPackages(filtered);
+                      }}
+                    />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                    {searchTerm && (
+                      <button
+                        onClick={() => {
+                          setSearchTerm('');
+                          // Reset to show all packages with current sort
+                          setSystemPackages(filterAndSortPackages('', sortOption));
+                        }}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                       >
-                        {style}
-                      </span>
-                    ))}
-                    {pkg.danceStyles && pkg.danceStyles.length > 3 && (
-                      <span className="text-xs text-gray-500 ml-1">
-                        +{pkg.danceStyles.length - 3} more
-                      </span>
+                        <XIcon className="h-5 w-5" />
+                      </button>
                     )}
                   </div>
                 </div>
+                
+                {/* Sort Dropdown */}
+                <div>
+                  <label htmlFor="packageSort" className="block text-sm font-medium text-gray-700 mb-1">
+                    Sort By
+                  </label>
+                  <select
+                    id="packageSort"
+                    value={sortOption}
+                    className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                    onChange={(e) => {
+                      const newSortOption = e.target.value;
+                      setSortOption(newSortOption);
+                      // Apply current search term with new sort option
+                      const sorted = filterAndSortPackages(searchTerm, newSortOption);
+                      setSystemPackages(sorted);
+                    }}
+                  >
+                    <option value="dateDesc">Newest First</option>
+                    <option value="dateAsc">Oldest First</option>
+                    <option value="priceAsc">Price: Low to High</option>
+                    <option value="priceDesc">Price: High to Low</option>
+                  </select>
+                </div>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {errors.selectedPackageID && (
-        <p className="text-red-500 text-sm mt-1">{errors.selectedPackageID}</p>
-      )}
+            {/* Packages Grid */}
+            <div className="max-h-[500px] overflow-y-auto pr-2">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {systemPackages.length > 0 ? (
+                  systemPackages.map(pkg => (
+                    <div
+                      key={pkg._id}
+                      className={`border rounded-lg overflow-hidden shadow-md group cursor-pointer relative transition-all duration-300 hover:shadow-lg
+                        ${formData.selectedPackageID === pkg._id
+                          ? 'border-red-500 ring-2 ring-red-500 transform scale-[1.02]'
+                          : 'border-gray-200 hover:border-red-300'
+                        }`}
+                    >
+                      {/* Package Image */}
+                      <div className="relative">
+                        <img 
+                          src={pkg.image || '/api/placeholder/400/250'} 
+                          alt={pkg.packageName} 
+                          className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                          onError={(e) => {
+                            e.target.src = '/api/placeholder/400/250';
+                            e.target.onerror = null;
+                          }}
+                        />
+                        
+                        {/* Price Badge */}
+                        <div className="absolute top-0 right-0 bg-red-600 text-white px-3 py-1 font-bold rounded-bl-lg">
+                          {pkg.price ? `Rs. ${pkg.price.toLocaleString()}` : 'Custom Quote'}
+                        </div>
+                        
+                        {/* Eye Icon for Details */}
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent selecting package when viewing details
+                            setViewingPackage(pkg);
+                          }}
+                          className="absolute bottom-2 right-2 bg-white/80 p-2 rounded-full hover:bg-white transition-all duration-200 hover:scale-110"
+                        >
+                          <EyeIcon className="w-5 h-5 text-gray-700" />
+                        </button>
+                      </div>
 
-      {/* Custom Package Button */}
-      <div className="mt-6">
-        <button
-          onClick={() => setShowCustomModal(true)}
-          className="flex items-center gap-2 bg-white text-blue-600 px-4 py-2 border border-blue-500 rounded hover:bg-blue-50"
-        >
-          <PlusIcon className="w-4 h-4" />
-          Create Custom Package
-        </button>
-      </div>
+                      {/* Package Details */}
+                      <div 
+                        className="p-4"
+                        onClick={() => {
+                          setFormData(prev => ({
+                            ...prev,
+                            selectedPackageID: pkg._id
+                          }));
+                          // Clear any previous errors
+                          setErrors(prev => ({ ...prev, selectedPackageID: undefined }));
+                        }}
+                      >
+                        <div className="flex justify-between items-start">
+                          <h4 className="font-bold text-gray-800 text-lg">{pkg.packageName}</h4>
+                          
+                          {/* Radio Button */}
+                          <input
+                            type="radio"
+                            name="selectedPackageID"
+                            value={pkg._id}
+                            onChange={(e) => {
+                              handleChange(e);
+                              // Clear any previous errors
+                              setErrors(prev => ({ ...prev, selectedPackageID: undefined }));
+                            }}
+                            checked={formData.selectedPackageID === pkg._id}
+                            className="w-5 h-5 text-red-600 mt-1"
+                          />
+                        </div>
 
-      <div className="flex justify-between mt-6">
-        <button onClick={prevStep} className="btn-secondary border p-2 rounded">Previous Step</button>
-        <button onClick={nextStep} className="btn bg-blue-600 text-white px-4 py-2 rounded">Next Step</button>
-      </div>
-    </div>
-  )}
+                        {/* Description */}
+                        <p className="text-sm text-gray-600 mt-2 line-clamp-2 min-h-[2.5rem]">
+                          {pkg.description}
+                        </p>
+
+                        {/* Dance Styles */}
+                        <div className="mt-2">
+                          <p className="text-sm font-medium text-gray-700 mb-1.5">Dance Styles:</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {pkg.danceStyles && pkg.danceStyles.slice(0, 3).map((style, idx) => (
+                              <span 
+                                key={idx} 
+                                className="bg-red-50 text-red-700 px-2 py-0.5 rounded-full text-xs"
+                              >
+                                {style}
+                              </span>
+                            ))}
+                            {pkg.danceStyles && pkg.danceStyles.length > 3 && (
+                              <span className="text-xs text-gray-500 ml-1 flex items-center">
+                                +{pkg.danceStyles.length - 3} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-full p-8 bg-gray-50 rounded-lg text-center">
+                    <div className="flex justify-center mb-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h4 className="text-lg font-medium text-gray-700 mb-1">No packages found</h4>
+                    <p className="text-gray-500 mb-4">Try a different search term or create a custom package</p>
+                    <button
+                      onClick={() => setShowCustomModal(true)}
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      <PlusIcon className="w-4 h-4 mr-2" />
+                      Create Custom Package
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Create Custom Package Button - Moved to bottom */}
+            <div className="mt-6 mb-3">
+              <button
+                onClick={() => setShowCustomModal(true)}
+                className="group w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-xl shadow-md hover:shadow-lg overflow-hidden transition-all duration-300 hover:scale-[1.01]"
+              >
+                <div className="flex items-center text-white">
+                  <div className="rounded-full bg-white/20 p-2 mr-3">
+                    <PlusIcon className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <h4 className="font-bold text-md">Create Custom Package</h4>
+                    <p className="text-xs text-white/80">
+                      Don't see what you need? Create a tailored package.
+                    </p>
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            {errors.selectedPackageID && (
+              <p className="text-red-500 text-sm mt-1">{errors.selectedPackageID}</p>
+            )}
+
+            <div className="flex justify-between mt-6">
+              <button 
+                onClick={prevStep} 
+                className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Previous Step
+              </button>
+              <button 
+                onClick={nextStep} 
+                className={`px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors ${
+                  !formData.selectedPackageID ? 'opacity-70' : ''
+                }`}
+              >
+                Next Step
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Additional Services section with improved styling */}
         {step === 3 && (
