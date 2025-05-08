@@ -35,7 +35,10 @@ export const updateEventDetails = async (req, res) => {
     eventDate,
     eventTime,
     guestCount,
-    additionalRequests 
+    additionalRequests,
+    packageID,
+    additionalServices,
+    status
   } = req.body;
 
   try {
@@ -94,6 +97,15 @@ export const updateEventDetails = async (req, res) => {
     if (eventTime) event.eventTime = eventTime;
     if (guestCount) event.guestCount = parseInt(guestCount);
     if (additionalRequests !== undefined) event.additionalRequests = additionalRequests;
+    
+    // Update package ID if provided
+    if (packageID) event.packageID = packageID;
+    
+    // Update additional services if provided
+    if (additionalServices) event.additionalServices = additionalServices;
+    
+    // Update status if provided
+    if (status) event.status = status;
 
     await event.save();
 

@@ -45,7 +45,8 @@ import {
 } from 'lucide-react';
 import { fetchAllEvents, addNoteToEvent, updateEventNote, deleteEventNote, updateEventDetails } from '../../services/eventService';
 import { fetchEventMedia, uploadEventFeatureImage, updateSocialMediaLinks } from '../../services/eventMediaService';
-import { getPackageById } from '../../services/packageService';
+import { getPackageById, getPackages } from '../../services/packageService';
+import { getAdditionalServices } from '../../services/additionalServiceService';
 import PackageDetailsModal from '../../components/event/PackageDetailsModal';
 import ServiceDetailsModal from '../../components/event/ServiceDetailsModal';
 import assets from '../../assets/assets.js';
@@ -83,6 +84,8 @@ const EventDetailPage = () => {
   const [editingSocialLink, setEditingSocialLink] = useState(null);
   const [editedSocialLinks, setEditedSocialLinks] = useState({});
   const [packageDetails, setPackageDetails] = useState(null);
+  const [showPackageSelectionModal, setShowPackageSelectionModal] = useState(false);
+  const [showServiceSelectionModal, setShowServiceSelectionModal] = useState(false);
   
   // States for editing event details
   const [editingInfo, setEditingInfo] = useState(false);
@@ -215,42 +218,51 @@ const EventDetailPage = () => {
   const loadPackageDetails = async () => {
     if (event?.packageID && event.packageID._id) {
       try {
-        toast.loading('Loading performance details...', { id: 'package-loading' });
+        toast.loading('Loading package details...', { id: 'package-loading' });
         console.log("Fetching package details for ID:", event.packageID._id);
+        
         const packageData = await getPackageById(event.packageID._id);
         
         if (packageData) {
           console.log("Received package data:", packageData);
+          console.log("Package ID:", packageData.packageID);
+          console.log("Package Name:", packageData.packageName);
+          console.log("Description:", packageData.description);
+          console.log("Performances:", packageData.performances);
+          console.log("Dance Styles:", packageData.danceStyles);
+          console.log("Team Involvement:", packageData.teamInvolvement);
+          console.log("Booking Terms:", packageData.bookingTerms);
+          console.log("Price:", packageData.price);
+          console.log("Image:", packageData.image);
+          console.log("Type:", packageData.type);
+          console.log("Status:", packageData.status);
+          
+          // Store complete package details
           setPackageDetails(packageData);
           
-          if (packageData.performances && packageData.performances.length > 0) {
-            console.log("Package performances:", packageData.performances);
-            
-            // Update the event with performances
-            setEvent(prev => ({
-              ...prev,
-              packageID: {
-                ...prev.packageID,
-                performances: packageData.performances.map(p => ({
-                  ...p,
-                  status: 'confirmed' // All package performances are considered confirmed
-                }))
-              }
-            }));
-            
-            toast.success('Performance details loaded successfully!', { id: 'package-loading' });
-          } else {
-            console.log("No performances found in package data");
-            toast.error('No performances found in this package.', { id: 'package-loading' });
-          }
+          // Update event with the complete package data
+          setEvent(prev => ({
+            ...prev,
+            packageID: {
+              ...packageData,
+              performances: packageData.performances?.map(p => ({
+                ...p,
+                status: 'confirmed' // All package performances are considered confirmed
+              })) || []
+            }
+          }));
+          
+          toast.success('Package details loaded successfully!', { id: 'package-loading' });
         } else {
+          console.error("Package data is empty or undefined");
           toast.error('Failed to load package details.', { id: 'package-loading' });
         }
       } catch (error) {
         console.error('Error loading package details:', error);
-        toast.error('Error loading package details.', { id: 'package-loading' });
+        toast.error('Error loading package details: ' + error.message, { id: 'package-loading' });
       }
     } else {
+      console.error("No package ID available", event?.packageID);
       toast.error('No package assigned to this event.', { id: 'package-loading' });
     }
   };
@@ -999,8 +1011,9 @@ const EventDetailPage = () => {
         {/* Edit icon - moved down further */}
         <button
           onClick={triggerFileInput}
-          disabled={uploadingImage}
-          className="absolute top-32 right-6 z-10 flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-white hover:bg-white/30 transition-colors"
+          disabled={uploadingImage || event.status === 'cancelled'}
+          className={`absolute top-32 right-6 z-10 flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-white hover:bg-white/30 transition-colors ${event.status === 'cancelled' ? 'opacity-50 cursor-not-allowed' : ''}`}
+          title={event.status === 'cancelled' ? "Cannot edit cancelled events" : "Change feature image"}
         >
           {uploadingImage ? (
             <span className="flex items-center">
@@ -1048,6 +1061,40 @@ const EventDetailPage = () => {
         </div>
       </div>
       
+      {/* Status banner for cancelled or change-requested events - moved below feature image */}
+      {(event.status === 'cancelled' || event.status === 'change-requested') && (
+        <div className={`w-full py-3 px-6 flex items-center justify-center 
+          ${event.status === 'cancelled' ? 'bg-red-600' : 'bg-yellow-600'} text-white`}>
+          {event.status === 'cancelled' ? (
+            <div className="flex items-center">
+              <AlertTriangle className="w-5 h-5 mr-2 animate-pulse" />
+              <span className="font-bold">This event has been cancelled</span>
+            </div>
+          ) : (
+            <div className="flex items-center">
+              <AlertTriangle className="w-5 h-5 mr-2 animate-pulse" />
+              <span className="font-bold">Changes have been requested for this event</span>
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Message for cancelled events explaining editing restrictions */}
+      {event.status === 'cancelled' && (
+        <div className="bg-red-50 border border-red-200 mx-auto max-w-6xl mt-6 p-4 rounded-lg">
+          <div className="flex items-start">
+            <Info className="w-5 h-5 text-red-600 mt-0.5 mr-3 flex-shrink-0" />
+            <div>
+              <h3 className="font-medium text-red-800">This event has been cancelled</h3>
+              <p className="text-red-700 mt-1">
+                All editing functionality has been disabled. Cancelled events cannot be modified.
+                Please contact support if you need to reactivate this event.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Main Content - increased space below the feature image */}
       <div className="container mx-auto px-4 mt-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -1065,7 +1112,9 @@ const EventDetailPage = () => {
                   {!editingInfo ? (
                     <button 
                       onClick={() => setEditingInfo(true)}
-                      className="p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-full transition-colors"
+                      className={`p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-full transition-colors ${event.status === 'cancelled' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={event.status === 'cancelled'}
+                      title={event.status === 'cancelled' ? "Cannot edit cancelled events" : "Edit event details"}
                     >
                       <Edit2 className="w-5 h-5" />
                     </button>
@@ -1321,7 +1370,9 @@ const EventDetailPage = () => {
                   {!editingDescription ? (
                     <button 
                       onClick={() => setEditingDescription(true)}
-                      className="p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-full transition-colors"
+                      className={`p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-full transition-colors ${event.status === 'cancelled' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={event.status === 'cancelled'}
+                      title={event.status === 'cancelled' ? "Cannot edit cancelled events" : "Edit description"}
                     >
                       <Edit2 className="w-5 h-5" />
                     </button>
@@ -1456,9 +1507,20 @@ const EventDetailPage = () => {
             {/* Package Details */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
               <div className="p-6">
-                <div className="flex items-center mb-4">
-                  <Package2 className="w-5 h-5 mr-2 text-red-600" />
-                  <h2 className="text-xl font-bold text-gray-800">Package Details</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <Package2 className="w-5 h-5 mr-2 text-red-600" />
+                    <h2 className="text-xl font-bold text-gray-800">Package Details</h2>
+                  </div>
+                  
+                  <button 
+                    onClick={() => setShowPackageSelectionModal(true)}
+                    className={`p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-full transition-colors ${event.status === 'cancelled' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    title={event.status === 'cancelled' ? "Cannot edit cancelled events" : "Change Package"}
+                    disabled={event.status === 'cancelled'}
+                  >
+                    <Edit2 className="w-5 h-5" />
+                  </button>
                 </div>
                 
                 {event.packageID ? (
@@ -1507,9 +1569,20 @@ const EventDetailPage = () => {
             {/* Additional Services */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
               <div className="p-6">
-                <div className="flex items-center mb-4">
-                  <Sparkles className="w-5 h-5 mr-2 text-red-600" />
-                  <h2 className="text-xl font-bold text-gray-800">Additional Services</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <Sparkles className="w-5 h-5 mr-2 text-red-600" />
+                    <h2 className="text-xl font-bold text-gray-800">Additional Services</h2>
+                  </div>
+                  
+                  <button 
+                    onClick={() => setShowServiceSelectionModal(true)}
+                    className={`p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-full transition-colors ${event.status === 'cancelled' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    title={event.status === 'cancelled' ? "Cannot edit cancelled events" : "Edit Services"}
+                    disabled={event.status === 'cancelled'}
+                  >
+                    <Edit2 className="w-5 h-5" />
+                  </button>
                 </div>
                 
                 {event.additionalServices && event.additionalServices.length > 0 ? (
@@ -1559,7 +1632,9 @@ const EventDetailPage = () => {
                   
                   <button 
                     onClick={() => posterInputRef.current.click()}
-                    className="mt-4 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                    className={`mt-4 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm ${event.status === 'cancelled' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={event.status === 'cancelled'}
+                    title={event.status === 'cancelled' ? "Cannot edit cancelled events" : "Upload Poster"}
                   >
                     <Plus className="w-4 h-4 mr-1 inline" />
                     Upload Poster
@@ -1578,7 +1653,12 @@ const EventDetailPage = () => {
                   <div className="aspect-[3/4] flex flex-col items-center justify-center bg-gray-50 rounded-lg border border-dashed border-gray-300">
                     <FileText className="w-12 h-12 text-gray-400 mb-2" />
                     <p className="text-gray-500">No poster uploaded yet</p>
-                    <button className="mt-4 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm">
+                    <button 
+                      className={`mt-4 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm ${event.status === 'cancelled' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      onClick={() => posterInputRef.current.click()}
+                      disabled={event.status === 'cancelled'}
+                      title={event.status === 'cancelled' ? "Cannot edit cancelled events" : "Upload Poster"}
+                    >
                       <Plus className="w-4 h-4 mr-1 inline" />
                       Upload Poster
                     </button>
@@ -1598,7 +1678,9 @@ const EventDetailPage = () => {
                   
                   <button 
                     onClick={() => imagesInputRef.current.click()}
-                    className="flex items-center px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                    className={`flex items-center px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm ${event.status === 'cancelled' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={event.status === 'cancelled'}
+                    title={event.status === 'cancelled' ? "Cannot edit cancelled events" : "Add Images"}
                   >
                     <Plus className="w-4 h-4 mr-1" />
                     Add Images
@@ -1623,7 +1705,9 @@ const EventDetailPage = () => {
                     <p className="text-gray-500">No event images uploaded yet</p>
                     <button 
                       onClick={() => imagesInputRef.current.click()}
-                      className="mt-4 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                      className={`mt-4 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm ${event.status === 'cancelled' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={event.status === 'cancelled'}
+                      title={event.status === 'cancelled' ? "Cannot edit cancelled events" : "Upload Images"}
                     >
                       <Plus className="w-4 h-4 mr-1 inline" />
                       Upload Images
@@ -1644,7 +1728,9 @@ const EventDetailPage = () => {
                   
                   <button 
                     onClick={() => videosInputRef.current.click()}
-                    className="flex items-center px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                    className={`flex items-center px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm ${event.status === 'cancelled' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={event.status === 'cancelled'}
+                    title={event.status === 'cancelled' ? "Cannot edit cancelled events" : "Add Videos"}
                   >
                     <Plus className="w-4 h-4 mr-1" />
                     Add Videos
@@ -1669,7 +1755,9 @@ const EventDetailPage = () => {
                     <p className="text-gray-500">No event videos uploaded yet</p>
                     <button 
                       onClick={() => videosInputRef.current.click()}
-                      className="mt-4 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                      className={`mt-4 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm ${event.status === 'cancelled' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={event.status === 'cancelled'}
+                      title={event.status === 'cancelled' ? "Cannot edit cancelled events" : "Upload Videos"}
                     >
                       <Plus className="w-4 h-4 mr-1 inline" />
                       Upload Videos
@@ -1809,8 +1897,10 @@ const EventDetailPage = () => {
                       </div>
                       
                       <button 
-                        className="text-gray-500 hover:text-blue-600 transition-colors"
+                        className={`text-gray-500 hover:text-blue-600 transition-colors ${event.status === 'cancelled' ? 'opacity-50 cursor-not-allowed' : ''}`}
                         onClick={() => setEditingSocialLink('facebook')}
+                        disabled={event.status === 'cancelled'}
+                        title={event.status === 'cancelled' ? "Cannot edit cancelled events" : "Edit Facebook link"}
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
@@ -1867,8 +1957,10 @@ const EventDetailPage = () => {
                       </div>
                       
                       <button 
-                        className="text-gray-500 hover:text-purple-600 transition-colors"
+                        className={`text-gray-500 hover:text-purple-600 transition-colors ${event.status === 'cancelled' ? 'opacity-50 cursor-not-allowed' : ''}`}
                         onClick={() => setEditingSocialLink('instagram')}
+                        disabled={event.status === 'cancelled'}
+                        title={event.status === 'cancelled' ? "Cannot edit cancelled events" : "Edit Instagram link"}
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
@@ -1925,8 +2017,10 @@ const EventDetailPage = () => {
                       </div>
                       
                       <button 
-                        className="text-gray-500 hover:text-red-600 transition-colors"
+                        className={`text-gray-500 hover:text-red-600 transition-colors ${event.status === 'cancelled' ? 'opacity-50 cursor-not-allowed' : ''}`}
                         onClick={() => setEditingSocialLink('youtube')}
+                        disabled={event.status === 'cancelled'}
+                        title={event.status === 'cancelled' ? "Cannot edit cancelled events" : "Edit YouTube link"}
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
@@ -1983,8 +2077,10 @@ const EventDetailPage = () => {
                       </div>
                       
                       <button 
-                        className="text-gray-500 hover:text-sky-600 transition-colors"
+                        className={`text-gray-500 hover:text-sky-600 transition-colors ${event.status === 'cancelled' ? 'opacity-50 cursor-not-allowed' : ''}`}
                         onClick={() => setEditingSocialLink('twitter')}
+                        disabled={event.status === 'cancelled'}
+                        title={event.status === 'cancelled' ? "Cannot edit cancelled events" : "Edit Twitter link"}
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
@@ -2041,8 +2137,10 @@ const EventDetailPage = () => {
                       </div>
                       
                       <button 
-                        className="text-gray-500 hover:text-green-600 transition-colors"
+                        className={`text-gray-500 hover:text-green-600 transition-colors ${event.status === 'cancelled' ? 'opacity-50 cursor-not-allowed' : ''}`}
                         onClick={() => setEditingSocialLink('whatsapp')}
+                        disabled={event.status === 'cancelled'}
+                        title={event.status === 'cancelled' ? "Cannot edit cancelled events" : "Edit WhatsApp number"}
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
@@ -2096,8 +2194,9 @@ const EventDetailPage = () => {
                   
                   <button 
                     onClick={() => setAddingNote(true)}
-                    className="flex items-center px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
-                    disabled={addingNote}
+                    className={`flex items-center px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium ${event.status === 'cancelled' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={addingNote || event.status === 'cancelled'}
+                    title={event.status === 'cancelled' ? "Cannot add notes to cancelled events" : "Add Note"}
                   >
                     <Plus className="w-4 h-4 mr-1" />
                     Add Note
@@ -2157,7 +2256,7 @@ const EventDetailPage = () => {
                             </p>
                             {editingNoteIndex !== index && (
                               <div className="flex space-x-1 ml-2">
-                                {(note.authorId === user?._id || note.author === user?.fullName) && (
+                                {(note.authorId === user?._id || note.author === user?.fullName) && event.status !== 'cancelled' && (
                                   <>
                                     <button 
                                       onClick={() => handleEditNote(index, note.content)}
@@ -2252,6 +2351,452 @@ const EventDetailPage = () => {
           onClose={() => setViewingService(null)}
         />
       )}
+
+      {/* Package Selection Modal */}
+      {showPackageSelectionModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-800">Change Package</h2>
+                <button 
+                  onClick={() => setShowPackageSelectionModal(false)}
+                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <PackageSelectionContent 
+                eventId={id} 
+                currentPackageId={event?.packageID?._id} 
+                onClose={() => setShowPackageSelectionModal(false)}
+                onPackageSelected={() => {
+                  setShowPackageSelectionModal(false);
+                  refreshEventData(true);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Service Selection Modal */}
+      {showServiceSelectionModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-800">Edit Additional Services</h2>
+                <button 
+                  onClick={() => setShowServiceSelectionModal(false)}
+                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <ServiceSelectionContent 
+                eventId={id} 
+                currentServices={event?.additionalServices || []} 
+                onClose={() => setShowServiceSelectionModal(false)}
+                onServicesUpdated={() => {
+                  setShowServiceSelectionModal(false);
+                  refreshEventData(true);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Package Selection Content Component
+const PackageSelectionContent = ({ eventId, currentPackageId, onClose, onPackageSelected }) => {
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedPackageId, setSelectedPackageId] = useState(currentPackageId);
+  const [updating, setUpdating] = useState(false);
+  const [showCreateCustom, setShowCreateCustom] = useState(false);
+
+  useEffect(() => {
+    const fetchPackages = async () => {
+      try {
+        setLoading(true);
+        const data = await getPackages();
+        // Filter only system packages (assuming there's a field to identify them)
+        // If there's no specific field, you might need to adjust this filter
+        const systemPackages = data.filter(pkg => pkg.type === 'system' || !pkg.type);
+        setPackages(systemPackages);
+      } catch (err) {
+        console.error('Error fetching packages:', err);
+        setError('Failed to load packages. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPackages();
+  }, []);
+
+  const handleUpdatePackage = async () => {
+    if (!selectedPackageId) {
+      toast.error('Please select a package');
+      return;
+    }
+
+    try {
+      setUpdating(true);
+      // Use the updateEventDetails function from eventService
+      const response = await updateEventDetails(eventId, { packageID: selectedPackageId });
+      
+      if (response.success) {
+        toast.success('Package updated successfully!');
+        onPackageSelected();
+      } else {
+        toast.error(response.message || 'Failed to update package');
+      }
+    } catch (error) {
+      console.error('Error updating package:', error);
+      toast.error('An error occurred while updating the package');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleCreateCustomPackage = () => {
+    // Switch to custom package creation view
+    setShowCreateCustom(true);
+  };
+
+  const handleBackToPackages = () => {
+    // Go back to package selection
+    setShowCreateCustom(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-900"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+        <p className="text-red-500">{error}</p>
+        <button 
+          onClick={onClose}
+          className="mt-4 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+        >
+          Close
+        </button>
+      </div>
+    );
+  }
+
+  if (showCreateCustom) {
+    return (
+      <div>
+        <div className="mb-4">
+          <button
+            onClick={handleBackToPackages}
+            className="flex items-center text-gray-600 hover:text-red-600 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            Back to Packages
+          </button>
+        </div>
+        
+        <div className="bg-gradient-to-r from-red-50 to-orange-50 p-6 rounded-lg border border-red-100 mb-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">Custom Package Creation</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            This feature allows you to create a tailored package specifically for this event.
+            Please note that custom packages need to be approved by the management team.
+          </p>
+          <p className="text-sm font-medium text-red-600">
+            Custom package creation is under development. Please contact our team directly for custom package requests.
+          </p>
+        </div>
+        
+        <div className="flex justify-end">
+          <button 
+            onClick={handleBackToPackages}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="mb-4">
+        <p className="text-sm text-gray-600">
+          Select a package from our standard offerings. Need something custom? Click "Create Custom Package" below.
+        </p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {packages.map((pkg) => (
+          <div 
+            key={pkg._id} 
+            className={`border rounded-lg p-4 cursor-pointer transition-all
+              ${selectedPackageId === pkg._id 
+                ? 'border-red-500 bg-red-50' 
+                : 'border-gray-200 hover:border-red-300 hover:bg-red-50/30'}`}
+            onClick={() => setSelectedPackageId(pkg._id)}
+          >
+            <div className="flex gap-4">
+              {pkg.image && (
+                <img 
+                  src={pkg.image} 
+                  alt={pkg.packageName} 
+                  className="w-20 h-20 object-cover rounded-lg"
+                />
+              )}
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-800">{pkg.packageName}</h3>
+                <p className="text-sm text-gray-600 line-clamp-2">{pkg.description}</p>
+                <div className="flex justify-between items-center mt-2">
+                  <p className="text-sm font-medium text-gray-700">
+                    Rs. {pkg.price.toLocaleString()}
+                  </p>
+                  {selectedPackageId === pkg._id && (
+                    <CheckCircle className="w-5 h-5 text-red-500" />
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+        
+        {/* Create Custom Package Option */}
+        <div 
+          className="border-2 border-dashed border-red-300 rounded-lg p-4 cursor-pointer hover:bg-red-50/30 transition-all"
+          onClick={handleCreateCustomPackage}
+        >
+          <div className="flex flex-col items-center justify-center h-full py-6 text-center">
+            <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-orange-400 rounded-full flex items-center justify-center mb-3">
+              <Plus className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="font-semibold text-gray-800 mb-1">Create Custom Package</h3>
+            <p className="text-sm text-gray-600">
+              Design a tailored package for this event
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-3">
+        <button 
+          onClick={onClose}
+          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+          disabled={updating}
+        >
+          Cancel
+        </button>
+        <button 
+          onClick={handleUpdatePackage}
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          disabled={updating || !selectedPackageId || selectedPackageId === currentPackageId}
+        >
+          {updating ? (
+            <span className="flex items-center">
+              <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
+              Updating...
+            </span>
+          ) : 'Update Package'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Service Selection Content Component
+const ServiceSelectionContent = ({ eventId, currentServices, onClose, onServicesUpdated }) => {
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedServices, setSelectedServices] = useState([]);
+  const [updating, setUpdating] = useState(false);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        setLoading(true);
+        const servicesData = await getAdditionalServices();
+        setServices(servicesData);
+        
+        // Set initial selected services based on current services
+        if (currentServices && currentServices.length > 0) {
+          const initialSelected = currentServices.map(service => service.serviceID._id);
+          setSelectedServices(initialSelected);
+        }
+      } catch (err) {
+        console.error('Error fetching additional services:', err);
+        setError('Failed to load additional services. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, [currentServices]);
+
+  const toggleServiceSelection = (serviceId) => {
+    setSelectedServices(prev => {
+      if (prev.includes(serviceId)) {
+        return prev.filter(id => id !== serviceId);
+      } else {
+        return [...prev, serviceId];
+      }
+    });
+  };
+
+  const handleUpdateServices = async () => {
+    try {
+      setUpdating(true);
+      
+      // Format the selected services for the API
+      const formattedServices = selectedServices.map(serviceId => ({
+        serviceID: serviceId
+      }));
+      
+      // Use updateEventDetails to update the additional services
+      const response = await updateEventDetails(eventId, { 
+        additionalServices: formattedServices 
+      });
+      
+      if (response.success) {
+        toast.success('Services updated successfully!');
+        onServicesUpdated();
+      } else {
+        toast.error(response.message || 'Failed to update services');
+      }
+    } catch (error) {
+      console.error('Error updating services:', error);
+      toast.error('An error occurred while updating services');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const isServiceChanged = () => {
+    if (!currentServices) return selectedServices.length > 0;
+    
+    const currentServiceIds = currentServices.map(service => service.serviceID._id);
+    
+    // Check if arrays have different lengths
+    if (currentServiceIds.length !== selectedServices.length) return true;
+    
+    // Check if all current services are in selected services and vice versa
+    return !currentServiceIds.every(id => selectedServices.includes(id)) || 
+           !selectedServices.every(id => currentServiceIds.includes(id));
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-900"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+        <p className="text-red-500">{error}</p>
+        <button 
+          onClick={onClose}
+          className="mt-4 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+        >
+          Close
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <p className="text-sm text-gray-600 mb-4">
+        Select the additional services you'd like to add to this event:
+      </p>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {services.map((service) => (
+          <div 
+            key={service._id} 
+            className={`border rounded-lg p-4 cursor-pointer transition-all
+              ${selectedServices.includes(service._id) 
+                ? 'border-blue-500 bg-blue-50' 
+                : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/30'}`}
+            onClick={() => toggleServiceSelection(service._id)}
+          >
+            <div className="flex justify-between">
+              <div>
+                <h3 className="font-semibold text-gray-800">{service.serviceName}</h3>
+                <p className="text-sm text-gray-600 line-clamp-2">{service.description}</p>
+                <p className="text-sm font-medium text-gray-700 mt-2">
+                  Rs. {service.price.toLocaleString()}
+                </p>
+              </div>
+              <div className="flex-shrink-0">
+                {selectedServices.includes(service._id) ? (
+                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                    <Check className="w-4 h-4 text-white" />
+                  </div>
+                ) : (
+                  <div className="w-6 h-6 border-2 border-gray-300 rounded-full"></div>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Show total cost */}
+      <div className="bg-gray-50 p-4 rounded-lg mb-6">
+        <div className="flex justify-between items-center">
+          <span className="font-medium">Total for selected services:</span>
+          <span className="font-bold text-lg">Rs. {
+            services
+              .filter(service => selectedServices.includes(service._id))
+              .reduce((sum, service) => sum + service.price, 0)
+              .toLocaleString()
+          }</span>
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-3">
+        <button 
+          onClick={onClose}
+          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+          disabled={updating}
+        >
+          Cancel
+        </button>
+        <button 
+          onClick={handleUpdateServices}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          disabled={updating || !isServiceChanged()}
+        >
+          {updating ? (
+            <span className="flex items-center">
+              <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
+              Updating...
+            </span>
+          ) : 'Update Services'}
+        </button>
+      </div>
     </div>
   );
 };
