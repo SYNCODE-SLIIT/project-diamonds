@@ -22,10 +22,14 @@ import {
 } from 'lucide-react';
 import { fetchAllEvents } from '../../services/eventService';
 import { fetchAllRequests } from '../../services/eventRequestService';
+import { fetchEventMedia } from '../../services/eventMediaService';
 import { useNavigate } from 'react-router-dom';
 import CustomPieChart from '../../components/Charts/CustomPieChart';
 import CustomBarChart from '../../components/Charts/CustomBarChart';
 import CustomLineChart from '../../components/Charts/CustomLineChart';
+
+// Default feature image from Cloudinary
+const DEFAULT_FEATURE_IMAGE_URL = "https://res.cloudinary.com/du5c9fw6s/image/upload/v1746620459/default_event_j82gdq.jpg";
 
 const EventDashboard = () => {
   const { user } = useContext(UserContext);
@@ -37,6 +41,7 @@ const EventDashboard = () => {
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [eventMediaMap, setEventMediaMap] = useState({});
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -85,6 +90,11 @@ const EventDashboard = () => {
         // Set initial filtered events
         setFilteredEvents(eventsData);
         
+        // Fetch media for events
+        if (eventsData.length > 0) {
+          await prefetchEventMedia(eventsData.map(event => event._id));
+        }
+        
         setLoading(false);
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -95,6 +105,29 @@ const EventDashboard = () => {
     
     fetchData();
   }, []);
+
+  // Prefetch media for all events in batches
+  const prefetchEventMedia = async (eventIds) => {
+    try {
+      // Process in batches of 5 to prevent too many concurrent requests
+      const batchSize = 5;
+      const mediaMap = {};
+      
+      for (let i = 0; i < eventIds.length; i += batchSize) {
+        const batch = eventIds.slice(i, i + batchSize);
+        const promises = batch.map(id => fetchEventMedia(id));
+        const results = await Promise.all(promises);
+        
+        batch.forEach((id, index) => {
+          mediaMap[id] = results[index]?.featureImage || DEFAULT_FEATURE_IMAGE_URL;
+        });
+      }
+      
+      setEventMediaMap(mediaMap);
+    } catch (error) {
+      console.error('Error prefetching event media:', error);
+    }
+  };
 
   // Calculate all analytics from data
   const calculateAnalytics = (eventsData, requestsData) => {
@@ -602,89 +635,95 @@ const EventDashboard = () => {
                 className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all cursor-pointer"
                 onClick={() => navigate(`${event._id}`)}
               >
-                {/* Card image with overlays */}
-                <div 
-                  className="h-48 bg-cover bg-center relative" 
-                  style={{ 
-                    backgroundImage: `url('https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=2069')` 
-                  }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
-                  
-                  {/* Bottom left overlay */}
-                  <div className="absolute bottom-3 left-3 flex items-center text-white">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    <span className="text-sm font-medium">{event.eventLocation}</span>
-                  </div>
-                  
-                  {/* Bottom right overlay */}
-                  <div className="absolute bottom-3 right-3 flex items-center bg-black/50 px-2 py-1 rounded-full text-white">
-                    <CalendarIcon className="w-3 h-3 mr-1" />
-                    <span className="text-xs font-medium">
-                      {new Date(event.eventDate).toLocaleDateString('default', { month: 'short', day: 'numeric' })}
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Card content */}
-                <div className="p-4">
-                  <h3 className="font-bold text-lg text-gray-900 mb-1">{event.eventName}</h3>
-                  
-                  <div className="flex items-center text-sm text-gray-600 mb-2">
-                    <Users className="w-4 h-4 mr-1" />
-                    <span>{event.guestCount} guests</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center mb-3">
-                    <span 
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        event.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                        event.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}
-                    >
-                      {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-                    </span>
-                    
-                    {event.packageID && (
-                      <span className="text-xs text-gray-500">
-                        {event.packageID.packageName}
+                <div className="flex flex-col md:flex-row">
+                  {/* Left side: Image with date */}
+                  <div className="relative md:w-1/3">
+                    {/* Date indicator overlay */}
+                    <div className="absolute top-3 left-3 bg-white rounded-lg shadow-md p-2 z-10 flex flex-col items-center justify-center w-16 h-16">
+                      <span className="text-xs font-bold text-red-500">
+                        {new Date(event.eventDate).toLocaleDateString('default', { month: 'short' }).toUpperCase()}
                       </span>
-                    )}
+                      <span className="text-xl font-bold text-gray-800">
+                        {new Date(event.eventDate).getDate()}
+                      </span>
+                    </div>
+                    
+                    <div 
+                      className="aspect-square w-full bg-cover bg-center" 
+                      style={{ 
+                        backgroundImage: `url(${eventMediaMap[event._id] || DEFAULT_FEATURE_IMAGE_URL})` 
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
+                      
+                      {/* Bottom left overlay */}
+                      <div className="absolute bottom-3 left-3 flex items-center text-white">
+                        <MapPin className="w-4 h-4 mr-1" />
+                        <span className="text-sm font-medium">{event.eventLocation}</span>
+                      </div>
+                    </div>
                   </div>
                   
-                  <div className="flex items-center text-sm text-gray-600">
-                    <div className="flex -space-x-2">
-                      {/* Show assigned member avatars (just placeholders) */}
-                      {Array.from({ length: Math.min(3, (event.membersAssigned?.length || 0)) }).map((_, i) => (
-                        <div key={i} className="w-6 h-6 rounded-full bg-gray-300 border border-white"></div>
-                      ))}
+                  {/* Right side: Event details */}
+                  <div className="p-4 md:p-6 md:w-2/3">
+                    <h3 className="font-bold text-lg text-gray-900 mb-1">{event.eventName}</h3>
+                    
+                    <div className="flex items-center text-sm text-gray-600 mb-2">
+                      <Users className="w-4 h-4 mr-1" />
+                      <span>{event.guestCount} guests</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center mb-3">
+                      <span 
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          event.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                          event.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}
+                      >
+                        {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                      </span>
                       
-                      {(event.membersAssigned?.length || 0) > 3 && (
-                        <div className="w-6 h-6 rounded-full bg-gray-100 border border-white flex items-center justify-center text-xs text-gray-600">
-                          +{event.membersAssigned.length - 3}
-                        </div>
+                      {event.packageID && (
+                        <span className="text-xs text-gray-500">
+                          {event.packageID.packageName}
+                        </span>
                       )}
                     </div>
                     
-                    {event.membersAssigned?.length > 0 ? (
-                      <span className="ml-2">
-                        {event.membersAssigned.filter(m => m.status === 'Accepted').length} assigned
-                      </span>
-                    ) : (
-                      <span className="ml-2">No members assigned</span>
-                    )}
+                    <div className="flex items-center text-sm text-gray-600 mb-4">
+                      <div className="flex -space-x-2">
+                        {/* Show assigned member avatars (just placeholders) */}
+                        {Array.from({ length: Math.min(3, (event.membersAssigned?.length || 0)) }).map((_, i) => (
+                          <div key={i} className="w-6 h-6 rounded-full bg-gray-300 border border-white"></div>
+                        ))}
+                        
+                        {(event.membersAssigned?.length || 0) > 3 && (
+                          <div className="w-6 h-6 rounded-full bg-gray-100 border border-white flex items-center justify-center text-xs text-gray-600">
+                            +{event.membersAssigned.length - 3}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {event.membersAssigned?.length > 0 ? (
+                        <span className="ml-2">
+                          {event.membersAssigned.filter(m => m.status === 'Accepted').length} assigned
+                        </span>
+                      ) : (
+                        <span className="ml-2">No members assigned</span>
+                      )}
+                    </div>
+                    
+                    <button 
+                      className="w-full py-2 bg-gradient-to-r from-red-600 to-red-800 text-white rounded-lg hover:from-red-700 hover:to-red-900 transition-all text-sm font-medium"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`${event._id}`);
+                      }}
+                    >
+                      Manage Event
+                    </button>
                   </div>
-                  
-                  <button 
-                    className="w-full mt-4 py-2 bg-gradient-to-r from-red-600 to-red-800 text-white rounded-lg hover:from-red-700 hover:to-red-900 transition-all text-sm font-medium"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`${event._id}`);
-                    }}
-                  >
-                    Manage Event
-                  </button>
                 </div>
               </div>
             ))

@@ -107,7 +107,7 @@ const MerchandiseStore = () => {
                   </div>
                 )}
                 <h3 className="text-xl font-bold mt-4 text-center">{product.name}</h3>
-                <p className="text-lg text-green-600 mt-2">${product.price}</p>
+                <p className="text-lg text-green-600 mt-2">LKR{product.price}</p>
                 <p className="text-gray-600 mt-2 text-center">{product.description || '-'}</p>
                 <button onClick={() => handleBuy(product)} className="mt-4 bg-indigo-600 text-white px-6 py-2 rounded-full hover:bg-indigo-700 transition">
                   Buy Now

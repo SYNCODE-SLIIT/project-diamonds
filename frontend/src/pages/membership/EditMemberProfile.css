@@ -1,380 +1,380 @@
 /* Edit Profile Container */
 .edit-profile-container {
-    max-width: 800px;
-    margin: 2rem auto;
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    background-color: #ffffff;
-  }
-  
-  /* Edit Profile Header */
-  .edit-profile-container h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #2a2a5a;
-    margin-bottom: 1.5rem;
-    text-align: center;
-  }
-  
-  /* New profile image section styles */
-  .edit-profile-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid #e5e7eb;
-  }
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+}
 
-  .profile-image-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 1rem;
-  }
+/* Edit Profile Header */
+.edit-profile-container h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #25105A;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
 
-  .profile-image-container {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    overflow: hidden;
-    margin-bottom: 1rem;
-    border: 3px solid #4a7bfc;
-    box-shadow: 0 4px 12px rgba(74, 123, 252, 0.2);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #f0f2f5;
-  }
+/* New profile image section styles */
+.edit-profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
 
-  .profile-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
+.profile-image-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 1rem;
+}
 
-  .profile-image-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #f0f2f5;
-  }
+.profile-image-container {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  border: 3px solid #25105A;
+  box-shadow: 0 4px 12px rgba(37, 16, 90, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f2f5;
+}
 
-  .profile-image-controls {
-    display: flex;
-    gap: 10px;
-    margin-top: 0.5rem;
-  }
+.profile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
-  .upload-button, .remove-photo-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
+.profile-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f2f5;
+}
 
-  .upload-button {
-    background-color: #4a7bfc;
-    color: white;
-    border: none;
-  }
+.profile-image-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 0.5rem;
+}
 
-  .upload-button:hover {
-    background-color: #3a63d2;
-  }
+.upload-button, .remove-photo-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
 
-  .remove-photo-button {
-    background-color: #ef4444;
-    color: white;
-    border: none;
-  }
+.upload-button {
+  background-color: #25105A;
+  color: white;
+  border: none;
+}
 
-  .remove-photo-button:hover {
-    background-color: #dc2626;
-  }
+.upload-button:hover {
+  background-color: #1E0B32;
+}
 
-  .hidden-input {
-    display: none;
-  }
+.remove-photo-button {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+}
 
-  /* Form section styling */
-  .form-section {
-    margin-bottom: 2rem;
+.remove-photo-button:hover {
+  background-color: #dc2626;
+}
+
+.hidden-input {
+  display: none;
+}
+
+/* Form section styling */
+.form-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.form-section h3 {
+  font-size: 1.25rem;
+  color: #25105A;
+  margin-bottom: 1.25rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Form Styles */
+.edit-profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-group input[type="email"],
+.form-group input[type="text"],
+.form-group input[type="time"],
+.form-group input[type="file"] {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #25105A;
+  box-shadow: 0 0 0 2px rgba(37, 16, 90, 0.2);
+}
+
+/* File Input Styling */
+.form-group input[type="file"] {
+  padding: 8px;
+  background-color: #f9fafb;
+  cursor: pointer;
+}
+
+.form-group input[type="file"]::-webkit-file-upload-button {
+  padding: 8px 12px;
+  background-color: #25105A;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+/* Availabilities Section */
+.availabilities-group {
+  border: 1px solid #e5e7eb;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: #f9fafb;
+}
+
+.availability-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0 0 1rem 0;
+}
+
+.availability-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.availability-item span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.remove-availability-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.availability-item button {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.availability-item button:hover {
+  background-color: #dc2626;
+}
+
+.no-availabilities {
+  padding: 1rem;
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+  background-color: white;
+  border-radius: 6px;
+  border: 1px dashed #d1d5db;
+}
+
+/* New Availability Input Section */
+.new-availability {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 10px;
+  margin-top: 0.75rem;
+}
+
+.new-availability input {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+}
+
+.new-availability button {
+  padding: 8px 12px;
+  background-color: #25105A;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.new-availability button:hover {
+  background-color: #1E0B32;
+}
+
+.add-availability-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.day-select, .time-input {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: #fff;
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.save-button, .cancel-button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.save-button {
+  background-color: #25105A;
+  color: white;
+  border: none;
+}
+
+.save-button:hover {
+  background-color: #1E0B32;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.cancel-button {
+  background-color: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+}
+
+.cancel-button:hover {
+  background-color: #e5e7eb;
+}
+
+/* Loading and Error States - same as profile page for consistency */
+.loading-state, .error-state {
+  text-align: center;
+  padding: 2rem;
+  border-radius: 8px;
+  background-color: #f9fafb;
+  margin: 2rem auto;
+  max-width: 800px;
+}
+
+.error-state {
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  background-color: #fee2e2;
+}
+
+/* Media Query for Mobile Responsiveness */
+@media (max-width: 640px) {
+  .edit-profile-container {
     padding: 1.5rem;
-    background-color: #f9fafb;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  }
-
-  .form-section h3 {
-    font-size: 1.25rem;
-    color: #2a2a5a;
-    margin-bottom: 1.25rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  /* Form Styles */
-  .edit-profile-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+    margin: 1rem;
   }
   
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .form-group label {
-    font-weight: 600;
-    color: #374151;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  
-  .form-group input[type="email"],
-  .form-group input[type="text"],
-  .form-group input[type="time"],
-  .form-group input[type="file"] {
-    padding: 10px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 1rem;
-    transition: border-color 0.2s ease;
-  }
-  
-  .form-group input:focus {
-    outline: none;
-    border-color: #4a7bfc;
-    box-shadow: 0 0 0 2px rgba(74, 123, 252, 0.2);
-  }
-  
-  /* File Input Styling */
-  .form-group input[type="file"] {
-    padding: 8px;
-    background-color: #f9fafb;
-    cursor: pointer;
-  }
-  
-  .form-group input[type="file"]::-webkit-file-upload-button {
-    padding: 8px 12px;
-    background-color: #4a7bfc;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    margin-right: 10px;
-    cursor: pointer;
-  }
-  
-  /* Availabilities Section */
-  .availabilities-group {
-    border: 1px solid #e5e7eb;
-    padding: 1rem;
-    border-radius: 8px;
-    background-color: #f9fafb;
-  }
-  
-  .availability-list {
-    list-style-type: none;
-    padding: 0;
-    margin: 0 0 1rem 0;
-  }
-  
-  .availability-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 12px;
-    margin-bottom: 8px;
-    background-color: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-  }
-  
-  .availability-item span {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .remove-availability-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .availability-item button {
-    background-color: #ef4444;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 4px 8px;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-  }
-  
-  .availability-item button:hover {
-    background-color: #dc2626;
-  }
-
-  .no-availabilities {
-    padding: 1rem;
-    text-align: center;
-    color: #6b7280;
-    font-style: italic;
-    background-color: white;
-    border-radius: 6px;
-    border: 1px dashed #d1d5db;
-  }
-  
-  /* New Availability Input Section */
   .new-availability {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr auto;
-    gap: 10px;
-    margin-top: 0.75rem;
+    grid-template-columns: 1fr;
   }
   
-  .new-availability input {
-    padding: 8px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-  }
-  
-  .new-availability button {
-    padding: 8px 12px;
-    background-color: #10b981;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    white-space: nowrap;
-  }
-  
-  .new-availability button:hover {
-    background-color: #059669;
-  }
-
-  .add-availability-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-  }
-
-  .day-select, .time-input {
-    padding: 8px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    background-color: #fff;
-  }
-  
-  /* Form Actions */
   .form-actions {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    margin-top: 1rem;
+    flex-direction: column;
   }
   
   .save-button, .cancel-button {
-    padding: 10px 20px;
-    font-size: 1rem;
-    font-weight: 500;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    min-width: 120px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+    width: 100%;
   }
-  
-  .save-button {
-    background-color: #4a7bfc;
-    color: white;
-    border: none;
-  }
-  
-  .save-button:hover {
-    background-color: #3a63d2;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  }
-  
-  .cancel-button {
-    background-color: #f3f4f6;
-    color: #4b5563;
-    border: 1px solid #d1d5db;
-  }
-  
-  .cancel-button:hover {
-    background-color: #e5e7eb;
-  }
-  
-  /* Loading and Error States - same as profile page for consistency */
-  .loading-state, .error-state {
-    text-align: center;
-    padding: 2rem;
-    border-radius: 8px;
-    background-color: #f9fafb;
-    margin: 2rem auto;
-    max-width: 800px;
-  }
-  
-  .error-state {
-    color: #dc2626;
-    border: 1px solid #fecaca;
-    background-color: #fee2e2;
-  }
-  
-  /* Media Query for Mobile Responsiveness */
-  @media (max-width: 640px) {
-    .edit-profile-container {
-      padding: 1.5rem;
-      margin: 1rem;
-    }
-    
-    .new-availability {
-      grid-template-columns: 1fr;
-    }
-    
-    .form-actions {
-      flex-direction: column;
-    }
-    
-    .save-button, .cancel-button {
-      width: 100%;
-    }
-  }
+}
 
-  /* Responsive adjustments */
-  @media (min-width: 768px) {
-    .profile-image-section {
-      flex-direction: row;
-      gap: 2rem;
-      align-items: center;
-    }
-    
-    .profile-image-controls {
-      flex-direction: column;
-      margin-top: 0;
-    }
+/* Responsive adjustments */
+@media (min-width: 768px) {
+  .profile-image-section {
+    flex-direction: row;
+    gap: 2rem;
+    align-items: center;
   }
+  
+  .profile-image-controls {
+    flex-direction: column;
+    margin-top: 0;
+  }
+}
