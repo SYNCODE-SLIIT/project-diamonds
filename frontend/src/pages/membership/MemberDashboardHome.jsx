@@ -9,7 +9,7 @@ import { toast } from 'react-hot-toast';
 import { addThousandsSeparator } from '../../utils/helper.js';
 
 // Icons
-import { UserCircle2, Calendar, Trophy, Mail, MessageSquare, Clock, ArrowRight, ChevronDown, ChevronUp, CreditCard, DollarSign, BarChart2, AlertCircle } from 'lucide-react';
+import { UserCircle2, Calendar, Trophy, Mail, MessageSquare, Clock, ArrowRight, ChevronDown, ChevronUp, CreditCard, DollarSign, BarChart2, AlertCircle, Users } from 'lucide-react';
 import { IoMdCard } from "react-icons/io";
 import { LuWalletMinimal, LuHandCoins } from 'react-icons/lu';
 import { FiBell } from 'react-icons/fi';
@@ -32,9 +32,18 @@ const MemberDashboardHome = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifLoading, setNotifLoading] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [managerUnread, setManagerUnread] = useState(0);
   const [groups, setGroups] = useState([]);
+  const [managerThread, setManagerThread] = useState(null);
   const memberId = user?.profileId || '';
   
+  // Calculate unread notification count
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+  
+  // Calculate total notifications that need attention
+  const hasImportantNotifications = unreadMessages > 0 || assignmentRequests.length > 0;
+  const totalUnreadNotifications = unreadCount + unreadMessages + assignmentRequests.length;
+
   // Fetch dashboard data
   const fetchDashboardData = async () => {
     try {
@@ -112,11 +121,48 @@ const MemberDashboardHome = () => {
       const gs = data.groups || [];
       setGroups(gs);
       
-      // Calculate total unread messages
-      const totalUnread = gs.reduce((total, group) => total + (group.unreadCount || 0), 0);
-      setUnreadMessages(totalUnread);
+      // Calculate unread group messages
+      const groupUnread = gs.reduce((total, group) => total + (group.unreadCount || 0), 0);
+      
+      // Combine with manager unread messages
+      setUnreadMessages(groupUnread + managerUnread);
     } catch (err) {
       console.error('Error fetching message groups:', err);
+    }
+  };
+
+  // Fetch manager thread and unread count
+  const fetchManagerThread = async () => {
+    if (!user?._id) return;
+    try {
+      const token = localStorage.getItem('token');
+      
+      // First get all users to find the manager
+      const usersRes = await fetch(`http://localhost:4000/api/users`, { 
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const users = await usersRes.json();
+      const manager = users.find(u => u.role === 'teamManager');
+      if (!manager) return;
+
+      // Get all direct chat threads for the user
+      const threadsRes = await fetch(`http://localhost:4000/api/direct-chats/user/${user._id}`, { 
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const { threads } = await threadsRes.json();
+      
+      // Find the thread with the manager
+      const thread = threads.find(t => t.participants.some(p => p._id === manager._id));
+      if (thread) {
+        setManagerThread(thread);
+        setManagerUnread(thread.unreadCount || 0);
+        
+        // Update total unread count when manager thread is found
+        const groupUnread = groups.reduce((total, group) => total + (group.unreadCount || 0), 0);
+        setUnreadMessages(groupUnread + (thread.unreadCount || 0));
+      }
+    } catch (err) {
+      console.error('Error fetching manager thread:', err);
     }
   };
 
@@ -129,7 +175,8 @@ const MemberDashboardHome = () => {
         fetchUserData(),
         fetchAssignmentRequests(),
         fetchNotifications(),
-        fetchMessageGroups()
+        fetchMessageGroups(),
+        fetchManagerThread()
       ]);
       setLoading(false);
     };
@@ -139,12 +186,11 @@ const MemberDashboardHome = () => {
     // Refresh message count periodically
     const interval = setInterval(() => {
       fetchMessageGroups();
+      fetchManagerThread();
     }, 10000);
     
     return () => clearInterval(interval);
   }, [user]);
-
-  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -204,48 +250,156 @@ const MemberDashboardHome = () => {
             </div>
           </div>
           
-          {/* Notification Bell */}
+          {/* Notification Bell - Improved with animation and dot indicator */}
           <div className="relative">
             <button
               className="relative p-3 rounded-full hover:bg-gray-100 focus:outline-none transition-colors"
               onClick={() => setShowNotifications(v => !v)}
               aria-label="Show notifications"
             >
-              <FiBell className="w-6 h-6 text-[#25105A]" />
+              <FiBell className={`w-6 h-6 text-[#25105A] ${hasImportantNotifications ? 'animate-pulse' : ''}`} />
+              
+              {/* Show numerical badge only for finance notifications */}
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 font-bold">{unreadCount}</span>
+                <span className="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 font-bold">
+                  {unreadCount}
+                </span>
+              )}
+              
+              {/* Show red dot for unread messages and event requests */}
+              {hasImportantNotifications && (
+                <span className="absolute top-1 right-1 h-2.5 w-2.5 bg-red-500 rounded-full ring-2 ring-white"></span>
               )}
             </button>
+            
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg z-50 border border-gray-200 max-h-96 overflow-y-auto">
-                <div className="p-3 border-b font-semibold bg-gradient-to-r from-[#1E0B32] to-[#25105A] text-white flex justify-between items-center">
-                  Notifications
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg z-50 border border-gray-200 max-h-[70vh] overflow-y-auto">
+                <div className="sticky top-0 p-3 border-b font-semibold bg-gradient-to-r from-[#1E0B32] to-[#25105A] text-white flex justify-between items-center">
+                  <span className="flex items-center">
+                    <FiBell className="mr-2 h-4 w-4" />
+                    Notifications
+                    {totalUnreadNotifications > 0 && (
+                      <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
+                        {totalUnreadNotifications}
+                      </span>
+                    )}
+                  </span>
                   <button className="text-xs text-purple-200 hover:text-white hover:underline transition-colors" onClick={fetchNotifications} disabled={notifLoading}>
                     Refresh
                   </button>
                 </div>
+                
                 {notifLoading ? (
-                  <div className="p-4 text-center text-gray-500">Loading...</div>
-                ) : notifications.length === 0 ? (
-                  <div className="p-4 text-center text-gray-500">No notifications</div>
+                  <div className="p-4 text-center">
+                    <div className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-[#25105A]"></div>
+                    <p className="mt-2 text-gray-500 text-sm">Loading notifications...</p>
+                  </div>
                 ) : (
-                  <ul className="divide-y divide-gray-100">
-                    {notifications.map(n => (
-                      <li key={n._id} className={`p-3 flex flex-col gap-1 ${n.isRead ? 'bg-gray-50' : 'bg-purple-50'}`}>
-                        <div className="flex items-center gap-2">
-                          <span className={`inline-block w-2 h-2 rounded-full ${n.isRead ? 'bg-gray-300' : 'bg-[#25105A]'}`}></span>
-                          <span className="text-sm text-gray-800 flex-1">{n.message}</span>
-                          {!n.isRead && (
-                            <button
-                              className="ml-2 text-xs text-[#25105A] hover:underline"
-                              onClick={() => handleMarkAsRead(n._id)}
-                            >Mark as read</button>
-                          )}
+                  <>
+                    {(!notifications.length && !assignmentRequests.length && !unreadMessages) ? (
+                      <div className="p-8 text-center">
+                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 mb-3">
+                          <FiBell className="h-6 w-6 text-gray-400" />
                         </div>
-                        <span className="text-xs text-gray-400">{new Date(n.createdAt).toLocaleString()}</span>
-                      </li>
-                    ))}
-                  </ul>
+                        <p className="text-gray-500">No new notifications</p>
+                      </div>
+                    ) : (
+                      <ul className="divide-y divide-gray-100">
+                        {/* Priority notifications section */}
+                        {(unreadMessages > 0 || assignmentRequests.length > 0) && (
+                          <li className="p-3 bg-purple-50">
+                            <h3 className="text-xs uppercase text-purple-700 font-semibold mb-2">Priority Updates</h3>
+                            <div className="space-y-2">
+                              {/* Event Request notifications */}
+                              {assignmentRequests.length > 0 && (
+                                <Link to="/member-dashboard/new-request" className="flex items-center p-2 rounded-md bg-white hover:bg-yellow-50 transition-colors">
+                                  <div className="rounded-full p-2 bg-yellow-100 mr-2">
+                                    <Calendar className="w-4 h-4 text-yellow-600" />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-800">
+                                      {assignmentRequests.length} Event Request{assignmentRequests.length > 1 ? 's' : ''}
+                                    </p>
+                                    <p className="text-xs text-gray-500">Requires your attention</p>
+                                  </div>
+                                </Link>
+                              )}
+                              
+                              {/* Unread message notifications */}
+                              {unreadMessages > 0 && (
+                                <Link to="/member-dashboard/inbox" className="flex items-center p-2 rounded-md bg-white hover:bg-purple-100 transition-colors">
+                                  <div className="rounded-full p-2 bg-[#25105A]/20 mr-2">
+                                    <Mail className="w-4 h-4 text-[#25105A]" />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-800">
+                                      {unreadMessages} Unread Message{unreadMessages > 1 ? 's' : ''}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {managerUnread > 0 ? `Including ${managerUnread} from your manager` : 'From your conversations'}
+                                    </p>
+                                  </div>
+                                </Link>
+                              )}
+                            </div>
+                          </li>
+                        )}
+                        
+                        {/* Finance notifications with improved design */}
+                        {notifications.length > 0 && (
+                          <>
+                            <li className="p-3 bg-gray-50">
+                              <h3 className="text-xs uppercase text-gray-500 font-semibold mb-2">Financial Updates</h3>
+                            </li>
+                            {notifications.map(n => (
+                              <li key={n._id} className={`p-3 hover:bg-gray-50 transition-colors ${n.isRead ? '' : 'border-l-2 border-[#25105A]'}`}>
+                                <div className="flex items-start">
+                                  <div className={`rounded-full p-2 ${n.isRead ? 'bg-gray-100' : 'bg-[#25105A]/10'} mr-3 mt-1`}>
+                                    <CreditCard className={`w-4 h-4 ${n.isRead ? 'text-gray-500' : 'text-[#25105A]'}`} />
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="flex justify-between">
+                                      <p className={`text-sm ${n.isRead ? 'text-gray-600' : 'text-gray-800 font-medium'}`}>
+                                        {n.message}
+                                      </p>
+                                      {!n.isRead && (
+                                        <button 
+                                          className="ml-2 text-xs text-[#25105A] hover:underline" 
+                                          onClick={() => handleMarkAsRead(n._id)}
+                                        >
+                                          Mark read
+                                        </button>
+                                      )}
+                                    </div>
+                                    <span className="text-xs text-gray-400 block mt-1">
+                                      {new Date(n.createdAt).toLocaleString(undefined, {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </span>
+                                  </div>
+                                </div>
+                              </li>
+                            ))}
+                          </>
+                        )}
+                      </ul>
+                    )}
+                    
+                    {/* View all link */}
+                    {(notifications.length > 0 || unreadMessages > 0 || assignmentRequests.length > 0) && (
+                      <div className="p-3 text-center border-t border-gray-100">
+                        <button 
+                          className="text-sm text-[#25105A] hover:underline font-medium"
+                          onClick={() => setShowNotifications(false)}
+                        >
+                          Close
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -363,7 +517,29 @@ const MemberDashboardHome = () => {
             )}
             
             <div className="mt-4">
-              <h3 className="font-medium text-gray-700 mb-2">Your Groups</h3>
+              <h3 className="font-medium text-gray-700 mb-2">Your Conversations</h3>
+              
+              {/* Manager Chat Link - Only show if thread exists */}
+              {managerThread && (
+                <Link 
+                  to={`/member-dashboard/direct-chat/${managerThread._id}`}
+                  className="flex items-center justify-between p-2 rounded-lg hover:bg-purple-50 transition-colors mb-2"
+                >
+                  <div className="flex items-center">
+                    <div className="bg-[#25105A]/10 text-[#25105A] p-1.5 rounded-full mr-2">
+                      <MessageSquare className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-medium">Team Manager</span>
+                  </div>
+                  {managerUnread > 0 && (
+                    <span className="bg-[#25105A] text-white text-xs px-2 py-0.5 rounded-full">
+                      {managerUnread}
+                    </span>
+                  )}
+                </Link>
+              )}
+              
+              {/* Group Chats Links */}
               {groups.length > 0 ? (
                 <div className="space-y-2">
                   {groups.slice(0, 3).map(group => (
@@ -374,7 +550,7 @@ const MemberDashboardHome = () => {
                     >
                       <div className="flex items-center">
                         <div className="bg-[#25105A]/10 text-[#25105A] p-1.5 rounded-full mr-2">
-                          <MessageSquare className="w-4 h-4" />
+                          <Users className="w-4 h-4" />
                         </div>
                         <span className="text-sm font-medium truncate max-w-[120px]">{group.groupName}</span>
                       </div>
@@ -388,6 +564,10 @@ const MemberDashboardHome = () => {
                 </div>
               ) : (
                 <p className="text-gray-500 text-sm">No groups yet</p>
+              )}
+              
+              {(groups.length === 0 && !managerThread) && (
+                <p className="text-gray-500 text-sm">No conversations yet</p>
               )}
             </div>
           </div>
