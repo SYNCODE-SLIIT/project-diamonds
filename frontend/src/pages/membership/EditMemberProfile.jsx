@@ -22,11 +22,39 @@ const EditMemberProfile = () => {
   const [removePicture, setRemovePicture] = useState(false);
 
   const [newDay, setNewDay] = useState('');
-  const [newStart, setNewStart] = useState('');
-  const [newEnd, setNewEnd] = useState('');
+  const [newStart, setNewStart] = useState('08:00');
+  const [newEnd, setNewEnd] = useState('22:00');
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Validation errors
+  const [errors, setErrors] = useState({});
+
+  // ─── Helper validators ────────────────────────────────────────────
+  const validateContactNumber = (value) => {
+    if (!value) return '';
+    if (!/^\d+$/.test(value)) return 'Contact number must contain only digits.';
+    if (value.length < 10 || value.length > 15) return 'Contact number should be between 10 and 15 digits.';
+    return '';
+  };
+
+  const validateDanceStyle = (value) => {
+    if (!value) return '';
+    if (!/^[A-Za-z,\-\s]+$/.test(value)) {
+      return 'Dance style can only contain letters, commas, dashes, and spaces.';
+    }
+    return '';
+  };
+
+  const validateEmail = (value) => {
+    if (!value) return 'Email is required.';
+    // Simple RFC‑ish regex
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.toLowerCase())) {
+      return 'Please enter a valid email address.';
+    }
+    return '';
+  };
 
   useEffect(() => {
     if (!newProfilePicture) {
@@ -74,11 +102,22 @@ const EditMemberProfile = () => {
 
   const handleAddAvailability = () => {
     if (newDay && newStart && newEnd) {
+      // Duplicate day check
+      if (editedAvailabilities.some((av) => av.day === newDay)) {
+        setErrors((prev) => ({ ...prev, availability: 'You have already added availability for that day.' }));
+        return;
+      }
+      // Time range guard
+      if (newStart >= newEnd) {
+        setErrors((prev) => ({ ...prev, availability: 'End time must be after start time.' }));
+        return;
+      }
+      setErrors((prev) => ({ ...prev, availability: '' }));
       const newAvail = { day: newDay, start: newStart, end: newEnd };
       setEditedAvailabilities([...editedAvailabilities, newAvail]);
       setNewDay('');
-      setNewStart('');
-      setNewEnd('');
+      setNewStart('08:00');
+      setNewEnd('22:00');
     }
   };
 
@@ -98,6 +137,17 @@ const EditMemberProfile = () => {
 
   const handleSaveChanges = async (e) => {
     e.preventDefault();
+
+    // Final client-side validation
+    const emailErr = validateEmail(editedEmail);
+    const contactErr = validateContactNumber(editedContactNumber);
+    const danceErr = validateDanceStyle(editedDanceStyle);
+    if (emailErr || contactErr || danceErr || errors.availability) {
+      setErrors((prev) => ({ ...prev, email: emailErr, contactNumber: contactErr, danceStyle: danceErr }));
+      setErrorMsg('Please fix the highlighted errors before saving.');
+      return;
+    }
+
     try {
       if (removePicture && !newProfilePicture) {
         const idToDelete = profileData._id || user.profileId;
@@ -205,10 +255,15 @@ const EditMemberProfile = () => {
               type="email"
               id="email"
               value={editedEmail}
-              onChange={(e) => setEditedEmail(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setEditedEmail(val);
+                setErrors((prev) => ({ ...prev, email: validateEmail(val) }));
+              }}
               required
               placeholder="Your email address"
             />
+            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
           </div>
 
           <div className="form-group">
@@ -220,9 +275,14 @@ const EditMemberProfile = () => {
               type="text"
               id="contactNumber"
               value={editedContactNumber}
-              onChange={(e) => setEditedContactNumber(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setEditedContactNumber(val);
+                setErrors((prev) => ({ ...prev, contactNumber: validateContactNumber(val) }));
+              }}
               placeholder="Your phone number"
             />
+            {errors.contactNumber && <p className="text-red-500 text-sm mt-1">{errors.contactNumber}</p>}
           </div>
         </div>
 
@@ -237,9 +297,14 @@ const EditMemberProfile = () => {
               type="text"
               id="danceStyle"
               value={editedDanceStyle}
-              onChange={(e) => setEditedDanceStyle(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setEditedDanceStyle(val);
+                setErrors((prev) => ({ ...prev, danceStyle: validateDanceStyle(val) }));
+              }}
               placeholder="e.g. Hip Hop, Contemporary, Ballet"
             />
+            {errors.danceStyle && <p className="text-red-500 text-sm mt-1">{errors.danceStyle}</p>}
           </div>
 
           <div className="form-group">
@@ -318,6 +383,7 @@ const EditMemberProfile = () => {
                 <box-icon name="plus" color="white" size="sm"></box-icon>
                 Add
               </button>
+              {errors.availability && <p className="text-red-500 text-sm mt-1">{errors.availability}</p>}
             </div>
           </div>
         </div>
