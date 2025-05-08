@@ -42,14 +42,28 @@ const CalendarView = () => {
   }, []);
 
   const getEventsForDate = (dateObj) => {
-    const dateStr = dateObj.toISOString().split('T')[0];
+    // Convert the input date to start of day in local timezone
+    const localDate = new Date(dateObj);
+    localDate.setHours(0, 0, 0, 0);
+    
+    // Convert to ISO string and get the date part
+    const dateStr = localDate.toISOString().split('T')[0];
+
     return {
-      events: events.filter(ev =>
-        ev.eventDate && new Date(ev.eventDate).toISOString().split('T')[0] === dateStr
-      ),
-      practices: practiceSessions.filter(practice => 
-        practice.practiceDate && new Date(practice.practiceDate).toISOString().split('T')[0] === dateStr
-      )
+      events: events.filter(ev => {
+        if (!ev.eventDate) return false;
+        // Convert event date to start of day in local timezone
+        const eventDate = new Date(ev.eventDate);
+        eventDate.setHours(0, 0, 0, 0);
+        return eventDate.toISOString().split('T')[0] === dateStr;
+      }),
+      practices: practiceSessions.filter(practice => {
+        if (!practice.practiceDate) return false;
+        // Convert practice date to start of day in local timezone
+        const practiceDate = new Date(practice.practiceDate);
+        practiceDate.setHours(0, 0, 0, 0);
+        return practiceDate.toISOString().split('T')[0] === dateStr;
+      })
     };
   };
 
@@ -57,9 +71,9 @@ const CalendarView = () => {
     if (view !== 'month') return null;
     const { events: dayEvents, practices: dayPractices } = getEventsForDate(date);
     return (
-      <div className="flex flex-col items-center">
-        {dayEvents.length > 0 && <span className="w-2 h-2 bg-blue-500 rounded-full mb-1" />}
-        {dayPractices.length > 0 && <span className="w-2 h-2 bg-green-500 rounded-full" />}
+      <div className="event-indicators">
+        {dayEvents.length > 0 && <span className="event-dot" />}
+        {dayPractices.length > 0 && <span className="practice-dot" />}
       </div>
     );
   };
@@ -95,8 +109,24 @@ const CalendarView = () => {
             {items.map(item => {
               const name = isEventList ? item.eventName : item.practiceName;
               const rawDate = isEventList ? item.eventDate : item.practiceDate;
-              const dateText = rawDate ? new Date(rawDate).toLocaleDateString() : 'N/A';
-              const timeText = isEventList ? item.eventTime : item.practiceTime;
+              // Format date in local timezone
+              const dateText = rawDate ? new Date(rawDate).toLocaleDateString(undefined, {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              }) : 'N/A';
+              
+              const timeText = isEventList 
+                ? (typeof item.eventTime === 'object' && item.eventTime 
+                    ? `${new Date(item.eventTime.startDate).toLocaleTimeString(undefined, {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })} - ${new Date(item.eventTime.endDate).toLocaleTimeString(undefined, {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}`
+                    : item.eventTime)
+                : item.practiceTime;
               const location = isEventList ? item.eventLocation : item.practiceLocation;
               const count = isEventList ? item.guestCount : item.maxParticipants;
               return (
@@ -160,13 +190,15 @@ const CalendarView = () => {
               <span className="text-sm text-gray-600">Practices</span>
             </div>
           </div>
-          <Calendar
-            onChange={setSelectedDate}
-            value={selectedDate}
-            tileContent={tileContent}
-            tileClassName={tileClassName}
-            className="w-full"
-          />
+          <div className="calendar-container">
+            <Calendar
+              onChange={setSelectedDate}
+              value={selectedDate}
+              tileContent={tileContent}
+              tileClassName={tileClassName}
+              className="w-full border-0"
+            />
+          </div>
         </div>
 
         <div className="mt-6 text-center">
@@ -190,6 +222,107 @@ const CalendarView = () => {
       <style jsx>{`
         .has-event-practice {
           font-weight: 600;
+        }
+        .calendar-container {
+          width: 100%;
+          background: white;
+          padding: 1.5rem;
+          border-radius: 1rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .calendar-container .react-calendar {
+          width: 100%;
+          border: none;
+          background: white;
+          font-family: 'Inter', sans-serif;
+        }
+        .calendar-container .react-calendar__navigation {
+          margin-bottom: 1rem;
+        }
+        .calendar-container .react-calendar__navigation button {
+          background: white;
+          color: #1f2937;
+          font-weight: 600;
+          font-size: 1.1rem;
+          padding: 0.75rem;
+          border-radius: 0.5rem;
+          transition: all 0.2s ease;
+        }
+        .calendar-container .react-calendar__navigation button:enabled:hover,
+        .calendar-container .react-calendar__navigation button:enabled:focus {
+          background: #f3f4f6;
+          transform: translateY(-1px);
+        }
+        .calendar-container .react-calendar__month-view__weekdays {
+          background: #f9fafb;
+          padding: 0.75rem 0;
+          border-radius: 0.5rem;
+          margin-bottom: 0.5rem;
+        }
+        .calendar-container .react-calendar__month-view__weekdays__weekday {
+          font-weight: 600;
+          color: #4b5563;
+          text-transform: uppercase;
+          font-size: 0.875rem;
+        }
+        .calendar-container .react-calendar__month-view__weekdays__weekday abbr {
+          text-decoration: none;
+        }
+        .calendar-container .react-calendar__tile {
+          padding: 1rem 0.5rem;
+          background: white;
+          border-radius: 0.5rem;
+          transition: all 0.2s ease;
+          position: relative;
+          height: 3.5rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+        .calendar-container .react-calendar__tile:enabled:hover,
+        .calendar-container .react-calendar__tile:enabled:focus {
+          background: #f3f4f6;
+          transform: translateY(-1px);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .calendar-container .react-calendar__tile--now {
+          background: #e5e7eb;
+          font-weight: 600;
+          color: #1f2937;
+        }
+        .calendar-container .react-calendar__tile--active {
+          background: #3b82f6 !important;
+          color: white;
+          font-weight: 600;
+          box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+        }
+        .calendar-container .react-calendar__tile--active:enabled:hover,
+        .calendar-container .react-calendar__tile--active:enabled:focus {
+          background: #2563eb !important;
+        }
+        .calendar-container .react-calendar__month-view__days__day--neighboringMonth {
+          color: #9ca3af;
+        }
+        .calendar-container .react-calendar__tile abbr {
+          font-size: 0.875rem;
+          margin-bottom: 0.25rem;
+        }
+        .calendar-container .react-calendar__tile .event-indicators {
+          display: flex;
+          gap: 0.25rem;
+          margin-top: 0.25rem;
+        }
+        .calendar-container .react-calendar__tile .event-indicators span {
+          width: 0.375rem;
+          height: 0.375rem;
+          border-radius: 50%;
+        }
+        .calendar-container .react-calendar__tile .event-indicators .event-dot {
+          background: #3b82f6;
+        }
+        .calendar-container .react-calendar__tile .event-indicators .practice-dot {
+          background: #10b981;
         }
       `}</style>
     </div>

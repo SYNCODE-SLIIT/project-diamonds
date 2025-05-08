@@ -126,23 +126,21 @@ export const updateAssignmentStatus = async (req, res) => {
 // Get all assignment requests
 export const getAssignmentRequests = async (req, res) => {
   try {
-    const assignments = await Assignment.find({ 'memberAssignments.status': 'pending' })
+    const assignments = await Assignment.find()
       .populate('eventID', 'eventName eventDate eventLocation guestCount')
       .populate('memberAssignments.memberID', 'fullName email')
       .exec();
 
     // Transform the data to a more frontend-friendly format
     const requests = assignments.flatMap(assignment => 
-      assignment.memberAssignments
-        .filter(ma => ma.status === 'pending')
-        .map(ma => ({
-          _id: ma._id,
-          event: assignment.eventID,
-          member: ma.memberID,
-          assignedBy: ma.assignedBy,
-          status: ma.status,
-          createdAt: ma.createdAt
-        }))
+      assignment.memberAssignments.map(ma => ({
+        _id: ma._id,
+        event: assignment.eventID,
+        member: ma.memberID,
+        assignedBy: ma.assignedBy,
+        status: ma.status,
+        createdAt: ma.createdAt
+      }))
     );
 
     res.status(200).json(requests);
