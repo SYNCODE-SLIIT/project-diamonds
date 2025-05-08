@@ -267,6 +267,8 @@ const App = () => {
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-cancel" element={<PaymentCancel />} />
 
+          <Route path="/media/view/:id" element={<ViewMedia />} />
+
         </Routes>
 
         
