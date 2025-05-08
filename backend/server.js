@@ -52,7 +52,7 @@ import practiceRequestRoutes from './routes/practiceRequestRoutes.js';
 import certificateRoutes from './routes/certificateRoutes.js';
 import sponsorshipRoutes from './routes/sponsorshipRoutes.js';
 
-
+import eventMediaRoutes from './routes/eventMediaRoutes.js';
 
 import merchandiseRoutes from './routes/merchandiseRoutes.js';
 
@@ -86,7 +86,6 @@ app.use('/uploads', express.static('uploads'));
 // Special middleware for Stripe webhooks
 app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
 
-
 // Add multer error handling middleware
 app.use(handleMulterError);
 
@@ -115,6 +114,7 @@ app.use('/api/organizers', organizerRoutes);
 
 // Financial Management Routes
 app.use('/api/finance', financialRoutes);
+app.use('/api/finance/notifications', financeNotificationRoutes);
 
 app.use('/api/assignments', assignmentRoutes);
 
@@ -131,7 +131,6 @@ app.use('/api/packages', packageRoutes);
 app.use('/api/services', additionalServiceRoutes);
 app.use('/api/event-requests', eventRequestRoutes);
 
-app.use("/api/finance", financialRoutes);
 app.use("/api/member-applications", memberApplicationRoutes);
 app.use("/api/admin/applications", adminApplicationRoutes);
 app.use("/api/users", userRoutes);
@@ -152,6 +151,8 @@ app.use('/api/chatbot', chatbotRoutes);
 // Stripe Routes
 app.use('/api/stripe', stripeRoutes);
 
+//event media routes
+app.use('/api/event-media', eventMediaRoutes);
 
 // API Endpoints
 app.get('/register/member/application', (req, res) => {

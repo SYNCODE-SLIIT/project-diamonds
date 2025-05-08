@@ -16,6 +16,7 @@ import {
     deleteOrganizer
   } from '../controllers/userController.js';
 import { loginUser } from '../controllers/authController.js';
+import { protect } from '../middleware/authmiddleware.js';
 
 // GET /api/users/create?applicationId=xxx -> Returns fullName and email from the MemberApplication
 router.get('/create', getApplicationDetailsForAccountCreation);
@@ -37,7 +38,7 @@ router.delete('/profile', deleteUser);
 router.get('/', getAllUsers);
 
 // Route to update the user's password
-router.put('/password', updatePassword);
+router.put('/password', protect, updatePassword);
 
 router.get('/check-email', checkEmail);
 

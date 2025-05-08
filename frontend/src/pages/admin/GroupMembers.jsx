@@ -1,35 +1,52 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { UserContext } from '../../context/userContext';
 
 const GroupMembers = () => {
   const { user } = useContext(UserContext);
   const { groupId } = useParams();
   const navigate = useNavigate();
+  const [groupDetails, setGroupDetails] = useState(null);
   const [members, setMembers] = useState([]);
   const [availableMembers, setAvailableMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [showAddMembers, setShowAddMembers] = useState(false);
   const [selectedToAdd, setSelectedToAdd] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // Fetch current group members
+  // Fetch group details and members
   useEffect(() => {
-    fetch(`http://localhost:4000/api/chat-groups/${groupId}/members`)
-      .then(res => {
-        if (!res.ok) {
-          throw new Error(`Error: ${res.status}`);
+    const fetchGroupDetails = async () => {
+      try {
+        const detailsRes = await fetch(`http://localhost:4000/api/chat-groups/${groupId}`);
+        if (!detailsRes.ok) {
+          throw new Error(`Error: ${detailsRes.status}`);
         }
-        return res.json();
-      })
-      .then(data => {
-        setMembers(data.members || []);
-        setLoading(false);
-      })
-      .catch(err => {
+        const detailsData = await detailsRes.json();
+        setGroupDetails(detailsData.group);
+      } catch (err) {
+        console.error("Error fetching group details:", err);
+      }
+    };
+
+    const fetchGroupMembers = async () => {
+      try {
+        const membersRes = await fetch(`http://localhost:4000/api/chat-groups/${groupId}/members`);
+        if (!membersRes.ok) {
+          throw new Error(`Error: ${membersRes.status}`);
+        }
+        const membersData = await membersRes.json();
+        setMembers(membersData.members || []);
+      } catch (err) {
         setErrorMsg("Error fetching group members: " + err.message);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchGroupDetails();
+    fetchGroupMembers();
   }, [groupId]);
 
   // Fetch all members (from users) to know who can be added
@@ -115,46 +132,113 @@ const GroupMembers = () => {
     }
   };
 
+  // Filter available members based on search term
+  const filteredAvailableMembers = availableMembers.filter(member => 
+    member.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    member.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (loading) return (
-    <div className="flex justify-center items-center h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    <div className="flex justify-center items-center min-h-screen bg-gray-50">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1c4b82]"></div>
     </div>
   );
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
-        <div className="bg-gray-100 p-6 border-b">
-          <h2 className="text-3xl font-bold text-center text-gray-800">Group Members</h2>
+    <div className="container mx-auto px-4 py-6 max-w-7xl">
+      {/* Header Section */}
+      <div className="mb-6">
+        <div className="flex items-center mb-2">
+          <Link to="/admin/inbox" className="text-[#1c4b82] hover:underline mr-2 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Inbox
+          </Link>
+          <span className="text-gray-400 mx-2">/</span>
+          <span className="text-gray-600">{groupDetails?.groupName || 'Group'} Members</span>
         </div>
-        {errorMsg && <div className="text-center text-red-500 py-4">{errorMsg}</div>}
-        {members.length === 0 ? (
-          <div className="text-center text-gray-500 py-4">No members found for this group.</div>
+        <h2 className="text-2xl font-semibold text-gray-800">{groupDetails?.groupName || 'Group'} Members</h2>
+        <p className="text-gray-500 mt-1">Manage the members in this group conversation</p>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border border-gray-100 mb-6">
+        <div className="flex justify-between items-center p-4 border-b border-gray-100">
+          <h3 className="text-lg font-medium text-gray-800">Group Members ({members.length})</h3>
+          <button
+            onClick={toggleAddMembers}
+            className="bg-gradient-to-r from-[#0d253f] to-[#1c4b82] text-white px-4 py-2 rounded-md hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-sm font-medium"
+          >
+            {showAddMembers ? "Cancel Adding" : "Add Members"}
+          </button>
+        </div>
+        
+        {errorMsg ? (
+          <div className="py-8 text-center">
+            <p className="text-red-500">{errorMsg}</p>
+          </div>
+        ) : members.length === 0 ? (
+          <div className="py-12 text-center">
+            <div className="w-16 h-16 bg-blue-50 rounded-full mx-auto flex items-center justify-center mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#1c4b82]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <p className="text-gray-500">No members found in this group</p>
+            <button
+              onClick={toggleAddMembers}
+              className="mt-4 text-[#1c4b82] hover:underline font-medium text-sm"
+            >
+              Add your first member
+            </button>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-100 border-b">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Full Name</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+              <thead>
+                <tr className="bg-gray-50 text-left">
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Member</th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                  <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-100">
                 {members.map(member => (
-                  <tr key={member._id} className="hover:bg-gray-50 transition duration-300 ease-in-out">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{member.fullName}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{member.email}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <tr key={member._id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-gradient-to-r from-[#0d253f] to-[#1c4b82] rounded-full flex items-center justify-center text-white flex-shrink-0">
+                          <span className="text-sm font-medium">
+                            {member.fullName?.charAt(0) || "?"}
+                          </span>
+                        </div>
+                        <div className="ml-3">
+                          <div className="font-medium text-gray-800">{member.fullName}</div>
+                          {member._id === user._id && (
+                            <div className="text-xs text-blue-500">You</div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-600">{member.email}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-[#1c4b82]">
+                        {member.role || "Member"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       {member._id !== user._id ? (
                         <button 
                           onClick={() => handleRemove(member._id)}
-                          className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-300"
+                          className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
                         >
                           Remove
                         </button>
                       ) : (
-                        <span className="text-gray-500">(Me)</span>
+                        <span className="text-sm text-gray-400">Cannot remove yourself</span>
                       )}
                     </td>
                   </tr>
@@ -163,51 +247,120 @@ const GroupMembers = () => {
             </table>
           </div>
         )}
-        {/* Add Members Section */}
-        <div className="p-6">
-          <button 
-            onClick={toggleAddMembers}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-300"
-          >
-            {showAddMembers ? "Hide Add Members" : "Add Members"}
-          </button>
-          {showAddMembers && (
-            <div className="mt-4 border border-gray-300 rounded-lg p-4 bg-gray-50">
-              <h3 className="text-lg font-semibold mb-2">Available Members</h3>
-              {availableMembers.length === 0 ? (
-                <p className="text-gray-500">No available members found.</p>
-              ) : (
-                <div className="space-y-2">
-                  {availableMembers.map(member => (
-                    <div key={member._id} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        value={member._id}
-                        onChange={handleCheckboxChange}
-                        className="mr-3 text-blue-600 focus:ring-blue-500 rounded"
-                      />
-                      <span className="text-gray-700">{member.fullName} ({member.email})</span>
+      </div>
+
+      {/* Add Members Panel */}
+      {showAddMembers && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 mb-6 overflow-hidden">
+          <div className="bg-gradient-to-r from-[#0d253f] to-[#1c4b82] px-5 py-4">
+            <h3 className="text-lg font-medium text-white">Add Members to Group</h3>
+          </div>
+          
+          <div className="p-4 border-b border-gray-100">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Search by name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {availableMembers.length === 0 ? (
+            <div className="py-12 text-center">
+              <div className="w-16 h-16 bg-blue-50 rounded-full mx-auto flex items-center justify-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#1c4b82]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+              </div>
+              <p className="text-gray-500">No available members to add</p>
+            </div>
+          ) : filteredAvailableMembers.length === 0 ? (
+            <div className="py-12 text-center">
+              <p className="text-gray-500">No matching members found</p>
+            </div>
+          ) : (
+            <div className="p-4 max-h-[400px] overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {filteredAvailableMembers.map(member => (
+                  <div 
+                    key={member._id} 
+                    className={`
+                      border rounded-lg p-3 flex items-center space-x-3 cursor-pointer
+                      ${selectedToAdd.includes(member._id) 
+                        ? 'border-[#1c4b82] bg-blue-50' 
+                        : 'border-gray-200 hover:border-gray-300'}
+                      transition-colors
+                    `}
+                    onClick={() => {
+                      if (selectedToAdd.includes(member._id)) {
+                        setSelectedToAdd(prev => prev.filter(id => id !== member._id));
+                      } else {
+                        setSelectedToAdd(prev => [...prev, member._id]);
+                      }
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      value={member._id}
+                      checked={selectedToAdd.includes(member._id)}
+                      onChange={handleCheckboxChange}
+                      className="h-4 w-4 text-[#1c4b82] focus:ring-[#1c4b82] border-gray-300 rounded"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <div className="flex items-center space-x-3 flex-1">
+                      <div className="w-10 h-10 bg-gradient-to-r from-[#0d253f] to-[#1c4b82] rounded-full flex items-center justify-center text-white flex-shrink-0">
+                        <span className="text-sm font-medium">
+                          {member.fullName?.charAt(0) || "?"}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">{member.fullName}</p>
+                        <p className="text-xs text-gray-500 truncate">{member.email}</p>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
-              <button 
-                onClick={handleAddSelectedMembers}
-                className="mt-4 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-300"
-              >
-                Add Selected Members
-              </button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
+
+          <div className="bg-gray-50 px-4 py-3 flex justify-between items-center border-t border-gray-100">
+            <div className="text-sm text-gray-600">
+              {selectedToAdd.length} {selectedToAdd.length === 1 ? 'member' : 'members'} selected
+            </div>
+            <button 
+              onClick={handleAddSelectedMembers}
+              disabled={selectedToAdd.length === 0}
+              className={`
+                px-4 py-2 rounded-md text-sm font-medium
+                ${selectedToAdd.length > 0 
+                  ? 'bg-gradient-to-r from-[#0d253f] to-[#1c4b82] text-white hover:opacity-90' 
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'}
+                transition-colors
+              `}
+            >
+              Add to Group
+            </button>
+          </div>
         </div>
-        <div className="p-6 flex justify-center">
-          <button
-            onClick={() => navigate(-1)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-300"
-          >
-            Back
-          </button>
-        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => navigate(-1)}
+          className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+        >
+          Return to Group
+        </button>
       </div>
     </div>
   );

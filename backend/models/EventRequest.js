@@ -34,6 +34,16 @@ const EventRequestSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  eventType: { 
+    type: String, 
+    enum: ['public', 'private'], 
+    required: true, 
+    default: 'private' 
+  },
+  eventTime: {
+    startDate: { type: Date, required: true },
+    endDate: { type: Date, required: true }
+  },
   guestCount: {
     type: Number,
     required: true,
@@ -50,7 +60,7 @@ const EventRequestSchema = new mongoose.Schema({
   },
   remarks: {
     type: String,
-    minlength: 10,
+    minlength: 0,
     maxlength: 500,
   },
   reviewedBy: {

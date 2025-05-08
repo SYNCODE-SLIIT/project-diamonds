@@ -180,4 +180,4 @@ const Chatbot = ({ onClose }) => {
   );
 };
 
-export default Chatbot; 
+export default Chatbot;

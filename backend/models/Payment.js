@@ -25,7 +25,7 @@ const PaymentSchema = new mongoose.Schema({
   },
   paymentFor: { 
     type: String, 
-    enum: ['merchandise', 'package', 'other'], 
+    enum: ['merchandise', 'package', 'ticket', 'other'], 
     required: true 
   },
   // Stripe specific fields

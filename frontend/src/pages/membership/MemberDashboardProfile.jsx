@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/userContext';
 import 'boxicons';
+import ChangePassword from './ChangePassword';
 
 import './MemberDashboardProfile.css'; 
 import { useUserAuth } from '../../hooks/useUserAuth';
@@ -9,6 +10,7 @@ import { useUserAuth } from '../../hooks/useUserAuth';
 const MemberDashboardProfile = () => {
   const { user } = useContext(UserContext);
   const [profileData, setProfileData] = useState(null);
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
@@ -124,13 +126,23 @@ const MemberDashboardProfile = () => {
               </tr>
             </tbody>
           </table>
-          <button
-            className="edit-button"
-            onClick={() => navigate('/member-dashboard/edit-member-profile')}>
-            Edit Profile
-          </button>
+          <div className="profile-buttons">
+            <button
+              className="profile-button"
+              onClick={() => navigate('/member-dashboard/edit-member-profile')}>
+              <box-icon name="edit" color="white" size="sm"></box-icon>
+              Edit Profile
+            </button>
+            <button
+              className="profile-button"
+              onClick={() => setShowChangePassword(true)}>
+              <box-icon name="lock-alt" color="white" size="sm"></box-icon>
+              Change Password
+            </button>
+          </div>
         </div>
       )}
+      {showChangePassword && <ChangePassword onClose={() => setShowChangePassword(false)} />}
     </div>
   );
 };

@@ -35,7 +35,7 @@ import avinaash1 from './home/avinash.jpg';
 import avinaash2 from './home/avinash2.jpg';
 import avinaash3 from './home/avinaash1.jpg';
 import avinaash4 from './home/avinnassh2.jpg';
-
+import default_event from './event/default_event.jpeg';
 
 export const assets = {
   logo1,
@@ -74,6 +74,7 @@ export const assets = {
   avinaash2,
   avinaash3,
   avinaash4,
+  default_event,
 };
 
 export default assets;

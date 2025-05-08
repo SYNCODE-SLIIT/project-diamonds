@@ -10,6 +10,8 @@ export const createEventRequest = async (req, res) => {
       additionalServices,
       eventName,
       eventLocation,
+      eventType,
+      eventTime,
       guestCount,
       eventDate,
       remarks
@@ -22,6 +24,8 @@ export const createEventRequest = async (req, res) => {
       additionalServices,
       eventName,
       eventLocation,
+      eventType,
+      eventTime,
       guestCount,
       eventDate,
       remarks
@@ -80,6 +84,8 @@ export const updateEventRequest = async (req, res) => {
     const allowedFields = [
       'eventName',
       'eventLocation',
+      'eventType',
+      'eventTime',
       'guestCount',
       'eventDate',
       'remarks',
@@ -149,6 +155,11 @@ export const updateRequestStatus = async (req, res) => {
         eventName: request.eventName,
         eventDate: request.eventDate,
         eventLocation: request.eventLocation,
+        eventType: request.eventType,
+        eventTime: {
+          startDate: request.eventTime.startDate,
+          endDate: request.eventTime.endDate
+        },
         guestCount: request.guestCount,
         status: 'confirmed',
         approvedBy: reviewedBy,

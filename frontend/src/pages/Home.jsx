@@ -147,7 +147,7 @@ const Home = () => {
     <div className="flex flex-col min-h-screen">
       {/* Background with fixed height that covers the entire page */}
       <div 
-        className="absolute inset-0 w-full h-full bg-cover bg-center bg-top -z-10"
+        className="absolute inset-0 w-full h-full bg-cover bg-top -z-10"
       ></div>
       
       {/* Content container */}

@@ -126,23 +126,21 @@ export const updateAssignmentStatus = async (req, res) => {
 // Get all assignment requests
 export const getAssignmentRequests = async (req, res) => {
   try {
-    const assignments = await Assignment.find({ 'memberAssignments.status': 'pending' })
+    const assignments = await Assignment.find()
       .populate('eventID', 'eventName eventDate eventLocation guestCount')
       .populate('memberAssignments.memberID', 'fullName email')
       .exec();
 
     // Transform the data to a more frontend-friendly format
     const requests = assignments.flatMap(assignment => 
-      assignment.memberAssignments
-        .filter(ma => ma.status === 'pending')
-        .map(ma => ({
-          _id: ma._id,
-          event: assignment.eventID,
-          member: ma.memberID,
-          assignedBy: ma.assignedBy,
-          status: ma.status,
-          createdAt: ma.createdAt
-        }))
+      assignment.memberAssignments.map(ma => ({
+        _id: ma._id,
+        event: assignment.eventID,
+        member: ma.memberID,
+        assignedBy: ma.assignedBy,
+        status: ma.status,
+        createdAt: ma.createdAt
+      }))
     );
 
     res.status(200).json(requests);
@@ -182,5 +180,34 @@ export const updateRequestStatus = async (req, res) => {
   } catch (error) {
     console.error('Error updating request status:', error);
     res.status(500).json({ message: 'Error updating request status', error: error.message });
+  }
+};
+
+// Get approved assignment requests (for upcoming events)
+export const getApprovedAssignments = async (req, res) => {
+  try {
+    // Find assignments where memberAssignments.status is 'accepted'
+    const assignments = await Assignment.find({ 'memberAssignments.status': 'accepted' })
+      .populate('eventID', 'eventName eventDate eventLocation guestCount')
+      .populate('memberAssignments.memberID', 'fullName email')
+      .exec();
+
+    // Transform to frontend-friendly format
+    const approved = assignments.flatMap(assignment => 
+      assignment.memberAssignments
+        .filter(ma => ma.status === 'accepted')
+        .map(ma => ({
+          _id: ma._id,
+          event: assignment.eventID,
+          member: ma.memberID,
+          status: ma.status,
+          createdAt: ma.updatedAt || ma.createdAt
+        }))
+    );
+
+    res.status(200).json(approved);
+  } catch (error) {
+    console.error('Error fetching approved assignments:', error);
+    res.status(500).json({ message: 'Error fetching approved assignments', error: error.message });
   }
 };

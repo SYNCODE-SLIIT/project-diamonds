@@ -20,6 +20,10 @@ router.patch('/anomalies/:id/resolve', financeController.resolveAnomaly);
 // Forecast routes
 router.get('/forecast', financeController.getForecast);
 
+// Notification routes
+router.get('/notifications', financeController.getNotifications);
+router.post('/notifications/read/:id', financeController.markNotificationAsRead);
+
 // 404 handler for finance routes
 router.use((req, res) => {
   console.log('404 Not Found:', req.method, req.originalUrl);

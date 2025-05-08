@@ -5,8 +5,8 @@ import {
 } from '../../services/eventRequestService';
 import { UserContext } from '../../context/userContext';
 import assets from '../../assets/assets.js';
-import EditEventRequestModal from './EditEventRequestModal';
 import { Calendar, CheckCircle, Clock, FileCheck, Search, Filter, Calendar as CalendarIcon, MapPin, Users, MessageSquare } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const OrganizerEventRequests = () => {
   const { user } = useContext(UserContext);
@@ -14,10 +14,9 @@ const OrganizerEventRequests = () => {
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [requestToEdit, setRequestToEdit] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
+  const navigate = useNavigate();
 
   const organizerID = user?._id;
 
@@ -38,11 +37,6 @@ const OrganizerEventRequests = () => {
       fetchData();
     }
   }, [organizerID]);
-
-  const handleEdit = (request) => {
-    setRequestToEdit(request);
-    setEditModalOpen(true);
-  };
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this request?')) {
@@ -91,6 +85,67 @@ const OrganizerEventRequests = () => {
     
     return true;
   });
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+  
+  // Format time from ISO to human-readable format
+  const formatTime = (timeString) => {
+    if (!timeString) return '';
+    
+    try {
+      // Convert 24-hour format to 12-hour format with AM/PM
+      const [hours, minutes] = timeString.split(':');
+      const hour = parseInt(hours, 10);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const hour12 = hour % 12 || 12;
+      return `${hour12}:${minutes} ${ampm}`;
+    } catch (error) {
+      return timeString;
+    }
+  };
+  
+  // Format date-time for display with new structure
+  const formatDateTime = (timeObj) => {
+    if (!timeObj) return 'Not specified';
+    
+    // Check if we have new date-time format
+    if (timeObj.startDate && timeObj.endDate) {
+      const startDate = new Date(timeObj.startDate);
+      const endDate = new Date(timeObj.endDate);
+      
+      const formatFullTime = (date) => {
+        return date.toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        });
+      };
+      
+      // Check if dates are different
+      const sameDay = startDate.toDateString() === endDate.toDateString();
+      
+      if (sameDay) {
+        return `${formatFullTime(startDate)} - ${formatFullTime(endDate)}`;
+      } else {
+        return `${formatDate(startDate)} ${formatFullTime(startDate)} - 
+                ${formatDate(endDate)} ${formatFullTime(endDate)}`;
+      }
+    }
+    
+    // Legacy format
+    if (timeObj.start && timeObj.end) {
+      return `${formatTime(timeObj.start)} - ${formatTime(timeObj.end)}`;
+    }
+    
+    return 'Time not specified';
+  };
 
   return (
     <div className="min-h-screen bg-cover bg-center bg-no-repeat pt-20"
@@ -249,7 +304,8 @@ const OrganizerEventRequests = () => {
               {filteredRequests.map((req) => (
                 <div
                   key={req._id}
-                  className="bg-white shadow-lg rounded-xl p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 relative overflow-hidden"
+                  className="bg-white shadow-lg rounded-xl p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 relative overflow-hidden cursor-pointer"
+                  onClick={() => navigate(`/event-requests/${req._id}`)}
                 >
                   {/* Status Indicator */}
                   <div className={`absolute top-0 right-0 w-20 h-20 ${
@@ -280,7 +336,7 @@ const OrganizerEventRequests = () => {
                   <div className="space-y-3 mb-6">
                     <div className="flex items-center text-gray-600">
                       <CalendarIcon className="w-4 h-4 mr-2 text-blue-500" />
-                      <p><strong>Date:</strong> {new Date(req.eventDate).toLocaleDateString()}</p>
+                      <p><strong>Date:</strong> {formatDateTime(req.eventTime)}</p>
                     </div>
                     
                     <div className="flex items-center text-gray-600">
@@ -307,13 +363,19 @@ const OrganizerEventRequests = () => {
                     {req.status === 'pending' && (
                       <>
                         <button
-                          onClick={() => handleEdit(req)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/event-requests/${req._id}/edit`);
+                          }}
                           className="px-4 py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white rounded-lg hover:from-yellow-500 hover:to-yellow-600 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                         >
                           Edit
                         </button>
                         <button
-                          onClick={() => handleDelete(req._id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(req._id);
+                          }}
                           className="px-4 py-2 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-lg hover:from-red-500 hover:to-red-600 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                         >
                           Delete
@@ -327,22 +389,6 @@ const OrganizerEventRequests = () => {
           )}
         </div>
       </div>
-
-      {/* Edit Modal */}
-      {editModalOpen && requestToEdit && (
-        <EditEventRequestModal
-          request={requestToEdit}
-          onClose={() => {
-            setEditModalOpen(false);
-            setRequestToEdit(null);
-          }}
-          onSuccess={() => {
-            fetchData();
-            setEditModalOpen(false);
-            setRequestToEdit(null);
-          }}
-        />
-      )}
     </div>
   );
 };
