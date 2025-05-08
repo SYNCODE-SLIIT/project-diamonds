@@ -139,6 +139,7 @@ import AdminEventRequestDetailsPage from './pages/admin/AdminEventRequestDetails
 
 import FundraisePage from './components/Fundraise/FundraisePage';
 
+
 import AdminDashboardOverview from './pages/admin/AdminDashboardOverview';
 
 import EventDetailPage from './pages/events/EventDetailPage';
@@ -197,7 +198,11 @@ const App = () => {
               <Route path="/event-requests/:id/edit" element={<EventRequestEditPage />} />
               <Route path="/event-dashboard" element={<EventDashboard />} />
               <Route path="/event-dashboard/:id" element={<OrganizerEventDetailPage />} />
-              
+              <Route path="/merchandise" element={<Merchandise />} />
+          <Route path="/donate" element={<DonationPage />} />
+          <Route path="/fundraising" element={<FundraisePage />} />
+          <Route path="/events/:eventSlug" element={<EventDetailPages />} />
+          <Route path="/ticket-payment-cancel" element={<TicketPaymentCancel />} />
 
             </Route>
 
@@ -290,13 +295,10 @@ const App = () => {
           <Route path="/upload" element={<UploadMedia />} />
           <Route path="/Cmanager" element={<ContentMediaDashboard />} />
 
-          <Route path="/merchandise" element={<Merchandise />} />
-          <Route path="/donate" element={<DonationPage />} />
-          <Route path="/fundraising" element={<FundraisePage />} />
-          <Route path="/events/:eventSlug" element={<EventDetailPage />} />
+          
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-cancel" element={<PaymentCancel />} />
-          <Route path="/ticket-payment-cancel" element={<TicketPaymentCancel />} />
+          
 
         </Routes>
 
