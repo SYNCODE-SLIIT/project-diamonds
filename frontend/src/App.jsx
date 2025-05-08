@@ -138,8 +138,9 @@ import AdminEventRequestDetailsPage from './pages/admin/AdminEventRequestDetails
 
 
 import FundraisePage from './components/Fundraise/FundraisePage';
-import EventDetailPages from './components/Fundraise/EventDetailPage';
 
+
+import AdminDashboardOverview from './pages/admin/AdminDashboardOverview';
 
 import EventDetailPage from './pages/events/EventDetailPage';
 import OrganizerEventDetailPage from './pages/events/OrganizerEventDetailsPage';
@@ -226,6 +227,7 @@ const App = () => {
 
 
           <Route path="/admin" element={<AdminLayout />}>
+            <Route path="dashboard-overview" element={<AdminDashboardOverview />} />
             <Route path="collaboration" element={<Collabaration />} />
             <Route path="blog" element={<BlogPosts />} />
             <Route path="content-creators" element={<ContentCreatorList />} />
