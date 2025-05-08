@@ -28,6 +28,15 @@ function generateOrderId() {
   return 'ORD-' + Math.floor(10000 + Math.random() * 90000);
 }
 
+// Phone number validation function
+function validatePhoneNumber(phone) {
+  const phoneRegex = /^(?:\+94|0)[1-9][0-9]{8}$/;
+  
+  if (!phone.trim()) return 'Contact number is required.';
+  if (!phoneRegex.test(phone)) return 'Please enter a valid phone number;';
+  return '';
+}
+
 const StripePaymentForm = ({ amount, onSuccess, onError }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -147,6 +156,18 @@ const MerchandisePaymentForm = ({ product, onClose }) => {
     return '';
   };
 
+  // Validate contact number when input changes
+  const handleContactChange = (e) => {
+    const value = e.target.value;
+    setForm((prev) => ({ ...prev, contact: value }));
+    
+    // Clear the error if the field was previously marked as invalid
+    if (errors.contact) {
+      const phoneError = validatePhoneNumber(value);
+      setErrors(prev => ({ ...prev, contact: phoneError }));
+    }
+  };
+
   // Step 1: Package selection
   const handlePackageChange = (e) => {
     const pkg = DUMMY_PACKAGES.find((p) => p.id === e.target.value);
@@ -156,7 +177,13 @@ const MerchandisePaymentForm = ({ product, onClose }) => {
   // Step 2: Form input
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    
+    // Special handling for contact field to validate phone number format
+    if (name === 'contact') {
+      handleContactChange(e);
+    } else {
+      setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    }
   };
 
   const handleSlipChange = (e) => {
@@ -181,7 +208,11 @@ const MerchandisePaymentForm = ({ product, onClose }) => {
   const validate = () => {
     const newErrors = {};
     if (!form.fullName.trim()) newErrors.fullName = 'Full name is required.';
-    if (!form.contact.trim()) newErrors.contact = 'Contact number is required.';
+    
+    // Enhanced contact number validation
+    const phoneError = validatePhoneNumber(form.contact);
+    if (phoneError) newErrors.contact = phoneError;
+    
     if (!form.email.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email)) newErrors.email = 'Valid email is required.';
     if (paymentMethod === 'bankslip') {
       const slipError = validateSlip(form.slip);
@@ -426,11 +457,12 @@ const MerchandisePaymentForm = ({ product, onClose }) => {
                       <input
                         className={`w-full border rounded px-3 py-2 ${errors.contact ? 'border-red-400' : ''}`}
                         name="contact"
-                        placeholder="Enter your contact number here"
+                        placeholder="e.g., +94/0771234567"
                         value={form.contact}
                         onChange={handleInputChange}
                       />
                       {errors.contact && <div className="text-red-500 text-sm mt-1">{errors.contact}</div>}
+                      <div className="text-xs text-gray-500 mt-1">Enter a valid Sri Lankan phone number.</div>
                     </div>
                     <div>
                       <label className="block font-medium mb-1">Email <span className="text-red-500">*</span></label>

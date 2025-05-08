@@ -122,7 +122,7 @@ export const deleteBlogPost = async (req, res) => {
 // Get published blog posts
 export const getPublishedBlogPosts = async (req, res) => {
   try {
-    const blogPosts = await BlogPost.find({ status: "published" }).populate("author", "name email").sort({ publishDate: -1 });
+    const blogPosts = await BlogPost.find().populate("author", "name email").sort({ publishDate: -1 });
     res.json(blogPosts);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });
