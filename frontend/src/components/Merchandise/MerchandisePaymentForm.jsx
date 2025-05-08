@@ -102,7 +102,7 @@ const StripePaymentForm = ({ amount, onSuccess, onError }) => {
   );
 };
 
-const MerchandisePaymentForm = ({ product }) => {
+const MerchandisePaymentForm = ({ product, onClose }) => {
   const userAuth = typeof useUserAuth === 'function' ? useUserAuth() : {};
   const user = userAuth?.user || null;
   const [step, setStep] = useState(product ? 2 : 1);
@@ -243,8 +243,8 @@ const MerchandisePaymentForm = ({ product }) => {
             headers: { 'Content-Type': 'multipart/form-data' }
           });
 
-        setReferenceId(generateReferenceId());
-        setStep(3);
+          setReferenceId(generateOrderId());
+          setStep(3);
         }
       } catch (err) {
         setErrors({ ...newErrors, submit: 'Payment failed. Please try again.' });
@@ -341,8 +341,8 @@ const MerchandisePaymentForm = ({ product }) => {
           {/* Left side - Product Details */}
           <div className="bg-gray-50 rounded-xl p-6">
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-44 h-44 rounded-2xl bg-white shadow-md flex items-center justify-center">
-                <img src={selectedPackage.image} alt={selectedPackage.name} className="w-40 h-40 object-contain" />
+              <div className="w-32 h-32 rounded-xl bg-white shadow-sm flex items-center justify-center">
+                <img src={selectedPackage.image} alt={selectedPackage.name} className="w-24 h-24 object-contain" />
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-gray-900">{selectedPackage.name}</h3>

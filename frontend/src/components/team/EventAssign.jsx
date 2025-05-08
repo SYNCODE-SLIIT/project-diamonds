@@ -49,12 +49,10 @@ const EventAssign = () => {
     }
   }, [selectedEvent]);
 
-  const availableMembers = allMembers.filter(mem => {
-    if (!mem || !mem._id) return false;
-    return !assignedMembers.some(amem => 
-      amem && amem.memberID && amem.memberID._id === mem._id
-    );
-  });
+  // Filter out members who are already assigned to the selected event.
+  const availableMembers = selectedEvent
+    ? allMembers.filter(member => !assignedMembers.some(assigned => assigned._id === member._id))
+    : allMembers;
 
   const handleEventChange = (event) => {
     setSelectedEvent(event.target.value);
@@ -188,7 +186,9 @@ const EventAssign = () => {
                 </div>
               ))
             ) : (
-              <p className="text-gray-500 col-span-full">No members available for this event.</p>
+              <p className="text-gray-500 col-span-full">
+                All members have already been assigned to this event.
+              </p>
             )}
           </div>
         </div>

@@ -94,12 +94,12 @@ const AdminOrganizersList = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
-        <div className="bg-gradient-to-r from-purple-600 to-blue-500 p-6">
+        <div className="bg-gradient-to-r from-[#0d253f] to-[#1c4b82] p-6">
           <h2 className="text-3xl font-bold text-center text-white">Organizers Management</h2>
         </div>
         {loading && (
           <div className="flex justify-center items-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1c4b82]"></div>
           </div>
         )}
         {errorMsg && (
@@ -114,40 +114,37 @@ const AdminOrganizersList = () => {
         )}
         {!loading && organizers.length > 0 && (
           <>
-            {/* Analytics Cards - Rearranged Layout */}
             <div className="p-6 bg-gray-50">
-              {/* Top row: Two number cards side by side */}
               <div className="grid grid-cols-2 gap-6 mb-6">
-                <div className="bg-white shadow-lg rounded-xl p-4 border-l-4 border-purple-500 transition-transform hover:scale-105 duration-300">
+                <div className="bg-white shadow-lg rounded-xl p-4 border-l-4 border-[#0d253f] transition-transform hover:scale-105 duration-300">
                   <div className="flex items-center">
-                    <div className="bg-purple-100 p-2 rounded-full mr-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="bg-[#0d253f]/10 p-2 rounded-full mr-4">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#0d253f]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                       </svg>
                     </div>
                     <div>
                       <h3 className="text-sm font-semibold text-gray-700">Total Organizers</h3>
-                      <p className="text-2xl font-bold text-purple-600">{stats.total}</p>
+                      <p className="text-2xl font-bold text-[#0d253f]">{stats.total}</p>
                     </div>
                   </div>
                 </div>
-                <div className="bg-white shadow-lg rounded-xl p-4 border-l-4 border-teal-500 transition-transform hover:scale-105 duration-300">
+                <div className="bg-white shadow-lg rounded-xl p-4 border-l-4 border-[#1c4b82] transition-transform hover:scale-105 duration-300">
                   <div className="flex items-center">
-                    <div className="bg-teal-100 p-2 rounded-full mr-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="bg-[#1c4b82]/10 p-2 rounded-full mr-4">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#1c4b82]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                       </svg>
                     </div>
                     <div>
                       <h3 className="text-sm font-semibold text-gray-700">Joined Last Month</h3>
-                      <p className="text-2xl font-bold text-teal-600">{stats.newLastMonth}</p>
+                      <p className="text-2xl font-bold text-[#1c4b82]">{stats.newLastMonth}</p>
                     </div>
                   </div>
                 </div>
               </div>
               
-              {/* Bottom row: Full-width chart */}
-              <div className="bg-white shadow-lg rounded-xl p-6 border-l-4 border-blue-500 transition-transform hover:scale-102 duration-300">
+              <div className="bg-white shadow-lg rounded-xl p-6 border-l-4 border-[#0d253f] transition-transform hover:scale-102 duration-300">
                 <h3 className="text-lg font-semibold text-gray-700 mb-2">Organizer Growth Trend</h3>
                 <div className="mt-4">
                   <ResponsiveContainer width="100%" height={200}>
@@ -174,10 +171,10 @@ const AdminOrganizersList = () => {
                       <Line 
                         type="monotone" 
                         dataKey="count" 
-                        stroke="#4F46E5" 
+                        stroke="#0d253f" 
                         strokeWidth={3} 
-                        dot={{ fill: '#4338CA', strokeWidth: 2, r: 4 }}
-                        activeDot={{ fill: '#4338CA', strokeWidth: 2, r: 6 }}
+                        dot={{ fill: '#1c4b82', strokeWidth: 2, r: 4 }}
+                        activeDot={{ fill: '#1c4b82', strokeWidth: 2, r: 6 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -186,11 +183,10 @@ const AdminOrganizersList = () => {
             </div>
             
             <div className="p-6">
-              {/* Export button with improved styling */}
               <div className="flex justify-end gap-4 mb-4">
                 <button 
                   onClick={handleExportCSV} 
-                  className="flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg shadow-md hover:from-purple-600 hover:to-indigo-700 transition-all transform hover:scale-105 duration-300"
+                  className="flex items-center px-4 py-2 bg-gradient-to-r from-[#0d253f] to-[#1c4b82] text-white rounded-lg shadow-md hover:from-[#0d253f]/90 hover:to-[#1c4b82]/90 transition-all transform hover:scale-105 duration-300"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -202,7 +198,7 @@ const AdminOrganizersList = () => {
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-100 border-b">
+                <thead className="bg-[#0d253f]/5 border-b">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Full Name
@@ -230,7 +226,7 @@ const AdminOrganizersList = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <Link
                           to={`/admin/organizers/${org.profileId ? org.profileId : org._id}`}
-                          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-300">
+                          className="bg-gradient-to-r from-[#0d253f] to-[#1c4b82] text-white px-4 py-2 rounded-md hover:from-[#0d253f]/90 hover:to-[#1c4b82]/90 transition duration-300">
                           View Details
                         </Link>
                       </td>

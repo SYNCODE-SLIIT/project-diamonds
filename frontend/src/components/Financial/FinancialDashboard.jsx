@@ -145,8 +145,18 @@ const Dashboard = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleView = (item) => {
-    setSelectedItem(item);
+  const handleView = async (item) => {
+    if (activeTab === 'transactions' || activeTab === 'invoices') {
+      try {
+        const res = await axiosInstance.get(`/api/finance/transaction/${item._id}`);
+        setSelectedItem(res.data);
+      } catch (err) {
+        toast.error('Failed to fetch full details');
+        setSelectedItem(item);
+      }
+    } else {
+      setSelectedItem(item);
+    }
     setIsViewModalOpen(true);
   };
 
@@ -189,7 +199,6 @@ const Dashboard = () => {
           reason: fullBudget.reason ?? '',
           remainingBudget: fullBudget.remainingBudget ?? 0,
         };
-        console.log('PATCH budget updateData:', updateData);
       } else if (activeTab === 'invoices') {
         updateData = { paymentStatus: newStatus };
       } else {
@@ -824,15 +833,23 @@ const Dashboard = () => {
           setIsExporting(false);
           return;
       }
-      doc.text(`${title} Report`, 14, 16);
+      doc.text(`Team Diamond ${title} Report`, 14, 16);
       autoTable(doc, {
         startY: 22,
         head: [columns.map(col => col.header)],
         body: rows.map(row => columns.map(col => row[col.dataKey])),
         styles: { fontSize: 9 },
-        headStyles: { fillColor: [41, 128, 185] },
+        headStyles: { fillColor: [44, 62, 80] },
         margin: { left: 14, right: 14 },
       });
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.setTextColor(150, 150, 150);
+        doc.text('Team Diamond Financial Services', 15, doc.internal.pageSize.height - 10);
+        doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width - 30, doc.internal.pageSize.height - 10);
+      }
       doc.save(`${title}_Report_${new Date().toISOString().split('T')[0]}.pdf`);
       toast.success('PDF exported successfully');
     } catch (err) {

@@ -18,8 +18,19 @@ const TransactionInfoCard = ({
   onViewDetails,
   id,
 }) => {
+  // Handler to prevent event bubbling from action buttons
+  const handleCardClick = (e) => {
+    if (onViewDetails) onViewDetails(id);
+  };
+
   return (
-    <div className="group relative flex items-center gap-4 w-full max-w-xl px-4 py-2 rounded-xl shadow-sm bg-white hover:shadow-md transition-shadow duration-300">
+    <div
+      className="group relative flex items-center gap-4 w-full max-w-xl px-4 py-2 rounded-xl shadow-sm bg-white hover:shadow-md transition-shadow duration-300 cursor-pointer"
+      onClick={handleCardClick}
+      tabIndex={0}
+      role="button"
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleCardClick(e); }}
+    >
       {/* Icon Container */}
       <div className="w-10 h-10 flex items-center justify-center text-lg text-gray-800 bg-gray-100 rounded-full">
         {icon ? (
@@ -54,20 +65,19 @@ const TransactionInfoCard = ({
       </div>
 
       {/* Action Buttons */}
-      <div className="absolute right-2 top-2 flex gap-1">
+      <div className="absolute right-2 top-2 flex gap-1 z-10">
         {!hideDeleteBtn && (
           <button
             className="p-1 text-gray-400 hover:text-red-600 transition-opacity opacity-0 group-hover:opacity-100"
-            onClick={onDelete}
+            onClick={e => { e.stopPropagation(); onDelete && onDelete(); }}
           >
             <LuTrash2 size={18} />
           </button>
         )}
-        
         {(type === "expense" || type === "income") && onViewDetails && (
           <button
             className="p-1 text-gray-400 hover:text-blue-600 transition-opacity opacity-0 group-hover:opacity-100"
-            onClick={() => onViewDetails(id)}
+            onClick={e => { e.stopPropagation(); onViewDetails(id); }}
             title="View Details"
           >
             <LuEye size={18} />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import { Toaster } from 'react-hot-toast';
 import AdminApplicationsCombinedList from './pages/authentication/AdminApplicationsCombinedList';
@@ -67,15 +67,17 @@ import PaymentOptions from './components/Financial/PaymentOptions';
 import AnomalyDetection from './components/Financial/AnomalyDetection';
 import PaymentSuccess from './components/Financial/PaymentSuccess';
 import PaymentCancel from './components/Financial/PaymentCancel';
+import TicketPaymentCancel from './components/Financial/TicketPaymentCancel';
 // public layout and pages
 import PublicLayout from './components/layout/PublicLayout';
-import Home from './pages/home';
+import Home from './pages/Home';
 import Contactus from './pages/Contactus';
 
 import OrganizerProfile from './pages/EventOrganizerProfile';
 
 
 import EventBookingPage from './pages/EventBookingPage';
+import DonationPage from './components/Donation/DonationPage';
 
 
 import EventRequestForm from './components/event/EventRequestForm';
@@ -114,7 +116,7 @@ import EventAssign from './components/team/EventAssign';
 import EventAssignmentRequests from './components/team/EventAssignmentRequests';
 import PracticeAssign from './components/team/PracticeAssign';
 import PracticeAssignments from './components/team/PracticeAssignments';
-
+import CalendarOverview from './components/team/CalendarOverview';
 
 
 
@@ -125,15 +127,23 @@ import DirectChatRoom from './pages/shared/DirectChatRoom';
 
 import MerchandiseAdmin from './pages/admin/MerchandiseAdmin';
 import Collabaration from './pages/content/Collaboration';
+
 import CertificateGenerator from './pages/content/CertificateGenerator';
 import Sponsorship from './pages/content/Sponsorship';
 import PublicBlogSlideShow from './pages/content/PublicBlogSlideShow';
 import PublicBlogDetail from './pages/content/PublicBlogDetail';
+import WhyJoinUs from './pages/WhyJoinUs';
 
 import AdminEventRequestDetailsPage from './pages/admin/AdminEventRequestDetailsPage';
 
+
+import FundraisePage from './components/Fundraise/FundraisePage';
+import EventDetailPage from './components/Fundraise/EventDetailPage';
+
+
 import EventDetailPage from './pages/events/EventDetailPage';
 import OrganizerEventDetailPage from './pages/events/OrganizerEventDetailsPage';
+
 
 const App = () => {
   return (
@@ -172,6 +182,7 @@ const App = () => {
               <Route path='/our-founder' element={<OurFounderPage />} />
               <Route path='/blogs' element={<PublicBlogSlideShow />} />
               <Route path='/blogs/:id' element={<PublicBlogDetail />} />
+              <Route path='/why-join' element={<WhyJoinUs />} />
               {/* <Route path='/event-request' element={<EventRequestForm />} /> */}
               <Route path='/register/member/application' element={<MemberApplication />} />
 
@@ -216,9 +227,14 @@ const App = () => {
             <Route path="content-creators" element={<ContentCreatorList />} />
             <Route path="create-blog-post" element={<CreateBlogPost />} />
             <Route path="media" element={<ViewAllMedia />} />
+
             <Route path="social-media" element={<SocialMediaFeed />} />
-            <Route path="event-calendar" element={<EventCalendar />} />
+          
+
+            <Route path="event-calendar" element={<CalendarOverview />} />
+
             <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="practice-assignments" element={<PracticeAssignments />} />
             {/* All admin routes are now relative to /admin */}
             <Route path="messaging/create-group" element={<GroupCreation />} />
             <Route path="inbox" element={<AdminInbox />} />
@@ -250,16 +266,13 @@ const App = () => {
           </Route>
        
 
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          {/* Remove these duplicate routes as they're now handled in the admin layout */}
+          {/* <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/event/assign" element={<EventAssign />} />
           <Route path="/team/assignment-requests" element={<EventAssignmentRequests />} />
           <Route path="/team/practice" element={<PracticeAssign />} />
-          <Route path="/team/practice-assignments" element={<PracticeAssignments />} />
-          
-          
-        
-       
-  
+          <Route path="/team/practice-assignments" element={<PracticeAssignments />} /> */}
+
           {/* Financial Routes */}
 
 
@@ -277,9 +290,12 @@ const App = () => {
           <Route path="/Cmanager" element={<ContentMediaDashboard />} />
 
           <Route path="/merchandise" element={<Merchandise />} />
-
+          <Route path="/donate" element={<DonationPage />} />
+          <Route path="/fundraising" element={<FundraisePage />} />
+          <Route path="/events/:eventSlug" element={<EventDetailPage />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-cancel" element={<PaymentCancel />} />
+          <Route path="/ticket-payment-cancel" element={<TicketPaymentCancel />} />
 
         </Routes>
 
