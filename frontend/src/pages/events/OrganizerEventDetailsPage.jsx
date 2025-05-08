@@ -448,8 +448,10 @@ const EventDetailPage = () => {
       // Format function
       const formatDateTime = (date) => {
         const options = { 
+          weekday: 'short',
           month: 'short', 
           day: 'numeric',
+          year: 'numeric',
           hour: 'numeric', 
           minute: '2-digit',
           hour12: true 
@@ -725,6 +727,8 @@ const EventDetailPage = () => {
           }
         }
       }
+    } else {
+      errors.startDate = 'Event times are required.';
     }
     
     // Description validation when editing description
@@ -790,6 +794,104 @@ const EventDetailPage = () => {
   
   // Enhanced time change handler with real-time validation
   const handleTimeChange = (field, date) => {
+    // If updating start time, ensure the date portion matches the event date
+    if (field === 'startDate' && editedEventDetails.eventDate) {
+      // Create a new date with the event date but keep the selected time
+      const eventDate = new Date(editedEventDetails.eventDate);
+      const selectedTime = date;
+      
+      // Set the hours, minutes, seconds from the selected time to the event date
+      eventDate.setHours(
+        selectedTime.getHours(),
+        selectedTime.getMinutes(),
+        selectedTime.getSeconds()
+      );
+      
+      // Use this combined date as the start date
+      date = eventDate;
+      
+      // Validate if time is in the past for today's date
+      const now = new Date();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const eventDateCopy = new Date(editedEventDetails.eventDate);
+      eventDateCopy.setHours(0, 0, 0, 0);
+      
+      // Live validation for past time on today's date
+      if (eventDateCopy.getTime() === today.getTime() && date < now) {
+        setValidationErrors(prev => ({
+          ...prev,
+          startDate: 'Start time cannot be in the past for today\'s event.'
+        }));
+      } else {
+        setValidationErrors(prev => ({
+          ...prev,
+          startDate: undefined
+        }));
+      }
+      
+      // Automatically set end time to 1 hour after start time if no end time is set
+      let endDate = editedEventDetails.eventTime?.endDate ? new Date(editedEventDetails.eventTime.endDate) : null;
+      
+      // If no end time or if existing end time is now before the new start time
+      if (!endDate || endDate <= date) {
+        endDate = new Date(date);
+        endDate.setHours(endDate.getHours() + 1);
+        
+        // Update the end time along with the start time
+        const updatedTimes = {
+          startDate: date,
+          endDate: endDate
+        };
+        
+        setEditedEventDetails(prev => ({
+          ...prev,
+          eventTime: updatedTimes
+        }));
+        
+        return; // Skip the rest of the function since we've already updated the state
+      }
+    }
+    
+    // For end time changes, we need to ensure it's after the start time
+    if (field === 'endDate' && editedEventDetails.eventTime?.startDate) {
+      const startDateTime = new Date(editedEventDetails.eventTime.startDate);
+      
+      // Check if end date/time is before start date/time
+      if (date <= startDateTime) {
+        // Set error
+        setValidationErrors(prev => ({
+          ...prev,
+          endDate: 'End time must be after start time.'
+        }));
+        
+        // If on the same day, automatically set the end time to 1 hour after start time
+        if (date.toDateString() === startDateTime.toDateString()) {
+          const correctedEndTime = new Date(startDateTime);
+          correctedEndTime.setHours(correctedEndTime.getHours() + 1);
+          
+          // Update with the corrected time
+          const updatedTimes = {
+            ...editedEventDetails.eventTime,
+            endDate: correctedEndTime
+          };
+          
+          setEditedEventDetails(prev => ({
+            ...prev,
+            eventTime: updatedTimes
+          }));
+          
+          return; // Skip the rest of the function
+        }
+      } else {
+        // Clear error if end time is valid
+        setValidationErrors(prev => ({
+          ...prev,
+          endDate: undefined
+        }));
+      }
+    }
+    
     const updatedTimes = {
       ...editedEventDetails.eventTime,
       [field]: date
@@ -819,10 +921,41 @@ const EventDetailPage = () => {
 
   // Function to handle date change with proper validation
   const handleDateChange = (date) => {
-    setEditedEventDetails(prev => ({
-      ...prev,
-      eventDate: date
-    }));
+    setEditedEventDetails(prev => {
+      // If we have a start time, update it to the new date while preserving the time
+      let updatedEventTime = {...prev.eventTime};
+      
+      if (updatedEventTime.startDate) {
+        const startDate = new Date(updatedEventTime.startDate);
+        const newStartDate = new Date(date);
+        
+        // Keep the time part from the original start date, but update the date part
+        newStartDate.setHours(
+          startDate.getHours(),
+          startDate.getMinutes(),
+          startDate.getSeconds()
+        );
+        
+        updatedEventTime.startDate = newStartDate;
+        
+        // If end date is before the new start date, update it too
+        if (updatedEventTime.endDate) {
+          const endDate = new Date(updatedEventTime.endDate);
+          if (endDate < newStartDate) {
+            // Create a new end date 1 hour after the start time
+            const newEndDate = new Date(newStartDate);
+            newEndDate.setHours(newEndDate.getHours() + 1);
+            updatedEventTime.endDate = newEndDate;
+          }
+        }
+      }
+      
+      return {
+        ...prev,
+        eventDate: date,
+        eventTime: updatedEventTime
+      };
+    });
     
     const errors = {...validationErrors};
     
@@ -851,7 +984,23 @@ const EventDetailPage = () => {
     try {
       setUpdatingEvent(true);
       
-      const response = await updateEventDetails(id, editedEventDetails);
+      // Check if critical fields were changed to update status
+      const criticalFieldsChanged = 
+        event.eventLocation !== editedEventDetails.eventLocation ||
+        event.guestCount.toString() !== editedEventDetails.guestCount.toString() ||
+        new Date(event.eventDate).toDateString() !== new Date(editedEventDetails.eventDate).toDateString() ||
+        JSON.stringify(event.eventTime) !== JSON.stringify(editedEventDetails.eventTime);
+      
+      // If critical fields changed and event is confirmed, update status to change-requested
+      const updatedDetails = {
+        ...editedEventDetails
+      };
+      
+      if (criticalFieldsChanged && event.status === 'confirmed') {
+        updatedDetails.status = 'change-requested';
+      }
+      
+      const response = await updateEventDetails(id, updatedDetails);
       
       if (response.success) {
         // Update the local state with the complete event object
@@ -863,12 +1012,18 @@ const EventDetailPage = () => {
           eventDate: editedEventDetails.eventDate,
           eventTime: editedEventDetails.eventTime,
           guestCount: editedEventDetails.guestCount,
-          additionalRequests: editedEventDetails.additionalRequests
+          additionalRequests: editedEventDetails.additionalRequests,
+          status: criticalFieldsChanged && event.status === 'confirmed' ? 'change-requested' : event.status
         });
         
         setEditingInfo(false);
         setEditingDescription(false);
-        toast.success('Event details updated successfully!');
+        
+        if (criticalFieldsChanged && event.status === 'confirmed') {
+          toast.success('Event details updated! Status changed to "Change Requested"');
+        } else {
+          toast.success('Event details updated successfully!');
+        }
         
         // Refresh all data to ensure consistency
         await refreshEventData(false);
@@ -1156,6 +1311,18 @@ const EventDetailPage = () => {
                   )}
                 </div>
                 
+                {/* Status Change Warning - Only show when editing */}
+                {editingInfo && event.status === 'confirmed' && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 flex items-start">
+                    <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 mr-2 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm text-amber-700">
+                        <strong>Important:</strong> Changes to location, guest count, event date or time will change the event status to "Change Requested" and require approval.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
                 {/* Event Name - Added at the top */}
                 <div className="mb-6 border-b border-gray-200 pb-4">
                   <h3 className="text-sm text-gray-500 font-medium mb-2">Event Name</h3>
@@ -1313,42 +1480,58 @@ const EventDetailPage = () => {
                         ) : (
                           <div className="space-y-3">
                             <div>
-                              <label className="text-xs text-gray-500">Start Time</label>
+                              <label className="text-xs text-gray-500">Start Time (on event date)</label>
                               <div className={`border ${validationErrors.startDate ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 bg-white mt-1`}>
                                 <DatePicker
                                   selected={editedEventDetails.eventTime?.startDate ? new Date(editedEventDetails.eventTime.startDate) : null}
                                   onChange={(date) => handleTimeChange('startDate', date)}
                                   showTimeSelect
                                   showTimeSelectOnly
+                                  timeFormat="h:mm aa"
                                   timeIntervals={15}
-                                  timeCaption="Start Time"
-                                  dateFormat="h:mm aa"
+                                  timeCaption="Time"
                                   className="w-full focus:outline-none"
+                                  placeholderText="Select start time"
+                                  dateFormat="h:mm aa"
+                                  disabled={!editedEventDetails.eventDate}
                                 />
                               </div>
                               {validationErrors.startDate && (
                                 <p className="text-sm text-red-500 mt-1">{validationErrors.startDate}</p>
                               )}
+                              {!editedEventDetails.eventDate && (
+                                <p className="text-xs text-amber-500 mt-1">Please select an event date first</p>
+                              )}
                             </div>
                             
                             <div>
-                              <label className="text-xs text-gray-500">End Time</label>
+                              <label className="text-xs text-gray-500">End Date & Time</label>
                               <div className={`border ${validationErrors.endDate ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 bg-white mt-1`}>
                                 <DatePicker
                                   selected={editedEventDetails.eventTime?.endDate ? new Date(editedEventDetails.eventTime.endDate) : null}
                                   onChange={(date) => handleTimeChange('endDate', date)}
                                   showTimeSelect
-                                  showTimeSelectOnly
+                                  dateFormat="MMMM d, yyyy h:mm aa"
+                                  timeFormat="h:mm aa"
                                   timeIntervals={15}
-                                  timeCaption="End Time"
-                                  dateFormat="h:mm aa"
+                                  timeCaption="Time"
                                   className="w-full focus:outline-none"
+                                  placeholderText="Select end date and time"
+                                  minDate={editedEventDetails.eventTime?.startDate ? new Date(editedEventDetails.eventTime.startDate) : editedEventDetails.eventDate}
+                                  disabled={!editedEventDetails.eventTime?.startDate}
                                 />
                               </div>
                               {validationErrors.endDate && (
                                 <p className="text-sm text-red-500 mt-1">{validationErrors.endDate}</p>
                               )}
+                              {!editedEventDetails.eventTime?.startDate && (
+                                <p className="text-xs text-amber-500 mt-1">Please select a start time first</p>
+                              )}
                             </div>
+                            <p className="text-xs text-gray-500 italic">
+                              Note: Start time will use the event date. End time can be on event date or later.
+                              Changing these details will set the event status to "Change Requested".
+                            </p>
                           </div>
                         )}
                       </div>
@@ -2375,6 +2558,7 @@ const EventDetailPage = () => {
                   setShowPackageSelectionModal(false);
                   refreshEventData(true);
                 }}
+                event={event}
               />
             </div>
           </div>
@@ -2404,6 +2588,7 @@ const EventDetailPage = () => {
                   setShowServiceSelectionModal(false);
                   refreshEventData(true);
                 }}
+                event={event}
               />
             </div>
           </div>
@@ -2414,7 +2599,7 @@ const EventDetailPage = () => {
 };
 
 // Package Selection Content Component
-const PackageSelectionContent = ({ eventId, currentPackageId, onClose, onPackageSelected }) => {
+const PackageSelectionContent = ({ eventId, currentPackageId, onClose, onPackageSelected, event }) => {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -2451,10 +2636,23 @@ const PackageSelectionContent = ({ eventId, currentPackageId, onClose, onPackage
     try {
       setUpdating(true);
       // Use the updateEventDetails function from eventService
-      const response = await updateEventDetails(eventId, { packageID: selectedPackageId });
+      const updateData = { 
+        packageID: selectedPackageId 
+      };
+      
+      // If event is confirmed, change status to change-requested
+      if (currentPackageId !== selectedPackageId && event.status === 'confirmed') {
+        updateData.status = 'change-requested';
+      }
+      
+      const response = await updateEventDetails(eventId, updateData);
       
       if (response.success) {
-        toast.success('Package updated successfully!');
+        if (currentPackageId !== selectedPackageId && event.status === 'confirmed') {
+          toast.success('Package updated! Status changed to "Change Requested"');
+        } else {
+          toast.success('Package updated successfully!');
+        }
         onPackageSelected();
       } else {
         toast.error(response.message || 'Failed to update package');
@@ -2542,6 +2740,18 @@ const PackageSelectionContent = ({ eventId, currentPackageId, onClose, onPackage
         <p className="text-sm text-gray-600">
           Select a package from our standard offerings. Need something custom? Click "Create Custom Package" below.
         </p>
+
+        {/* Status Change Warning - only show for confirmed events */}
+        {event?.status === 'confirmed' && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-3 flex items-start">
+            <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 mr-2 flex-shrink-0" />
+            <div>
+              <p className="text-sm text-amber-700">
+                <strong>Important:</strong> Changing the package will set the event status to "Change Requested" and require approval.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -2621,7 +2831,7 @@ const PackageSelectionContent = ({ eventId, currentPackageId, onClose, onPackage
 };
 
 // Service Selection Content Component
-const ServiceSelectionContent = ({ eventId, currentServices, onClose, onServicesUpdated }) => {
+const ServiceSelectionContent = ({ eventId, currentServices, onClose, onServicesUpdated, event }) => {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -2670,13 +2880,28 @@ const ServiceSelectionContent = ({ eventId, currentServices, onClose, onServices
         serviceID: serviceId
       }));
       
-      // Use updateEventDetails to update the additional services
-      const response = await updateEventDetails(eventId, { 
+      // Check if services have changed
+      const servicesChanged = isServiceChanged();
+      
+      // Create update data
+      const updateData = { 
         additionalServices: formattedServices 
-      });
+      };
+      
+      // If services changed and event is confirmed, update status to change-requested
+      if (servicesChanged && event.status === 'confirmed') {
+        updateData.status = 'change-requested';
+      }
+      
+      // Use updateEventDetails to update the additional services
+      const response = await updateEventDetails(eventId, updateData);
       
       if (response.success) {
-        toast.success('Services updated successfully!');
+        if (servicesChanged && event.status === 'confirmed') {
+          toast.success('Services updated! Status changed to "Change Requested"');
+        } else {
+          toast.success('Services updated successfully!');
+        }
         onServicesUpdated();
       } else {
         toast.error(response.message || 'Failed to update services');
@@ -2730,6 +2955,18 @@ const ServiceSelectionContent = ({ eventId, currentServices, onClose, onServices
       <p className="text-sm text-gray-600 mb-4">
         Select the additional services you'd like to add to this event:
       </p>
+      
+      {/* Status Change Warning - only show for confirmed events */}
+      {event?.status === 'confirmed' && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 flex items-start">
+          <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 mr-2 flex-shrink-0" />
+          <div>
+            <p className="text-sm text-amber-700">
+              <strong>Important:</strong> Changing additional services will set the event status to "Change Requested" and require approval.
+            </p>
+          </div>
+        </div>
+      )}
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {services.map((service) => (
