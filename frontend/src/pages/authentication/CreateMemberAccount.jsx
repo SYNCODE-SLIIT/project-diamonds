@@ -176,22 +176,9 @@ const CreateMemberAccount = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative py-10"
          style={{ backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.7)), url(${assets.loginCover})` }}>
       
-      <div className="absolute top-0 w-full bg-white/10 backdrop-blur-sm py-4">
-        <div className="container mx-auto px-6 flex justify-between items-center">
-          <div className="text-white text-xl font-bold">Project Diamonds</div>
-          <button 
-            onClick={() => navigate('/login')}
-            className="text-white hover:text-blue-200 flex items-center transition-colors"
-          >
-            <LogIn className="h-5 w-5 mr-2" />
-            Sign In
-          </button>
-        </div>
-      </div>
-      
       <div className="max-w-md w-full bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-8 mb-10 z-10 mt-20">
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Project Diamonds</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Team Diamonds</h2>
           <p className="text-gray-600">Complete your account setup to get started</p>
         </div>
         
