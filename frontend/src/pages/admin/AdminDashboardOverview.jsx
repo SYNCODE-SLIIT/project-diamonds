@@ -20,39 +20,35 @@ const AdminDashboardOverview = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       setLoading(true);
+      // Fetch total member count matching the members list page
+      let totalMembersCount = 0;
       try {
-        // In a real implementation, this would be a single API call to get all dashboard data
-        // For now, we'll simulate with placeholder data
-        
-        // Simulated API response
-        const dashboardData = {
-          stats: {
-            totalMembers: 124,
-            pendingApplications: 7,
-            activeEvents: 12,
-            pendingRequests: 4,
-            totalIncome: 12750.00,
-            totalExpenses: 8450.25,
-            unreadMessages: 9
-          },
-          recentActivity: [
-            { id: 1, type: 'application', user: 'Jasmine Smith', action: 'submitted a membership application', timestamp: new Date(Date.now() - 1000 * 60 * 25), status: 'pending' },
-            { id: 2, type: 'event', user: 'Michael Chen', action: 'requested a new event booking', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), status: 'pending' },
-            { id: 3, type: 'invoice', user: 'Dance Studio Corp', action: 'paid invoice #INV-2023-054', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5), status: 'completed' },
-            { id: 4, type: 'member', user: 'Alex Johnson', action: 'updated their profile information', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12), status: 'completed' },
-            { id: 5, type: 'budget', user: 'Sarah Williams', action: 'submitted a new budget request', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), status: 'pending' }
-          ]
-        };
-        
-        setStats(dashboardData.stats);
-        setRecentActivity(dashboardData.recentActivity);
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+        const membersRes = await axiosInstance.get('/api/users/members');
+        totalMembersCount = Array.isArray(membersRes.data)
+          ? membersRes.data.length
+          : (membersRes.data.members?.length || 0);
+      } catch (err) {
+        console.error("Error fetching member count:", err);
+      }
+      // Initialize default stats
+      let dashboardStats = { totalMembers: totalMembersCount, pendingApplications: 0, activeEvents: 0, pendingRequests: 0, totalIncome: 0, totalExpenses: 0, unreadMessages: 0 };
+      let recentActivityList = [];
+      // Fetch other admin dashboard stats
+      try {
+        const response = await axiosInstance.get('/api/v1/dashboard/admin');
+        if (response.data) {
+          dashboardStats = { ...response.data.stats, totalMembers: totalMembersCount };
+          recentActivityList = response.data.recentActivity || [];
+        }
+      } catch (err) {
+        console.error("Error fetching admin dashboard data:", err);
       } finally {
+        setStats(dashboardStats);
+        setRecentActivity(recentActivityList);
         setLoading(false);
       }
     };
-    
+
     fetchDashboardData();
   }, []);
 
