@@ -136,8 +136,13 @@ import WhyJoinUs from './pages/WhyJoinUs';
 
 import AdminEventRequestDetailsPage from './pages/admin/AdminEventRequestDetailsPage';
 
+
 import FundraisePage from './components/Fundraise/FundraisePage';
 import EventDetailPage from './components/Fundraise/EventDetailPage';
+
+
+import EventDetailPage from './pages/events/EventDetailPage';
+import OrganizerEventDetailPage from './pages/events/OrganizerEventDetailsPage';
 
 
 const App = () => {
@@ -191,7 +196,7 @@ const App = () => {
               <Route path="/event-requests/:id" element={<EventRequestDetailsPage />} />
               <Route path="/event-requests/:id/edit" element={<EventRequestEditPage />} />
               <Route path="/event-dashboard" element={<EventDashboard />} />
-              <Route path="/event-dashboard/:id" element={<EventDetailPage />} />
+              <Route path="/event-dashboard/:id" element={<OrganizerEventDetailPage />} />
               
 
             </Route>
@@ -245,6 +250,7 @@ const App = () => {
             <Route path="members" element={<AdminMembersList />} />
             <Route path="packages" element={<PackageList />} />
             <Route path="events" element={<EventsDashboard />} />
+            <Route path="events/:id" element={<EventDetailPage />} />
             <Route path="event-requests" element={<EventRequestDashboard />} />
             <Route path="event-requests/:id" element={<AdminEventRequestDetailsPage />} />
             <Route path="financial" element={<FinancialDashboard />} />
