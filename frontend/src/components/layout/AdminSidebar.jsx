@@ -644,6 +644,18 @@ const AdminSidebar = () => {
                       Calendar
                     </NavLink>
                   </li>
+                        <li className="mb-[15px]">
+                <NavLink
+                  to="/admin/event-calendar"
+                  className={({ isActive }) =>
+                    `${isActive ? 'bg-[rgba(79,70,229,0.25)] font-bold' : ''} 
+                    flex items-center gap-[10px] text-white no-underline text-[16px] p-[10px] rounded-[8px]
+                    transition-colors duration-300 ease hover:bg-[rgba(79,70,229,0.15)]`
+                  }
+                >
+                  Calendar
+                </NavLink>
+              </li>
                   <li>
                     <NavLink
                       to="/admin/budget-requests"
@@ -658,7 +670,9 @@ const AdminSidebar = () => {
                   </li>
                 </ul>
               </div>
+
             </div>
+
 
             {/* Inbox with notification badge */}
             <NavLink

@@ -116,7 +116,7 @@ import EventAssign from './components/team/EventAssign';
 import EventAssignmentRequests from './components/team/EventAssignmentRequests';
 import PracticeAssign from './components/team/PracticeAssign';
 import PracticeAssignments from './components/team/PracticeAssignments';
-
+import CalendarOverview from './components/team/CalendarOverview';
 
 
 
@@ -222,9 +222,14 @@ const App = () => {
             <Route path="content-creators" element={<ContentCreatorList />} />
             <Route path="create-blog-post" element={<CreateBlogPost />} />
             <Route path="media" element={<ViewAllMedia />} />
+
             <Route path="social-media" element={<SocialMediaFeed />} />
-            <Route path="event-calendar" element={<EventCalendar />} />
+          
+
+            <Route path="event-calendar" element={<CalendarOverview />} />
+
             <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="practice-assignments" element={<PracticeAssignments />} />
             {/* All admin routes are now relative to /admin */}
             <Route path="messaging/create-group" element={<GroupCreation />} />
             <Route path="inbox" element={<AdminInbox />} />
@@ -255,16 +260,13 @@ const App = () => {
           </Route>
        
 
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          {/* Remove these duplicate routes as they're now handled in the admin layout */}
+          {/* <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/event/assign" element={<EventAssign />} />
           <Route path="/team/assignment-requests" element={<EventAssignmentRequests />} />
           <Route path="/team/practice" element={<PracticeAssign />} />
-          <Route path="/team/practice-assignments" element={<PracticeAssignments />} />
-          
-          
-        
-       
-  
+          <Route path="/team/practice-assignments" element={<PracticeAssignments />} /> */}
+
           {/* Financial Routes */}
 
 
