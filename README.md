@@ -906,11 +906,15 @@ If you find a bug or have a feature request:
 
 **Team Syncode** - Development Team
 
-- **Project Lead**: [Name]
-- **Backend Developers**: [Names]
-- **Frontend Developers**: [Names]
-- **UI/UX Designer**: [Name]
-- **QA Engineers**: [Names]
+[cite_start]This project was brought to life by the dedicated members of team Syncode (Group ITP_WD_B1_20)[cite: 8].
+
+| Name            | Student ID | Role / Module Lead                      |
+| :-------------- | :--------- | :-------------------------------------- |
+| Perera E V      | [cite_start]IT23439078 [cite: 16] | [cite_start]Event Booking & Organizing / Scrum Master [cite: 276, 283] |
+| Perera P D      | [cite_start]IT23148086 [cite: 16] | [cite_start]User & Membership Management [cite: 290]            |
+| Wijesinghe S K  | [cite_start]IT23152700 [cite: 16] | [cite_start]Content & Media Management [cite: 296]              |
+| Liyanage LN P   | [cite_start]IT23141506 [cite: 16] | [cite_start]Financial Management [cite: 304]                    |
+| Navodya W R     | [cite_start]IT23153004 [cite: 16] | [cite_start]Team Management [cite: 310]                         |
 
 **Client**: Team Diamonds - SLIIT Professional Dance Team
 
