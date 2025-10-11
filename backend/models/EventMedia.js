@@ -32,7 +32,13 @@ const EventMediaSchema = new mongoose.Schema({
   poster: {
     type: String,
     default: DEFAULT_POSTER_IMAGE_URL
-  }, // optional poster image
+  }, // legacy field for a single poster image
+  
+  posterImages: [
+    {
+      type: String
+    }
+  ], // multiple poster images allowed
 
   socialMediaLinks: {
     instagram: { type: String, default: "" },

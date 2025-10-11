@@ -229,6 +229,22 @@ const AdminEventRequestDetailsPage = () => {
                 </span>
               </div>
             )}
+            
+            {request.status === 'rejected' && request.approvalDate && (
+              <div className="bg-red-50 p-3 rounded-lg mb-6 border border-red-100">
+                <div className="flex items-center">
+                  <AlertTriangle className="w-5 h-5 text-red-600 mr-2" />
+                  <span className="font-medium text-red-800">
+                    Rejected on {new Date(request.approvalDate).toLocaleDateString()}
+                  </span>
+                </div>
+                {request.rejectionReason && (
+                  <div className="mt-2 pl-7">
+                    <p className="text-red-700">Reason: {request.rejectionReason}</p>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
               <div className="flex items-start">

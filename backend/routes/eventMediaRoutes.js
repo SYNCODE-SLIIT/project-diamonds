@@ -11,6 +11,7 @@ router.post(
   upload.fields([
     { name: 'featureImage', maxCount: 1 },
     { name: 'poster', maxCount: 1 },
+    { name: 'posterImages', maxCount: 10 }, // Allow up to 10 poster images
     { name: 'eventImages', maxCount: 10 },
     { name: 'eventVideos', maxCount: 5 }
   ]),

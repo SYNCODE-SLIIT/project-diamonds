@@ -35,7 +35,9 @@ import {
   Phone,
   Save,
   CalendarIcon,
-  RefreshCw
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { 
   Facebook,
@@ -82,6 +84,7 @@ const EventDetailPage = () => {
   const [deletingNote, setDeletingNote] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [packageDetails, setPackageDetails] = useState(null);
+  const [currentPosterIndex, setCurrentPosterIndex] = useState(0);
   
   // Function to refresh event data when needed
   const refreshEventData = async (showLoadingState = false) => {
@@ -456,6 +459,24 @@ const EventDetailPage = () => {
         {config.icon}
         {status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')}
       </span>
+    );
+  };
+
+  // Navigate to the previous poster in the carousel
+  const goToPreviousPoster = () => {
+    if (!eventMedia?.posterImages || eventMedia.posterImages.length <= 1) return;
+    
+    setCurrentPosterIndex(prevIndex => 
+      prevIndex === 0 ? eventMedia.posterImages.length - 1 : prevIndex - 1
+    );
+  };
+
+  // Navigate to the next poster in the carousel
+  const goToNextPoster = () => {
+    if (!eventMedia?.posterImages || eventMedia.posterImages.length <= 1) return;
+    
+    setCurrentPosterIndex(prevIndex => 
+      prevIndex === eventMedia.posterImages.length - 1 ? 0 : prevIndex + 1
     );
   };
 
@@ -977,25 +998,76 @@ const EventDetailPage = () => {
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center">
                     <FileText className="w-5 h-5 mr-2 text-red-600" />
-                    <h2 className="text-xl font-bold text-gray-800">Event Poster</h2>
+                    <h2 className="text-xl font-bold text-gray-800">Event Posters</h2>
                   </div>
                   
                   {/* Upload button removed */}
                 </div>
                 
-                {eventMedia?.poster ? (
-                  <div className="aspect-[3/4] w-full">
-                    <img 
-                      src={eventMedia.poster} 
-                      alt="Event poster" 
-                      className="w-full h-full object-contain rounded-lg"
-                    />
+                {eventMedia?.posterImages && eventMedia.posterImages.length > 0 ? (
+                  <div className="h-[32rem] relative">
+                    {/* Image carousel */}
+                    <div className="w-full h-full flex justify-center">
+                      <img 
+                        src={eventMedia.posterImages[currentPosterIndex]} 
+                        alt={`Event poster ${currentPosterIndex + 1}`} 
+                        className="h-full object-contain rounded-lg"
+                      />
+                    </div>
+                    
+                    {/* Navigation arrows - only show if there are multiple images */}
+                    {eventMedia.posterImages.length > 1 && (
+                      <>
+                        <button 
+                          onClick={goToPreviousPoster}
+                          className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-r-lg"
+                        >
+                          <ChevronLeft className="w-6 h-6" />
+                        </button>
+                        
+                        <button 
+                          onClick={goToNextPoster}
+                          className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-l-lg"
+                        >
+                          <ChevronRight className="w-6 h-6" />
+                        </button>
+                      </>
+                    )}
+                    
+                    {/* Indicator dots */}
+                    {eventMedia.posterImages.length > 1 && (
+                      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                        {eventMedia.posterImages.map((_, index) => (
+                          <button 
+                            key={index}
+                            onClick={() => setCurrentPosterIndex(index)}
+                            className={`w-3 h-3 rounded-full ${index === currentPosterIndex ? 'bg-red-600' : 'bg-gray-300'}`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Image counter */}
+                    <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                      {currentPosterIndex + 1}/{eventMedia.posterImages.length}
+                    </div>
                   </div>
                 ) : (
-                  <div className="aspect-[3/4] flex flex-col items-center justify-center bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                    <FileText className="w-12 h-12 text-gray-400 mb-2" />
-                    <p className="text-gray-500">No poster uploaded yet</p>
-                  </div>
+                  eventMedia?.poster ? (
+                    // Fallback for legacy poster field
+                    <div className="h-[32rem] flex justify-center">
+                      <img 
+                        src={eventMedia.poster} 
+                        alt="Event poster" 
+                        className="h-full object-contain rounded-lg"
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-60 flex flex-col items-center justify-center bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                      <FileText className="w-12 h-12 text-gray-400 mb-2" />
+                      <p className="text-gray-500">No poster uploaded yet</p>
+                    </div>
+                  )
                 )}
               </div>
             </div>
